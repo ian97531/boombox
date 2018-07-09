@@ -1,0 +1,53 @@
+service: boombox
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  default_stage: testing
+  stage: ${opt:stage, self:custom.default_stage}
+  aws_transcriptions: ${self:service}-${self:custom.stage}-aws-transcriptions
+  normalized_aws_transcriptions: ${self:service}-${self:custom.stage}-normalized_aws-transcriptions
+
+package:
+  exclude:
+    - node_modules/**
+    - .requirements/**
+    - .idea/**
+    - env/**
+    - package.json
+    - package-lock.json
+    - requirements.txt
+    - LICENSE
+    - .gitignore
+
+provider:
+  name: aws
+  runtime: python2.7
+  region: us-east-1
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:GetObject
+        - s3:PutObject
+      Resource: arn:aws:s3:::awstranscriptions/*
+    - Effect: Allow
+      Action:
+        - s3:GetObject
+        - s3:PutObject
+      Resource: arn:aws:s3:::normalizedawstranscriptions/*
+
+functions:
+  aws-normalize:
+    handler: aws.normalize
+    events:
+      - s3:
+          bucket: awstranscriptions
+          event: s3:ObjectCreated:*
+
+resources:
+  Resources:
+    normalizedawstranscriptions:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: normalizedawstranscriptions
