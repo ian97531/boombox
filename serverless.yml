@@ -7,6 +7,8 @@ custom:
   stage: ${opt:stage, 'dev'}
   AWSTranscriptions: ${self:service}-${self:custom.stage}-aws-transcriptions
   normalizedAWSTranscriptions: ${self:service}-${self:custom.stage}-normalized-aws-transcriptions
+  watsonTranscriptions: ${self:service}-${self:custom.stage}-watson-transcriptions
+  normalizedWatsonTranscriptions: ${self:service}-${self:custom.stage}-normalized-watson-transcriptions
 
 package:
   exclude:
@@ -35,6 +37,16 @@ provider:
         - s3:GetObject
         - s3:PutObject
       Resource: arn:aws:s3:::${self:custom.normalizedAWSTranscriptions}/*
+    - Effect: Allow
+      Action:
+        - s3:GetObject
+        - s3:PutObject
+      Resource: arn:aws:s3:::${self:custom.watsonTranscriptions}/*
+    - Effect: Allow
+      Action:
+        - s3:GetObject
+        - s3:PutObject
+      Resource: arn:aws:s3:::${self:custom.normalizedWatsonTranscriptions}/*
 
 functions:
   aws-normalize:
@@ -46,6 +58,15 @@ functions:
       - s3:
           bucket: ${self:custom.AWSTranscriptions}
           event: s3:ObjectCreated:*
+  watson-normalize:
+    name: ${self:service}-${self:custom.stage}-watson-normalize
+    handler: watson.normalize
+    environment:
+      OUTPUT_BUCKET: ${self:custom.normalizedWatsonTranscriptions}
+    events:
+      - s3:
+          bucket: ${self:custom.watsonTranscriptions}
+          event: s3:ObjectCreated:*
 
 resources:
   Resources:
@@ -53,3 +74,7 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.normalizedAWSTranscriptions}
+    normalizedwatsontranscriptions:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.normalizedWatsonTranscriptions}
