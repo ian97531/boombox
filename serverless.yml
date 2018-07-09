@@ -4,10 +4,9 @@ plugins:
   - serverless-python-requirements
 
 custom:
-  default_stage: testing
-  stage: ${opt:stage, self:custom.default_stage}
-  aws_transcriptions: ${self:service}-${self:custom.stage}-aws-transcriptions
-  normalized_aws_transcriptions: ${self:service}-${self:custom.stage}-normalized_aws-transcriptions
+  stage: ${opt:stage, 'dev'}
+  AWSTranscriptions: ${self:service}-${self:custom.stage}-aws-transcriptions
+  normalizedAWSTranscriptions: ${self:service}-${self:custom.stage}-normalized-aws-transcriptions
 
 package:
   exclude:
@@ -30,19 +29,22 @@ provider:
       Action:
         - s3:GetObject
         - s3:PutObject
-      Resource: arn:aws:s3:::awstranscriptions/*
+      Resource: arn:aws:s3:::${self:custom.AWSTranscriptions}/*
     - Effect: Allow
       Action:
         - s3:GetObject
         - s3:PutObject
-      Resource: arn:aws:s3:::normalizedawstranscriptions/*
+      Resource: arn:aws:s3:::${self:custom.normalizedAWSTranscriptions}/*
 
 functions:
   aws-normalize:
+    name: ${self:service}-${self:custom.stage}-aws-normalize
     handler: aws.normalize
+    environment:
+      OUTPUT_BUCKET: ${self:custom.normalizedAWSTranscriptions}
     events:
       - s3:
-          bucket: awstranscriptions
+          bucket: ${self:custom.AWSTranscriptions}
           event: s3:ObjectCreated:*
 
 resources:
@@ -50,4 +52,4 @@ resources:
     normalizedawstranscriptions:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: normalizedawstranscriptions
+        BucketName: ${self:custom.normalizedAWSTranscriptions}

@@ -6,8 +6,6 @@ import json
 from log_cfg import logger
 
 s3 = boto3.resource('s3')
-OUTPUT_S3_BUCKET = 'normalizedawstranscriptions'
-
 
 class Speakers():
 	segment = 0
@@ -70,9 +68,10 @@ def normalize(event, context):
 
 	logger.info('Completed processing of ' + str(num_words) + ' words and ' + str(num_punctuation) + ' punctuation.')
 	
-	logger.info('Starting writing JSON to  "' + input_file_name + '" in bucket "' + OUTPUT_S3_BUCKET + '".')
-	output_file = s3.Object(OUTPUT_S3_BUCKET, input_file_name)
+	output_bucket = os.environ["OUTPUT_BUCKET"]
+	logger.info('Starting writing JSON to  "' + input_file_name + '" in bucket "' + output_bucket + '".')
+	output_file = s3.Object(output_bucket, input_file_name)
 	output_file.put(Body=json.dumps(output_json))
-	logger.info('Completed writing JSON to  "' + input_file_name + '" in bucket "' + OUTPUT_S3_BUCKET + '".')
+	logger.info('Completed writing JSON to  "' + input_file_name + '" in bucket "' + output_bucket + '".')
 
 	return {'statusCode': httplib.OK}

@@ -17,7 +17,9 @@
     "url": "https://github.com/ian97531/boombox/issues"
   },
   "homepage": "https://github.com/ian97531/boombox#readme",
-  "dependencies": {},
+  "dependencies": {
+    "npm": "^6.1.0"
+  },
   "devDependencies": {
     "serverless-python-requirements": "^4.1.0"
   }
