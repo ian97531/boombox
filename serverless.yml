@@ -9,6 +9,7 @@ custom:
   normalizedAWSTranscriptions: ${self:service}-${self:custom.stage}-normalized-aws-transcriptions
   watsonTranscriptions: ${self:service}-${self:custom.stage}-watson-transcriptions
   normalizedWatsonTranscriptions: ${self:service}-${self:custom.stage}-normalized-watson-transcriptions
+  combinedTranscriptions: ${self:service}-${self:custom.stage}-combined-transcriptions
 
 package:
   exclude:
@@ -47,11 +48,17 @@ provider:
         - s3:GetObject
         - s3:PutObject
       Resource: arn:aws:s3:::${self:custom.normalizedWatsonTranscriptions}/*
+    - Effect: Allow
+      Action:
+        - s3:GetObject
+        - s3:PutObject
+      Resource: arn:aws:s3:::${self:custom.combinedTranscriptions}/*
 
 functions:
   aws-normalize:
     name: ${self:service}-${self:custom.stage}-aws-normalize
     handler: aws.normalize
+    timeout: 60
     environment:
       OUTPUT_BUCKET: ${self:custom.normalizedAWSTranscriptions}
     events:
@@ -61,20 +68,32 @@ functions:
   watson-normalize:
     name: ${self:service}-${self:custom.stage}-watson-normalize
     handler: watson.normalize
+    timeout: 60
     environment:
       OUTPUT_BUCKET: ${self:custom.normalizedWatsonTranscriptions}
     events:
       - s3:
           bucket: ${self:custom.watsonTranscriptions}
           event: s3:ObjectCreated:*
+  normalized-combine:
+    name: ${self:service}-${self:custom.stage}-normalized-combine
+    handler: normalized.combine
+    timeout: 300
+    environment:
+      AWS_INPUT_BUCKET: ${self:custom.normalizedAWSTranscriptions}
+      WATSON_INPUT_BUCKET: ${self:custom.normalizedWatsonTranscriptions}
+      OUTPUT_BUCKET: ${self:custom.combinedTranscriptions}
+    events:
+      - s3:
+          bucket: ${self:custom.normalizedAWSTranscriptions}
+          event: s3:ObjectCreated:*
+      - s3:
+          bucket: ${self:custom.normalizedWatsonTranscriptions}
+          event: s3:ObjectCreated:*
 
 resources:
   Resources:
-    normalizedawstranscriptions:
+    combinedtranscriptions:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${self:custom.normalizedAWSTranscriptions}
-    normalizedwatsontranscriptions:
-      Type: AWS::S3::Bucket
-      Properties:
-        BucketName: ${self:custom.normalizedWatsonTranscriptions}
+        BucketName: ${self:custom.combinedTranscriptions}
