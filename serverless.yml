@@ -1,4 +1,4 @@
-service: boombox
+service: boombox2
 
 plugins:
   - serverless-python-requirements
@@ -10,6 +10,8 @@ custom:
   watsonTranscriptions: ${self:service}-${self:custom.stage}-watson-transcriptions
   normalizedWatsonTranscriptions: ${self:service}-${self:custom.stage}-normalized-watson-transcriptions
   combinedTranscriptions: ${self:service}-${self:custom.stage}-combined-transcriptions
+  activeJobsTable: ${self:service}-${self:custom.stage}-podcast-jobs
+  podcastsTable: ${self:service}-${self:custom.stage}-podcasts
 
 package:
   exclude:
@@ -32,29 +34,34 @@ provider:
       Action:
         - s3:GetObject
         - s3:PutObject
-      Resource: arn:aws:s3:::${self:custom.AWSTranscriptions}/*
+      Resource: 
+        - arn:aws:s3:::${self:custom.AWSTranscriptions}/*
+        - arn:aws:s3:::${self:custom.normalizedAWSTranscriptions}/*
+        - arn:aws:s3:::${self:custom.watsonTranscriptions}/*
+        - arn:aws:s3:::${self:custom.normalizedWatsonTranscriptions}/*
+        - arn:aws:s3:::${self:custom.combinedTranscriptions}/*
     - Effect: Allow
       Action:
-        - s3:GetObject
-        - s3:PutObject
-      Resource: arn:aws:s3:::${self:custom.normalizedAWSTranscriptions}/*
-    - Effect: Allow
-      Action:
-        - s3:GetObject
-        - s3:PutObject
-      Resource: arn:aws:s3:::${self:custom.watsonTranscriptions}/*
-    - Effect: Allow
-      Action:
-        - s3:GetObject
-        - s3:PutObject
-      Resource: arn:aws:s3:::${self:custom.normalizedWatsonTranscriptions}/*
-    - Effect: Allow
-      Action:
-        - s3:GetObject
-        - s3:PutObject
-      Resource: arn:aws:s3:::${self:custom.combinedTranscriptions}/*
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+        - dynamodb:DescribeTable
+      Resource: 
+        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.activeJobsTable}
+        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.podcastsTable}
 
 functions:
+  podcasts-update-from-feed:
+    name: ${self:service}-${self:custom.stage}-podcasts-update-from-feed
+    handler: podcasts.checkRSSFeed
+    timeout: 300
+  podcasts-download:
+    name: ${self:service}-${self:custom.stage}-podcasts-download
+    handler: podcasts.download
+    timeout: 300
   aws-normalize:
     name: ${self:service}-${self:custom.stage}-aws-normalize
     handler: aws.normalize
@@ -97,3 +104,38 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.combinedTranscriptions}
+    activeJobsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.activeJobsTable}
+        AttributeDefinitions:
+          -
+            AttributeName: jobId
+            AttributeType: S
+          -
+            AttributeName: startDate
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: jobId
+            KeyType: HASH
+          - AttributeName: startDate
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    podcastsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.podcastsTable}
+        AttributeDefinitions:
+          -
+            AttributeName: feedURL
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: feedURL
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1

@@ -1,2 +1,5 @@
 boto3 #no-deploy
 botocore #no-deploy
+requests
+feedparser
+pynamodb
