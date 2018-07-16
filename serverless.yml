@@ -1,10 +1,11 @@
-service: boombox2
+service: boombox
 
 plugins:
   - serverless-python-requirements
 
 custom:
   stage: ${opt:stage, 'dev'}
+  accountId: "095713129403"
   AWSTranscriptions: ${self:service}-${self:custom.stage}-aws-transcriptions
   normalizedAWSTranscriptions: ${self:service}-${self:custom.stage}-normalized-aws-transcriptions
   watsonTranscriptions: ${self:service}-${self:custom.stage}-watson-transcriptions
@@ -12,6 +13,21 @@ custom:
   combinedTranscriptions: ${self:service}-${self:custom.stage}-combined-transcriptions
   activeJobsTable: ${self:service}-${self:custom.stage}-podcast-jobs
   podcastsTable: ${self:service}-${self:custom.stage}-podcasts
+  episodesTable: ${self:service}-${self:custom.stage}-episodes
+  episodeInsertLimit: "2"
+  podcastInput: ${self:service}-${self:custom.stage}-podcast-input
+  podcastSplits: ${self:service}-${self:custom.stage}-podcast-splits
+  transcodeQueue: ${self:service}-${self:custom.stage}-transcode-queue
+  transcodePipeline: ${self:service}-${self:custom.stage}-transcode-pipeline
+  transcodePipelineIds:
+    dev: 1531438545970-0z6rkw
+  transcodePipelineId: ${self:custom.transcodePipelineIds.${self:custom.stage}}
+  transcodePipelineARN: arn:aws:elastictranscoder:${self:provider.region}:${self:custom.accountId}:pipeline/${self:custom.transcodePipelineId}
+  transcodeJobsARN: arn:aws:elastictranscoder:${self:provider.region}:${self:custom.accountId}:job/*
+  transcodePresetsARN: arn:aws:elastictranscoder:${self:provider.region}:${self:custom.accountId}:preset/*
+  transcodePendingSNS: ${self:service}-${self:custom.stage}-transcode-pending
+  transcodeCompleteSNS: ${self:service}-${self:custom.stage}-transcode-complete
+  transcodePendingSNSARN: arn:aws:sns:${self:provider.region}:${self:custom.accountId}:${self:custom.transcodePendingSNS}
 
 package:
   exclude:
@@ -40,6 +56,7 @@ provider:
         - arn:aws:s3:::${self:custom.watsonTranscriptions}/*
         - arn:aws:s3:::${self:custom.normalizedWatsonTranscriptions}/*
         - arn:aws:s3:::${self:custom.combinedTranscriptions}/*
+        - arn:aws:s3:::${self:custom.podcastInput}/*
     - Effect: Allow
       Action:
         - dynamodb:Query
@@ -48,10 +65,38 @@ provider:
         - dynamodb:PutItem
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
+        - dynamodb:BatchGetItem
+        - dynamodb:BatchWriteItem
         - dynamodb:DescribeTable
       Resource: 
         - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.activeJobsTable}
         - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.podcastsTable}
+        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.episodesTable}
+    - Effect: Allow
+      Action:
+        - sqs:ReceiveMessage
+      Resource: 
+        Fn::GetAtt:
+          - transcodeQueue
+          - Arn
+    - Effect: Allow
+      Action:
+        - SNS:Publish
+      Resource: 
+        - ${self:custom.transcodePendingSNSARN}
+    - Effect: Allow
+      Action:
+        - elastictranscoder:Read*
+        - elastictranscoder:List*
+        - elastictranscoder:*Job
+      Resource: 
+        - ${self:custom.transcodePipelineARN}
+        - ${self:custom.transcodeJobsARN}
+        - ${self:custom.transcodePresetsARN}
+  environment:
+      PODCASTS_TABLE: ${self:custom.podcastsTable}
+      EPISODES_TABLE: ${self:custom.episodesTable}
+      INSERT_LIMIT: ${self:custom.episodeInsertLimit}
 
 functions:
   podcasts-update-from-feed:
@@ -62,6 +107,32 @@ functions:
     name: ${self:service}-${self:custom.stage}-podcasts-download
     handler: podcasts.download
     timeout: 300
+    environment:
+      OUTPUT_BUCKET: ${self:custom.podcastInput}
+      TRANSCODE_PENDING_ARN: ${self:custom.transcodePendingSNSARN}
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::GetAtt:
+              - episodesTable
+              - StreamArn
+  podcasts-transcode:
+    name: ${self:service}-${self:custom.stage}-podcasts-transcode
+    handler: podcasts.transcode
+    timeout: 60
+    environment:
+      TRANSCODE_PIPELINE_ID: ${self:custom.transcodePipelineId}
+    events:
+      - sns: ${self:custom.transcodePendingSNS}
+  podcasts-split:
+    name: ${self:service}-${self:custom.stage}-podcasts-split
+    handler: podcasts.split
+    timeout: 60
+    environment:
+      OUTPUT_BUCKET: ${self:custom.podcastSplits}
+    events:
+      - sns: ${self:custom.transcodeCompleteSNS}
   aws-normalize:
     name: ${self:service}-${self:custom.stage}-aws-normalize
     handler: aws.normalize
@@ -104,6 +175,15 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.combinedTranscriptions}
+    podcastInput:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.podcastInput}
+    transcodeQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.transcodeQueue}
+        VisibilityTimeout: 300
     activeJobsTable:
       Type: AWS::DynamoDB::Table
       Properties:
@@ -139,3 +219,18 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
+    episodesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.episodesTable}
+        AttributeDefinitions:
+          -
+            AttributeName: guid
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: guid
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 2
+          WriteCapacityUnits: 5
