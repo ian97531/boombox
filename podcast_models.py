@@ -40,6 +40,7 @@ class EpisodeModel(Model):
     m4aURL = UnicodeAttribute(null=True)
     oggURL = UnicodeAttribute(null=True)
     duration = NumberAttribute(null=True)
+    splits = ListAttribute(null=True)
     publishedAt = UTCDateTimeAttribute(null=False)
     createdAt = UTCDateTimeAttribute(null=False, default=datetime.now())
     lastModifiedAt = UTCDateTimeAttribute(null=False, default=datetime.now())

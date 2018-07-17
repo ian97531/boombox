@@ -1,6 +1,7 @@
 import boto3
 import os
 import json
+import math
 import requests
 import feedparser
 from log_cfg import logger
@@ -18,16 +19,24 @@ INSERT_LIMIT = int(os.environ['INSERT_LIMIT'])
 PODCASTS_TABLE = os.environ['PODCASTS_TABLE']
 EPISODES_TABLE = os.environ['EPISODES_TABLE']
 
+M4A_PRESET = '1351620000001-100120' #M4A AAC 160 44k
+OGG_PRESET = '1531717800275-2wz911' #OGG Vorbis 160 44k
+MP3_PRESET = '1351620000001-300030' #MP3 160 44k
+
+
 def getEnclosure(links):
 	for link in links:
 		if link['rel'] == 'enclosure':
 			return link['href']
 
+
 def getSafeGUID(guid):
 	keepCharacters = (' ', '.', '_', '-')
 	return "".join(c for c in guid if c.isalnum() or c in keepCharacters).rstrip()
 
+
 def checkRSSFeed(event, context):
+	logger.debug(json.dumps(event))
 	FEED_URL = 'https://www.hellointernet.fm/podcast?format=rss'
 	page = 1
 	response = feedparser.parse(FEED_URL)
@@ -86,9 +95,8 @@ def checkRSSFeed(event, context):
 	podcast.save()
 
 
-
-
 def download(event, context):
+	logger.debug(json.dumps(event))
 	startTime = datetime.now()
 	OUTPUT_BUCKET = os.environ['OUTPUT_BUCKET']
 	TRANSCODE_PENDING_ARN = os.environ['TRANSCODE_PENDING_ARN']
@@ -106,15 +114,18 @@ def download(event, context):
 			data = requests.get(podcast_url, stream=True)
 			bucket.upload_fileobj(data.raw, filename)
 			logger.debug('Completed download of "' + podcast_url + '" to bucket "s3:/' + OUTPUT_BUCKET + '/' + filename + '".')
+			
 			downloads = downloads + 1
+			
 			message = {
 				'guid': guid,
 				'filename': filename
 			}
-			topic.publish(Message=json.dumps({'default': json.dumps(message)}), MessageStructure='json')
+			logger.debug('Sending ' + json.dumps(message) + '\n to the transcode pending SNS.')
+			response = topic.publish(Message=json.dumps({'default': json.dumps(message)}), MessageStructure='json')
+			logger.debug('Sent message to the transcode pending SNS ' + json.dumps(response))
 
  	logger.info('Completed downloads for ' + str(downloads) + ' episodes in ' + str(datetime.now() - startTime) + ' .')
-
 
 
 def transcode(event, context):
@@ -127,11 +138,11 @@ def transcode(event, context):
 		guid = data['guid']
 		m4a = {
 			'Key': guid + '.m4a',
-			'PresetId': '1351620000001-100120' #MP4 AAC 160k
+			'PresetId': M4A_PRESET
 		}
 		ogg = {
 			'Key': guid + '.ogg',
-			'PresetId': '1531717800275-2wz911' #MP4 AAC 160k
+			'PresetId': OGG_PRESET 
 		}
 		response = transcoder.create_job(PipelineId=TRANSCODE_PIPELINE_ID,
 										Input={'Key': data['filename']},
@@ -139,7 +150,160 @@ def transcode(event, context):
 		logger.debug(json.dumps(response))
 
 
+def filePermissions(event, context):
+	logger.debug(json.dumps(event))
+
+	INPUT_BUCKET = os.environ['INPUT_BUCKET']
+	PERMISSIONS_COMPLETE_ARN = os.environ['PERMISSIONS_COMPLETE_ARN']
+	BUCKET_PREFIX = 'https://s3.amazonaws.com/'
+	BUCKET_URL_PREFIX = BUCKET_PREFIX + INPUT_BUCKET + '/'
+
+	topic = sns.Topic(PERMISSIONS_COMPLETE_ARN)
+	records = 0
+
+	logger.info('Starting setting permissions for ' + str(len(event['Records'])) + ' episodes.')
+
+	for record in event['Records']:
+		jobResult = json.loads(record['Sns']['Message'])
+		duration = 0
+		mp3Filename = jobResult['input']['key']
+		m4aFilename = None
+		oggFilename = None
+		guid = mp3Filename.split('.')[0]
+
+		for output in jobResult['outputs']:
+			duration = output['duration']
+			if output['presetId'] == M4A_PRESET:
+				m4aFilename = output['key']
+				object_acl = s3.ObjectAcl('bucket_name','object_key')
+			elif output['presetId'] == OGG_PRESET:
+				oggFilename = output['key']
+
+		logger.debug('Starting setting public read permissions for ' + guid + '.')
+		mp3_acl = s3.ObjectAcl(INPUT_BUCKET, mp3Filename)
+		m4a_acl = s3.ObjectAcl(INPUT_BUCKET, m4aFilename)
+		ogg_acl = s3.ObjectAcl(INPUT_BUCKET, oggFilename)
+		mp3_acl.put(ACL='public-read')
+		m4a_acl.put(ACL='public-read')
+		ogg_acl.put(ACL='public-read')
+		logger.debug('Completed setting public read permissions for ' + guid + '.')
+
+		logger.debug('Starting updating dynamodb record for ' + guid + '.')
+		episode = EpisodeModel.get(hash_key=guid)
+		episode.mp3URL = BUCKET_URL_PREFIX + mp3Filename
+		episode.m4aURL = BUCKET_URL_PREFIX + m4aFilename
+		episode.oggURL = BUCKET_URL_PREFIX + oggFilename
+		episode.duration = duration
+		episode.save()
+		logger.debug('Completed updating dynamodb record for ' + guid + '.')
+
+		records = records + 1
+
+		message = {
+			'guid': guid,
+			'filename': mp3Filename,
+			'duration': duration
+		}
+		logger.debug('Sending ' + json.dumps(message) + '\n to the permissions complete SNS.')
+		response = topic.publish(Message=json.dumps({'default': json.dumps(message)}), MessageStructure='json')
+		logger.debug('Sent message to permissions complete SNS ' + json.dumps(response))
+
+	logger.info('Completed setting permissions for ' + str(records) + ' episodes.')
+
+
 def split(event, context):
 	logger.debug(json.dumps(event))
-	OUTPUT_BUCKET = os.environ['OUTPUT_BUCKET']
 
+	SPLIT_PIPELINE_ID = os.environ['SPLIT_PIPELINE_ID']
+	MAX_LENGTH = float(3300)
+	OVERLAP_LENGTH = 4 * 60
+
+	for record in event['Records']:
+		message = json.loads(record['Sns']['Message'])
+		duration = message['duration']
+		filename = message['filename']
+		guid = message['guid']
+
+		segments = math.ceil(duration/MAX_LENGTH)
+		segmentDuration = int(math.ceil(duration/segments))
+		startTime = 0
+		splits = []
+
+		for index in range(int(segments - 1)):
+			inputs = [{
+				'Key': filename,
+				'TimeSpan': {
+					'StartTime': str(startTime),
+					'Duration': str(segmentDuration)
+				}
+			}]
+
+			outputFilename = guid + '/' + str(startTime) + '.mp3'
+			splits.append(outputFilename)
+			outputs = [{
+				'Key': outputFilename,
+				'PresetId': MP3_PRESET
+			}]
+
+			logger.debug('Starting split job with inputs\n ' + json.dumps(inputs))
+			logger.debug('Starting split job with outputs\n ' + json.dumps(outputs))
+			transcoder.create_job(PipelineId=SPLIT_PIPELINE_ID,
+								Inputs=inputs,
+								Outputs=outputs)
+
+			overlapStartTime = (startTime + segmentDuration) - (OVERLAP_LENGTH/2)
+			inputs = [{
+				'Key': filename,
+				'TimeSpan': {
+					'StartTime': str(overlapStartTime),
+					'Duration': str(OVERLAP_LENGTH)
+				}
+			}]
+
+			outputFilename = guid + '/' + str(overlapStartTime) + '.mp3'
+			splits.append(outputFilename)
+			outputs = [{
+				'Key': outputFilename,
+				'PresetId': MP3_PRESET
+			}]
+
+			logger.debug('Starting split job with inputs\n ' + json.dumps(inputs))
+			logger.debug('Starting split job with outputs\n ' + json.dumps(outputs))
+			transcoder.create_job(PipelineId=SPLIT_PIPELINE_ID,
+								Inputs=inputs,
+								Outputs=outputs)
+
+			startTime = startTime + segmentDuration
+
+
+		finalDuration = int(duration - startTime)
+		inputs = [{
+			'Key': filename,
+			'TimeSpan': {
+				'StartTime': str(startTime),
+				'Duration': str(finalDuration)
+			}
+		}]
+
+		outputFilename = guid + '/' + str(startTime) + '.mp3'
+		splits.append(outputFilename)
+		outputs = [{
+			'Key': outputFilename,
+			'PresetId': MP3_PRESET,
+		}]
+
+		logger.debug('Starting split job with inputs\n ' + json.dumps(inputs))
+		logger.debug('Starting split job with outputs\n ' + json.dumps(outputs))
+		transcoder.create_job(PipelineId=SPLIT_PIPELINE_ID,
+							Inputs=inputs,
+							Outputs=outputs)
+
+		logger.debug('Starting updating dynamodb record for ' + guid + '.')
+		episode = EpisodeModel.get(hash_key=guid)
+		episode.splits = splits
+		episode.save()
+		logger.debug('Completed updating dynamodb record for ' + guid + '.')
+
+		
+def splitTranscribe(event, context):
+	logger.debug(json.dumps(event))

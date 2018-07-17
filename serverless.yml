@@ -26,8 +26,16 @@ custom:
   transcodeJobsARN: arn:aws:elastictranscoder:${self:provider.region}:${self:custom.accountId}:job/*
   transcodePresetsARN: arn:aws:elastictranscoder:${self:provider.region}:${self:custom.accountId}:preset/*
   transcodePendingSNS: ${self:service}-${self:custom.stage}-transcode-pending
-  transcodeCompleteSNS: ${self:service}-${self:custom.stage}-transcode-complete
   transcodePendingSNSARN: arn:aws:sns:${self:provider.region}:${self:custom.accountId}:${self:custom.transcodePendingSNS}
+  transcodeCompleteSNS: ${self:service}-${self:custom.stage}-transcode-complete
+  permissionsCompleteSNS: ${self:service}-${self:custom.stage}-permissions-complete
+  permissionsCompleteSNSARN: arn:aws:sns:${self:provider.region}:${self:custom.accountId}:${self:custom.permissionsCompleteSNS}
+  splitPipeline: ${self:service}-${self:custom.stage}-split-pipeline
+  splitCompleteSNS: ${self:service}-${self:custom.stage}-split-complete
+  splitPipelineIds:
+    dev: 1531803024408-reo2a2
+  splitPipelineId: ${self:custom.splitPipelineIds.${self:custom.stage}}
+  splitPipelineARN: arn:aws:elastictranscoder:${self:provider.region}:${self:custom.accountId}:pipeline/${self:custom.splitPipelineId}
 
 package:
   exclude:
@@ -59,6 +67,23 @@ provider:
         - arn:aws:s3:::${self:custom.podcastInput}/*
     - Effect: Allow
       Action:
+        - s3:PutObjectAcl
+      Resource: 
+        - arn:aws:s3:::${self:custom.podcastInput}/*
+    - Effect: Allow
+      Action:
+        - s3:GetObject
+        - s3:PutObject
+      Resource: 
+        - arn:aws:s3:::${self:custom.AWSTranscriptions}/*
+        - arn:aws:s3:::${self:custom.normalizedAWSTranscriptions}/*
+        - arn:aws:s3:::${self:custom.watsonTranscriptions}/*
+        - arn:aws:s3:::${self:custom.normalizedWatsonTranscriptions}/*
+        - arn:aws:s3:::${self:custom.combinedTranscriptions}/*
+        - arn:aws:s3:::${self:custom.podcastInput}/*
+        - arn:aws:s3:::${self:custom.podcastSplits}/*
+    - Effect: Allow
+      Action:
         - dynamodb:Query
         - dynamodb:Scan
         - dynamodb:GetItem
@@ -84,6 +109,7 @@ provider:
         - SNS:Publish
       Resource: 
         - ${self:custom.transcodePendingSNSARN}
+        - ${self:custom.permissionsCompleteSNSARN}
     - Effect: Allow
       Action:
         - elastictranscoder:Read*
@@ -93,6 +119,7 @@ provider:
         - ${self:custom.transcodePipelineARN}
         - ${self:custom.transcodeJobsARN}
         - ${self:custom.transcodePresetsARN}
+        - ${self:custom.splitPipelineARN}
   environment:
       PODCASTS_TABLE: ${self:custom.podcastsTable}
       EPISODES_TABLE: ${self:custom.episodesTable}
@@ -125,14 +152,29 @@ functions:
       TRANSCODE_PIPELINE_ID: ${self:custom.transcodePipelineId}
     events:
       - sns: ${self:custom.transcodePendingSNS}
+  podcasts-file-permissions:
+    name: ${self:service}-${self:custom.stage}-podcasts-file-permissions
+    handler: podcasts.filePermissions
+    timeout: 60
+    environment:
+      INPUT_BUCKET: ${self:custom.podcastInput}
+      PERMISSIONS_COMPLETE_ARN: ${self:custom.permissionsCompleteSNSARN}
+    events:
+      - sns: ${self:custom.transcodeCompleteSNS}
   podcasts-split:
     name: ${self:service}-${self:custom.stage}-podcasts-split
     handler: podcasts.split
     timeout: 60
     environment:
-      OUTPUT_BUCKET: ${self:custom.podcastSplits}
+      SPLIT_PIPELINE_ID: ${self:custom.splitPipelineId}
     events:
-      - sns: ${self:custom.transcodeCompleteSNS}
+      - sns: ${self:custom.permissionsCompleteSNS}
+  podcasts-split-transcribe:
+    name: ${self:service}-${self:custom.stage}-podcasts-split-transcribe
+    handler: podcasts.splitTranscribe
+    timeout: 60
+    events:
+      - sns: ${self:custom.splitCompleteSNS}
   aws-normalize:
     name: ${self:service}-${self:custom.stage}-aws-normalize
     handler: aws.normalize
@@ -179,6 +221,10 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.podcastInput}
+    podcastSplits:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.podcastSplits}
     transcodeQueue:
       Type: AWS::SQS::Queue
       Properties:
@@ -234,3 +280,5 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 2
           WriteCapacityUnits: 5
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE
