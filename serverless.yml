@@ -6,6 +6,8 @@ plugins:
 custom:
   stage: ${opt:stage, 'dev'}
   accountId: "095713129403"
+  pythonRequirements:
+    noDeploy: ""
   AWSTranscriptions: ${self:service}-${self:custom.stage}-aws-transcriptions
   normalizedAWSTranscriptions: ${self:service}-${self:custom.stage}-normalized-aws-transcriptions
   watsonTranscriptions: ${self:service}-${self:custom.stage}-watson-transcriptions
@@ -120,6 +122,10 @@ provider:
         - ${self:custom.transcodeJobsARN}
         - ${self:custom.transcodePresetsARN}
         - ${self:custom.splitPipelineARN}
+    - Effect: Allow
+      Action:
+        - transcribe:StartTranscriptionJob
+      Resource: "*"
   environment:
       PODCASTS_TABLE: ${self:custom.podcastsTable}
       EPISODES_TABLE: ${self:custom.episodesTable}
@@ -169,10 +175,14 @@ functions:
       SPLIT_PIPELINE_ID: ${self:custom.splitPipelineId}
     events:
       - sns: ${self:custom.permissionsCompleteSNS}
-  podcasts-split-transcribe:
-    name: ${self:service}-${self:custom.stage}-podcasts-split-transcribe
-    handler: podcasts.splitTranscribe
+  aws-transcribe:
+    name: ${self:service}-${self:custom.stage}-aws-transcribe
+    handler: aws.transcribe
     timeout: 60
+    environment:
+      INPUT_BUCKET: ${self:custom.podcastSplits}
+      OUTPUT_BUCKET: ${self:custom.AWSTranscriptions}
+      REGION: ${self:provider.region}
     events:
       - sns: ${self:custom.splitCompleteSNS}
   aws-normalize:
@@ -203,13 +213,13 @@ functions:
       AWS_INPUT_BUCKET: ${self:custom.normalizedAWSTranscriptions}
       WATSON_INPUT_BUCKET: ${self:custom.normalizedWatsonTranscriptions}
       OUTPUT_BUCKET: ${self:custom.combinedTranscriptions}
-    events:
-      - s3:
-          bucket: ${self:custom.normalizedAWSTranscriptions}
-          event: s3:ObjectCreated:*
-      - s3:
-          bucket: ${self:custom.normalizedWatsonTranscriptions}
-          event: s3:ObjectCreated:*
+    # events:
+    #   - s3:
+    #       bucket: ${self:custom.normalizedAWSTranscriptions}
+    #       event: s3:ObjectCreated:*
+    #   - s3:
+    #       bucket: ${self:custom.normalizedWatsonTranscriptions}
+    #       event: s3:ObjectCreated:*
 
 resources:
   Resources:

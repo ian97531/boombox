@@ -31,7 +31,7 @@ def getEnclosure(links):
 
 
 def getSafeGUID(guid):
-	keepCharacters = (' ', '.', '_', '-')
+	keepCharacters = ('_', '-')
 	return "".join(c for c in guid if c.isalnum() or c in keepCharacters).rstrip()
 
 
@@ -303,7 +303,3 @@ def split(event, context):
 		episode.splits = splits
 		episode.save()
 		logger.debug('Completed updating dynamodb record for ' + guid + '.')
-
-		
-def splitTranscribe(event, context):
-	logger.debug(json.dumps(event))

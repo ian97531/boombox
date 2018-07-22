@@ -1,11 +1,16 @@
 import httplib
 import os
 import boto3
+import botocore
 import json
+import datetime
+import uuid
 
 from log_cfg import logger
 
 s3 = boto3.resource('s3')
+transcribeService = boto3.client('transcribe')
+
 
 class Speakers():
 	segment = 0
@@ -26,52 +31,97 @@ class Speakers():
 		return int(speaker["speaker_label"].replace('spk_', ''))
 
 
+def getSafeGUID(guid):
+	keepCharacters = ('_', '-')
+	return "".join(c for c in guid if c.isalnum() or c in keepCharacters).rstrip()
+
+def dateconverter(o):
+    if isinstance(o, datetime.datetime):
+        return o.__str__()
+
+def transcribe(event, context):
+	logger.debug(json.dumps(event))
+
+	logger.debug('boto3 version: ' + boto3.__version__)
+	logger.debug('botocore version: ' + botocore.__version__)
+
+	REGION = os.environ['REGION']
+	INPUT_BUCKET = os.environ['INPUT_BUCKET']
+	OUTPUT_BUCKET = os.environ['OUTPUT_BUCKET']
+
+	for record in event['Records']:
+		message = json.loads(record['Sns']['Message'])
+		for output in message['outputs']:
+			key = output['key']
+			uri = 'https://s3-' + REGION + '.amazonaws.com/' + INPUT_BUCKET + '/' + key 
+			response = transcribeService.start_transcription_job(
+				TranscriptionJobName=str(uuid.uuid4()) + '-' + getSafeGUID(key),
+				LanguageCode='en-US',
+				MediaSampleRateHertz=44100,
+				MediaFormat='mp3',
+				Media={
+					'MediaFileUri': uri
+				},
+				OutputBucketName=OUTPUT_BUCKET,
+				Settings={
+					'ShowSpeakerLabels': True,
+					'MaxSpeakerLabels': 2
+				}
+			)
+			logger.debug('Started Transcriptions job\n ' + json.dumps(response, default=dateconverter))
+
+
 def normalize(event, context):
-	logger.debug('event: {}'.format(event))
-	input_file_name = event['Records'][0]['s3']['object']['key']
-	input_bucket = event['Records'][0]['s3']['bucket']['name']
+	logger.debug(json.dumps(event))
 
-	logger.info('Starting fetching input JSON file "' + input_file_name + '" from bucket "' + input_bucket + '".')
-	input_object = s3.Object(input_bucket, input_file_name)
-	response = input_object.get()
-	logger.info('Completed fetching input JSON file "' + input_file_name + '" from bucket "' + input_bucket + '".')
+	for record in event['Records']:
+		input_file_name = record['s3']['object']['key']
+		input_bucket = record['s3']['bucket']['name']
 
-	logger.info('Starting reading JSON from file.')
-	file_content = response['Body'].read().decode('utf-8')
-	json_content = json.loads(file_content)
-	logger.info('Completed reading JSON from file.')
+		if input_file_name != '.write_access_check_file.temp':
+			logger.info('Starting fetching input JSON file "' + input_file_name + '" from bucket "' + input_bucket + '".')
+			input_object = s3.Object(input_bucket, input_file_name)
+			response = input_object.get()
+			logger.info('Completed fetching input JSON file "' + input_file_name + '" from bucket "' + input_bucket + '".')
 
-	output_json = []
-	items = json_content["results"]["items"]
-	speaker_data = Speakers(json_content)
-	num_words = 0
-	num_punctuation = 0
+			logger.info('Starting reading JSON from file.')
+			file_content = response['Body'].read().decode('utf-8')
+			json_content = json.loads(file_content)
+			logger.info('Completed reading JSON from file.')
 
-	logger.info('Starting processing of ' + str(len(items)) + ' recognized items.')
+			output_json = []
+			items = json_content["results"]["items"]
+			speaker_data = Speakers(json_content)
+			num_words = 0
+			num_punctuation = 0
 
-	for item in items:
-		if item["type"] == "pronunciation":
-			if "confidence" in item["alternatives"][0]:
-				speaker = speaker_data.getNextSpeaker()
-				output_json.append({
-					"word": item["alternatives"][0]["content"],
-					"confidence": float(item["alternatives"][0]["confidence"]),
-					"start_time": float(item["start_time"]),
-					"end_time": float(item["end_time"]),
-					"speaker": speaker
-				})
-				num_words = num_words + 1
-			else:
-				num_punctuation = num_punctuation + 1
+			logger.info('Starting processing of ' + str(len(items)) + ' recognized items.')
+
+			for item in items:
+				if item["type"] == "pronunciation":
+					if "confidence" in item["alternatives"][0]:
+						speaker = speaker_data.getNextSpeaker()
+						output_json.append({
+							"word": item["alternatives"][0]["content"],
+							"confidence": float(item["alternatives"][0]["confidence"]),
+							"start_time": float(item["start_time"]),
+							"end_time": float(item["end_time"]),
+							"speaker": speaker
+						})
+						num_words = num_words + 1
+					else:
+						num_punctuation = num_punctuation + 1
+				else:
+					num_punctuation = num_punctuation + 1
+
+			logger.info('Completed processing of ' + str(num_words) + ' words and ' + str(num_punctuation) + ' punctuation.')
+			
+			output_bucket = os.environ["OUTPUT_BUCKET"]
+			logger.info('Starting writing JSON to  "' + input_file_name + '" in bucket "' + output_bucket + '".')
+			output_file = s3.Object(output_bucket, input_file_name)
+			output_file.put(Body=json.dumps(output_json))
+			logger.info('Completed writing JSON to  "' + input_file_name + '" in bucket "' + output_bucket + '".')
 		else:
-			num_punctuation = num_punctuation + 1
-
-	logger.info('Completed processing of ' + str(num_words) + ' words and ' + str(num_punctuation) + ' punctuation.')
-	
-	output_bucket = os.environ["OUTPUT_BUCKET"]
-	logger.info('Starting writing JSON to  "' + input_file_name + '" in bucket "' + output_bucket + '".')
-	output_file = s3.Object(output_bucket, input_file_name)
-	output_file.put(Body=json.dumps(output_json))
-	logger.info('Completed writing JSON to  "' + input_file_name + '" in bucket "' + output_bucket + '".')
+			logger.info('Skipping processing of file "' + input_file_name + '" from bucket "' + input_bucket + '".')
 
 	return {'statusCode': httplib.OK}
