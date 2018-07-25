@@ -10,8 +10,10 @@ custom:
     noDeploy: ""
   AWSTranscriptions: ${self:service}-${self:custom.stage}-aws-transcriptions
   normalizedAWSTranscriptions: ${self:service}-${self:custom.stage}-normalized-aws-transcriptions
+  zippedAWSTranscriptions: ${self:service}-${self:custom.stage}-zipped-aws-transcriptions
   watsonTranscriptions: ${self:service}-${self:custom.stage}-watson-transcriptions
   normalizedWatsonTranscriptions: ${self:service}-${self:custom.stage}-normalized-watson-transcriptions
+  zippedWatsonTranscriptions: ${self:service}-${self:custom.stage}-zipped-watson-transcriptions
   combinedTranscriptions: ${self:service}-${self:custom.stage}-combined-transcriptions
   activeJobsTable: ${self:service}-${self:custom.stage}-podcast-jobs
   podcastsTable: ${self:service}-${self:custom.stage}-podcasts
@@ -38,6 +40,8 @@ custom:
     dev: 1531803024408-reo2a2
   splitPipelineId: ${self:custom.splitPipelineIds.${self:custom.stage}}
   splitPipelineARN: arn:aws:elastictranscoder:${self:provider.region}:${self:custom.accountId}:pipeline/${self:custom.splitPipelineId}
+  normalizeAWSCompleteSNS: ${self:service}-${self:custom.stage}-normalize-aws-complete
+  normalizeAWSCompleteSNSARN: arn:aws:sns:${self:provider.region}:${self:custom.accountId}:${self:custom.normalizeAWSCompleteSNS}
 
 package:
   exclude:
@@ -112,6 +116,7 @@ provider:
       Resource: 
         - ${self:custom.transcodePendingSNSARN}
         - ${self:custom.permissionsCompleteSNSARN}
+        - ${self:custom.normalizeAWSCompleteSNSARN}
     - Effect: Allow
       Action:
         - elastictranscoder:Read*
@@ -191,10 +196,20 @@ functions:
     timeout: 60
     environment:
       OUTPUT_BUCKET: ${self:custom.normalizedAWSTranscriptions}
+      NORMALIZE_AWS_COMPLETE_ARN: ${self:custom.normalizeAWSCompleteSNSARN}
     events:
       - s3:
           bucket: ${self:custom.AWSTranscriptions}
           event: s3:ObjectCreated:*
+  aws-zip:
+    name: ${self:service}-${self:custom.stage}-normalized-zip
+    handler: normalized.zip
+    timeout: 300
+    environment:
+      INPUT_BUCKET: ${self:custom.normalizedAWSTranscriptions}
+      OUTPUT_BUCKET: ${self:custom.zippedAWSTranscriptions}
+    events:
+      - sns: ${self:custom.normalizeAWSCompleteSNS}
   watson-normalize:
     name: ${self:service}-${self:custom.stage}-watson-normalize
     handler: watson.normalize
@@ -205,6 +220,7 @@ functions:
       - s3:
           bucket: ${self:custom.watsonTranscriptions}
           event: s3:ObjectCreated:*
+  
   normalized-combine:
     name: ${self:service}-${self:custom.stage}-normalized-combine
     handler: normalized.combine
@@ -227,6 +243,14 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.combinedTranscriptions}
+    normalizedAWStranscriptions:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.normalizedAWSTranscriptions}
+    zippedAWStranscriptions:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.zippedAWSTranscriptions}
     podcastInput:
       Type: AWS::S3::Bucket
       Properties:

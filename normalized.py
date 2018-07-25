@@ -177,30 +177,140 @@ def processFiles(aws_object, watson_object):
 
 
 def combine(event, context):
-	logger.debug('event: {}'.format(event))
-	input_file_name = event['Records'][0]['s3']['object']['key']
+	logger.debug(json.dumps(event))
+
 	aws_bucket = os.environ["AWS_INPUT_BUCKET"]
 	watson_bucket = os.environ["WATSON_INPUT_BUCKET"]
 
-	aws_object = s3.Object(aws_bucket, input_file_name)
-	watson_object = s3.Object(watson_bucket, input_file_name)
-	both_present = True
+	for record in event['Records']:
+		input_file_name = record['s3']['object']['key']
+		
+		aws_object = s3.Object(aws_bucket, input_file_name)
+		watson_object = s3.Object(watson_bucket, input_file_name)
+		both_present = True
 
-	try:
-		aws_object.load()
-		watson_object.load()
-	except botocore.exceptions.ClientError as e:
-		both_present = False
+		try:
+			aws_object.load()
+			watson_object.load()
+		except botocore.exceptions.ClientError as e:
+			both_present = False
 
-	if both_present:
-		output_json = processFiles(aws_object, watson_object)
-		output_bucket = os.environ["OUTPUT_BUCKET"]
+		if both_present:
+			output_json = processFiles(aws_object, watson_object)
+			output_bucket = os.environ["OUTPUT_BUCKET"]
 
-		logger.info('Starting writing JSON to  "' + input_file_name + '" in bucket "' + output_bucket + '".')
-		output_file = s3.Object(output_bucket, input_file_name)
-		output_file.put(Body=json.dumps(output_json))
-		logger.info('Completed writing JSON to  "' + input_file_name + '" in bucket "' + output_bucket + '".')
-	else:
-		logger.info('Skipping combine for "' + input_file_name + '" because at least one normalization is missing.')
+			logger.info('Starting writing JSON to  "' + input_file_name + '" in bucket "' + output_bucket + '".')
+			output_file = s3.Object(output_bucket, input_file_name)
+			output_file.put(Body=json.dumps(output_json))
+			logger.info('Completed writing JSON to  "' + input_file_name + '" in bucket "' + output_bucket + '".')
+		else:
+			logger.info('Skipping combine for "' + input_file_name + '" because at least one normalization is missing.')
 
-	return {'statusCode': httplib.OK}
+
+
+
+def zipTranscriptions(transcriptions):
+	output = []
+	switchSpeakers = False
+	currentHeadTime = 0
+	
+	while len(transcriptions):
+		currentTranscription = transcriptions.pop(0)
+
+		if len(transcriptions):
+			nextTranscription = transcriptions[0]
+			nextTranscription.getNext()
+
+			nextHead = nextTranscription.peekNext()[0]
+			nextHeadTime = nextTranscription.name + nextHead['start_time']
+
+			lastDistanceToHead = None
+
+			while currentTranscription.peekNext():
+				currentItem = currentTranscription.getNext()[0]
+				if switchSpeakers:
+					if currentItem['speaker'] == 0:
+						currentItem['speaker'] = 1
+					elif currentItem['speaker'] == 1:
+						currentItem['speaker'] = 0
+
+				currentItem['start_time'] = currentItem['start_time'] + currentHeadTime
+				currentItem['end_time'] = currentItem['end_time'] + currentHeadTime
+				
+				distanceToNextHead = nextHeadTime - currentItem['start_time']
+					
+				if distanceToNextHead < -0.5:
+					peekItems = nextTranscription.peekNext(10)
+					bestIndex = None
+					bestDrift = None
+
+					for index in range(len(peekItems)):
+						if peekItems[index]['word'].lower() == currentItem['word'].lower():
+							startDrift = abs(left["start_time"] - right["start_time"])
+							endDrift = abs(left["end_time"] - right["end_time"])
+							drift = startDrift + endDrift
+							if bestDrift == None or drift < bestDrift:
+								bestDrift = drift
+								bestIndex = index
+
+					if bestIndex != None:
+						discard = nextTranscription.getNext(bestIndex)
+						switchSpeakers = currentItem['speaker'] != nextHead['speaker']
+						currentHeadTime = nextTranscription.name
+						break
+
+				output.append(currentItem)
+				lastDistanceToHead = distanceToNextHead
+		else:
+			while currentTranscription.peekNext():
+				currentItem = currentTranscription.getNext()[0]
+				if switchSpeakers:
+					if currentItem['speaker'] == 0:
+						currentItem['speaker'] = 1
+					elif currentItem['speaker'] == 1:
+						currentItem['speaker'] = 0
+
+				currentItem['start_time'] = currentItem['start_time'] + currentHeadTime
+				currentItem['end_time'] = currentItem['end_time'] + currentHeadTime
+				output.append(currentItem)
+
+	return output
+
+
+def zip(event, context):
+	logger.debug(json.dumps(event))
+
+	aws_bucket = os.environ["AWS_INPUT_BUCKET"]
+	output_bucket = os.environ["OUTPUT_BUCKET"]
+
+	for record in event['Records']:
+		message = json.loads(record['Sns']['Message'])
+		guid = message['guid']
+		transcriptions = []
+
+		logger.info('Starting reading "' + str(len(message['files'])) + '" transcription files from S3 for episode "' + guid + '".')
+		for file in message['files']:
+			key = file.split('-')[5]
+			startTime = int(file.split('-')[6])
+
+			aws_object = s3.Object(aws_bucket, key)
+			aws_response = aws_object.get()
+			aws_file_content = aws_response['Body'].read().decode('utf-8')
+			aws_json_content = json.loads(aws_file_content)
+
+			transcriptions.append(Transcription(aws_json_content, startTime))
+		logger.info('Starting reading "' + str(len(message['files'])) + '" transcription files from S3 for episode "' + guid + '".')
+
+		logger.info('Starting zipping "' + str(len(transcriptions)) + '" transcription files for episode "' + guid + '".')
+		output = zipTranscriptions(transcriptions)
+		logger.info('Completed zipping "' + str(len(transcriptions)) + '" transcription files for episode "' + guid + '".')
+
+		logger.info('Starting writing JSON to  "' + outputFilename + '" in bucket "' + output_bucket + '".')
+		outputFilename = guid + '.json'
+		output_file = s3.Object(output_bucket, outputFilename)
+		output_file.put(Body=json.dumps(output))
+		logger.info('Completed writing JSON to  "' + outputFilename + '" in bucket "' + output_bucket + '".')
+
+
+
+		

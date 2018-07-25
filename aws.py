@@ -7,8 +7,11 @@ import datetime
 import uuid
 
 from log_cfg import logger
+from pynamodb.exceptions import DoesNotExist
+from podcast_models import PodcastModel, EpisodeModel
 
 s3 = boto3.resource('s3')
+sns = boto3.resource('sns')
 transcribeService = boto3.client('transcribe')
 
 
@@ -32,8 +35,15 @@ class Speakers():
 
 
 def getSafeGUID(guid):
-	keepCharacters = ('_', '-')
-	return "".join(c for c in guid if c.isalnum() or c in keepCharacters).rstrip()
+	strArray = []
+	keepCharacters = ('_', '-', '.')
+	for c in guid:
+		if c.isalnum() or c in keepCharacters:
+			strArray.append(c)
+		else:
+			strArray.append('-')
+
+	return "".join(strArray).rstrip()
 
 def dateconverter(o):
     if isinstance(o, datetime.datetime):
@@ -54,8 +64,9 @@ def transcribe(event, context):
 		for output in message['outputs']:
 			key = output['key']
 			uri = 'https://s3-' + REGION + '.amazonaws.com/' + INPUT_BUCKET + '/' + key 
+			jobName = key.split('.')[0]
 			response = transcribeService.start_transcription_job(
-				TranscriptionJobName=str(uuid.uuid4()) + '-' + getSafeGUID(key),
+				TranscriptionJobName=str(uuid.uuid4()) + '-' + getSafeGUID(jobName),
 				LanguageCode='en-US',
 				MediaSampleRateHertz=44100,
 				MediaFormat='mp3',
@@ -73,6 +84,9 @@ def transcribe(event, context):
 
 def normalize(event, context):
 	logger.debug(json.dumps(event))
+
+	NORMALIZE_AWS_COMPLETE_ARN = os.environ['NORMALIZE_AWS_COMPLETE_ARN']
+	topic = sns.Topic(NORMALIZE_AWS_COMPLETE_ARN)
 
 	for record in event['Records']:
 		input_file_name = record['s3']['object']['key']
@@ -121,7 +135,23 @@ def normalize(event, context):
 			output_file = s3.Object(output_bucket, input_file_name)
 			output_file.put(Body=json.dumps(output_json))
 			logger.info('Completed writing JSON to  "' + input_file_name + '" in bucket "' + output_bucket + '".')
+
+			guid = input_file_name.split('-')[5]
+			logger.debug('Starting updating dynamodb record for ' + guid + '.')
+			episode = EpisodeModel.get(hash_key=guid)
+			episode.splitTranscriptions.append(input_file_name)
+			episode.save()
+			logger.debug('Completed updating dynamodb record for ' + guid + '.')
+
+			if len(episode.splitTranscriptions) == len(episode.splits):
+				message = {
+					'files': [],
+					'guid': guid
+				}
+				for key in episode.splitTranscriptions:
+					message['files'].append(key)
+				logger.debug('Sending ' + json.dumps(message) + '\n to the AWS normalization complete SNS.')
+				response = topic.publish(Message=json.dumps({'default': json.dumps(message)}), MessageStructure='json')
+				logger.debug('Sent message to AWS normalization complete SNS ' + json.dumps(response))
 		else:
 			logger.info('Skipping processing of file "' + input_file_name + '" from bucket "' + input_bucket + '".')
-
-	return {'statusCode': httplib.OK}
