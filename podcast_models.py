@@ -41,6 +41,7 @@ class EpisodeModel(Model):
     oggURL = UnicodeAttribute(null=True)
     duration = NumberAttribute(null=True)
     splits = ListAttribute(null=True)
+    splitTranscriptions = ListAttribute(null=True)
     publishedAt = UTCDateTimeAttribute(null=False)
     createdAt = UTCDateTimeAttribute(null=False, default=datetime.now())
     lastModifiedAt = UTCDateTimeAttribute(null=False, default=datetime.now())

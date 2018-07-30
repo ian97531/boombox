@@ -85,8 +85,8 @@ def transcribe(event, context):
 def normalize(event, context):
 	logger.debug(json.dumps(event))
 
-	NORMALIZE_AWS_COMPLETE_ARN = os.environ['NORMALIZE_AWS_COMPLETE_ARN']
-	topic = sns.Topic(NORMALIZE_AWS_COMPLETE_ARN)
+	COMPLETE_TOPIC = os.environ['COMPLETE_TOPIC']
+	topic = sns.Topic(COMPLETE_TOPIC)
 
 	for record in event['Records']:
 		input_file_name = record['s3']['object']['key']

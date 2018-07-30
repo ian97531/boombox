@@ -99,9 +99,9 @@ def download(event, context):
 	logger.debug(json.dumps(event))
 	startTime = datetime.now()
 	OUTPUT_BUCKET = os.environ['OUTPUT_BUCKET']
-	TRANSCODE_PENDING_ARN = os.environ['TRANSCODE_PENDING_ARN']
+	COMPLETE_TOPIC = os.environ['COMPLETE_TOPIC']
 
-	topic = sns.Topic(TRANSCODE_PENDING_ARN)
+	topic = sns.Topic(COMPLETE_TOPIC)
 	downloads = 0
 	for record in event['Records']:
 		if record['eventName'] == 'INSERT':
@@ -153,12 +153,14 @@ def transcode(event, context):
 def filePermissions(event, context):
 	logger.debug(json.dumps(event))
 
-	INPUT_BUCKET = os.environ['INPUT_BUCKET']
-	PERMISSIONS_COMPLETE_ARN = os.environ['PERMISSIONS_COMPLETE_ARN']
 	BUCKET_PREFIX = 'https://s3.amazonaws.com/'
-	BUCKET_URL_PREFIX = BUCKET_PREFIX + INPUT_BUCKET + '/'
+	ORIGINAL_BUCKET = os.environ['ORIGINAL_BUCKET']
+	TRANSCODED_BUCKET = os.environ['TRANSCODED_BUCKET']
+	ORIGINAL_BUCKET_URL_PREFIX = BUCKET_PREFIX + ORIGINAL_BUCKET + '/'
+	TRANSCODED_BUCKET_URL_PREFIX = BUCKET_PREFIX + TRANSCODED_BUCKET + '/'
+	COMPLETE_TOPIC = os.environ['COMPLETE_TOPIC']
 
-	topic = sns.Topic(PERMISSIONS_COMPLETE_ARN)
+	topic = sns.Topic(COMPLETE_TOPIC)
 	records = 0
 
 	logger.info('Starting setting permissions for ' + str(len(event['Records'])) + ' episodes.')
@@ -175,14 +177,13 @@ def filePermissions(event, context):
 			duration = output['duration']
 			if output['presetId'] == M4A_PRESET:
 				m4aFilename = output['key']
-				object_acl = s3.ObjectAcl('bucket_name','object_key')
 			elif output['presetId'] == OGG_PRESET:
 				oggFilename = output['key']
 
 		logger.debug('Starting setting public read permissions for ' + guid + '.')
-		mp3_acl = s3.ObjectAcl(INPUT_BUCKET, mp3Filename)
-		m4a_acl = s3.ObjectAcl(INPUT_BUCKET, m4aFilename)
-		ogg_acl = s3.ObjectAcl(INPUT_BUCKET, oggFilename)
+		mp3_acl = s3.ObjectAcl(ORIGINAL_BUCKET, mp3Filename)
+		m4a_acl = s3.ObjectAcl(TRANSCODED_BUCKET, m4aFilename)
+		ogg_acl = s3.ObjectAcl(TRANSCODED_BUCKET, oggFilename)
 		mp3_acl.put(ACL='public-read')
 		m4a_acl.put(ACL='public-read')
 		ogg_acl.put(ACL='public-read')
@@ -190,9 +191,9 @@ def filePermissions(event, context):
 
 		logger.debug('Starting updating dynamodb record for ' + guid + '.')
 		episode = EpisodeModel.get(hash_key=guid)
-		episode.mp3URL = BUCKET_URL_PREFIX + mp3Filename
-		episode.m4aURL = BUCKET_URL_PREFIX + m4aFilename
-		episode.oggURL = BUCKET_URL_PREFIX + oggFilename
+		episode.mp3URL = ORIGINAL_BUCKET_URL_PREFIX + mp3Filename
+		episode.m4aURL = TRANSCODED_BUCKET_URL_PREFIX + m4aFilename
+		episode.oggURL = TRANSCODED_BUCKET_URL_PREFIX + oggFilename
 		episode.duration = duration
 		episode.save()
 		logger.debug('Completed updating dynamodb record for ' + guid + '.')

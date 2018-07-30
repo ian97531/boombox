@@ -3,46 +3,6 @@ service: boombox
 plugins:
   - serverless-python-requirements
 
-custom:
-  stage: ${opt:stage, 'dev'}
-  accountId: "095713129403"
-  pythonRequirements:
-    noDeploy: ""
-  AWSTranscriptions: ${self:service}-${self:custom.stage}-aws-transcriptions
-  normalizedAWSTranscriptions: ${self:service}-${self:custom.stage}-normalized-aws-transcriptions
-  zippedAWSTranscriptions: ${self:service}-${self:custom.stage}-zipped-aws-transcriptions
-  watsonTranscriptions: ${self:service}-${self:custom.stage}-watson-transcriptions
-  normalizedWatsonTranscriptions: ${self:service}-${self:custom.stage}-normalized-watson-transcriptions
-  zippedWatsonTranscriptions: ${self:service}-${self:custom.stage}-zipped-watson-transcriptions
-  combinedTranscriptions: ${self:service}-${self:custom.stage}-combined-transcriptions
-  activeJobsTable: ${self:service}-${self:custom.stage}-podcast-jobs
-  podcastsTable: ${self:service}-${self:custom.stage}-podcasts
-  episodesTable: ${self:service}-${self:custom.stage}-episodes
-  episodeInsertLimit: "2"
-  podcastInput: ${self:service}-${self:custom.stage}-podcast-input
-  podcastSplits: ${self:service}-${self:custom.stage}-podcast-splits
-  transcodeQueue: ${self:service}-${self:custom.stage}-transcode-queue
-  transcodePipeline: ${self:service}-${self:custom.stage}-transcode-pipeline
-  transcodePipelineIds:
-    dev: 1531438545970-0z6rkw
-  transcodePipelineId: ${self:custom.transcodePipelineIds.${self:custom.stage}}
-  transcodePipelineARN: arn:aws:elastictranscoder:${self:provider.region}:${self:custom.accountId}:pipeline/${self:custom.transcodePipelineId}
-  transcodeJobsARN: arn:aws:elastictranscoder:${self:provider.region}:${self:custom.accountId}:job/*
-  transcodePresetsARN: arn:aws:elastictranscoder:${self:provider.region}:${self:custom.accountId}:preset/*
-  transcodePendingSNS: ${self:service}-${self:custom.stage}-transcode-pending
-  transcodePendingSNSARN: arn:aws:sns:${self:provider.region}:${self:custom.accountId}:${self:custom.transcodePendingSNS}
-  transcodeCompleteSNS: ${self:service}-${self:custom.stage}-transcode-complete
-  permissionsCompleteSNS: ${self:service}-${self:custom.stage}-permissions-complete
-  permissionsCompleteSNSARN: arn:aws:sns:${self:provider.region}:${self:custom.accountId}:${self:custom.permissionsCompleteSNS}
-  splitPipeline: ${self:service}-${self:custom.stage}-split-pipeline
-  splitCompleteSNS: ${self:service}-${self:custom.stage}-split-complete
-  splitPipelineIds:
-    dev: 1531803024408-reo2a2
-  splitPipelineId: ${self:custom.splitPipelineIds.${self:custom.stage}}
-  splitPipelineARN: arn:aws:elastictranscoder:${self:provider.region}:${self:custom.accountId}:pipeline/${self:custom.splitPipelineId}
-  normalizeAWSCompleteSNS: ${self:service}-${self:custom.stage}-normalize-aws-complete
-  normalizeAWSCompleteSNSARN: arn:aws:sns:${self:provider.region}:${self:custom.accountId}:${self:custom.normalizeAWSCompleteSNS}
-
 package:
   exclude:
     - node_modules/**
@@ -55,39 +15,123 @@ package:
     - LICENSE
     - .gitignore
 
+custom:
+  stage: ${opt:stage, 'dev'}
+  accountId: "095713129403"
+  pythonRequirements:
+    noDeploy: ""
+  episodeInsertLimit: "2"
+
+  buckets:
+    transcriptions:
+      aws:
+        raw: ${self:service}-${self:custom.stage}-aws-raw-transcriptions
+        normalized: ${self:service}-${self:custom.stage}-aws-normalized-transcriptions
+        zipped: ${self:service}-${self:custom.stage}-aws-zipped-transcriptions
+      watson:
+        raw: ${self:service}-${self:custom.stage}-watson-raw-transcriptions
+        normalized: ${self:service}-${self:custom.stage}-watson-normalized-transcriptions
+        zipped: ${self:service}-${self:custom.stage}-watson-zipped-transcriptions
+      combined: ${self:service}-${self:custom.stage}-combined-transcriptions
+    audio:
+      original: ${self:service}-${self:custom.stage}-episode-audio-original
+      transcoded: ${self:service}-${self:custom.stage}-episode-audio-transcoded
+      splits: ${self:service}-${self:custom.stage}-episode-audio-splits
+  
+  dynamodb:
+    podcasts: ${self:service}-${self:custom.stage}-podcasts
+    episodes: ${self:service}-${self:custom.stage}-episodes
+  
+  sns:
+    topics:
+      transcodePending:
+        name: ${self:service}-${self:custom.stage}-transcode-pending
+        arn: arn:aws:sns:${self:provider.region}:${self:custom.accountId}:${self:custom.sns.topics.transcodePending.name}
+      transcodeComplete: 
+        name: ${self:service}-${self:custom.stage}-transcode-complete
+        arn: arn:aws:sns:${self:provider.region}:${self:custom.accountId}:${self:custom.sns.topics.transcodeComplete.name}
+      permissionsComplete: 
+        name: ${self:service}-${self:custom.stage}-permissions-complete
+        arn: arn:aws:sns:${self:provider.region}:${self:custom.accountId}:${self:custom.sns.topics.permissionsComplete.name}
+      splitComplete: 
+        name: ${self:service}-${self:custom.stage}-split-complete
+        arn: arn:aws:sns:${self:provider.region}:${self:custom.accountId}:${self:custom.sns.topics.splitComplete.name}
+      normalizeAWSComplete: 
+        name: ${self:service}-${self:custom.stage}-aws-normalize-complete
+        arn: arn:aws:sns:${self:provider.region}:${self:custom.accountId}:${self:custom.sns.topics.normalizeAWSComplete.name}
+      downloadWatsonComplete: 
+        name: ${self:service}-${self:custom.stage}-watson-download-complete
+        arn: arn:aws:sns:${self:provider.region}:${self:custom.accountId}:${self:custom.sns.topics.downloadWatsonComplete.name}
+      normalizeWatsonComplete: 
+        name: ${self:service}-${self:custom.stage}-watson-normalize-complete
+        arn: arn:aws:sns:${self:provider.region}:${self:custom.accountId}:${self:custom.sns.topics.normalizeWatsonComplete.name}
+      zipComplete: 
+        name: ${self:service}-${self:custom.stage}-zip-complete
+        arn: arn:aws:sns:${self:provider.region}:${self:custom.accountId}:${self:custom.sns.topics.zipComplete.name}
+      combineComplete: 
+        name: ${self:service}-${self:custom.stage}-combine-complete
+        arn: arn:aws:sns:${self:provider.region}:${self:custom.accountId}:${self:custom.sns.topics.combineComplete.name}
+  
+  transcoder:
+    jobs: 
+      arn: arn:aws:elastictranscoder:${self:provider.region}:${self:custom.accountId}:job/*
+    presets:
+      arn: arn:aws:elastictranscoder:${self:provider.region}:${self:custom.accountId}:preset/*
+    pipelines:
+      transcode:
+        ids:
+          dev: 1531438545970-0z6rkw
+        id: ${self:custom.transcoder.pipelines.transcode.ids.${self:custom.stage}}
+        arn: arn:aws:elastictranscoder:${self:provider.region}:${self:custom.accountId}:pipeline/${self:custom.transcoder.pipelines.transcode.id}
+      split:
+        ids:
+          dev: 1531803024408-reo2a2
+        id: ${self:custom.transcoder.pipelines.split.ids.${self:custom.stage}}
+        arn: arn:aws:elastictranscoder:${self:provider.region}:${self:custom.accountId}:pipeline/${self:custom.transcoder.pipelines.split.id}
+
+  watson:
+    callbackURL: https://00dx5lxdp1.execute-api.us-east-1.amazonaws.com/dev/watson
+    username: 413d132f-c8e0-4d2e-9ae5-c93adef492cd
+    password: 7wigNYcFSz8R
+
 provider:
   name: aws
   runtime: python2.7
   region: us-east-1
+  environment:
+      PODCASTS_TABLE: ${self:custom.dynamodb.podcasts}
+      EPISODES_TABLE: ${self:custom.dynamodb.episodes}
+      INSERT_LIMIT: ${self:custom.episodeInsertLimit}
   iamRoleStatements:
+
+    #
+    # S3 Bucket Permissions
+    #
     - Effect: Allow
       Action:
         - s3:GetObject
         - s3:PutObject
       Resource: 
-        - arn:aws:s3:::${self:custom.AWSTranscriptions}/*
-        - arn:aws:s3:::${self:custom.normalizedAWSTranscriptions}/*
-        - arn:aws:s3:::${self:custom.watsonTranscriptions}/*
-        - arn:aws:s3:::${self:custom.normalizedWatsonTranscriptions}/*
-        - arn:aws:s3:::${self:custom.combinedTranscriptions}/*
-        - arn:aws:s3:::${self:custom.podcastInput}/*
+        - arn:aws:s3:::${self:custom.buckets.transcriptions.aws.raw}/*
+        - arn:aws:s3:::${self:custom.buckets.transcriptions.aws.normalized}/*
+        - arn:aws:s3:::${self:custom.buckets.transcriptions.aws.zipped}/*
+        - arn:aws:s3:::${self:custom.buckets.transcriptions.watson.raw}/*
+        - arn:aws:s3:::${self:custom.buckets.transcriptions.watson.normalized}/*
+        - arn:aws:s3:::${self:custom.buckets.transcriptions.watson.zipped}/*
+        - arn:aws:s3:::${self:custom.buckets.transcriptions.combined}/*
+        - arn:aws:s3:::${self:custom.buckets.audio.original}/*
+        - arn:aws:s3:::${self:custom.buckets.audio.transcoded}/*
+        - arn:aws:s3:::${self:custom.buckets.audio.splits}/*
     - Effect: Allow
       Action:
         - s3:PutObjectAcl
       Resource: 
-        - arn:aws:s3:::${self:custom.podcastInput}/*
-    - Effect: Allow
-      Action:
-        - s3:GetObject
-        - s3:PutObject
-      Resource: 
-        - arn:aws:s3:::${self:custom.AWSTranscriptions}/*
-        - arn:aws:s3:::${self:custom.normalizedAWSTranscriptions}/*
-        - arn:aws:s3:::${self:custom.watsonTranscriptions}/*
-        - arn:aws:s3:::${self:custom.normalizedWatsonTranscriptions}/*
-        - arn:aws:s3:::${self:custom.combinedTranscriptions}/*
-        - arn:aws:s3:::${self:custom.podcastInput}/*
-        - arn:aws:s3:::${self:custom.podcastSplits}/*
+        - arn:aws:s3:::${self:custom.buckets.audio.original}/*
+        - arn:aws:s3:::${self:custom.buckets.audio.transcoded}/*
+    
+    #
+    # DynamoDB Table Permissions
+    #
     - Effect: Allow
       Action:
         - dynamodb:Query
@@ -100,43 +144,60 @@ provider:
         - dynamodb:BatchWriteItem
         - dynamodb:DescribeTable
       Resource: 
-        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.activeJobsTable}
-        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.podcastsTable}
-        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.episodesTable}
-    - Effect: Allow
-      Action:
-        - sqs:ReceiveMessage
-      Resource: 
-        Fn::GetAtt:
-          - transcodeQueue
-          - Arn
+        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dynamodb.podcasts}
+        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dynamodb.episodes}
+    
+    #
+    # SNS Topic Publish Permissions
+    #
     - Effect: Allow
       Action:
         - SNS:Publish
       Resource: 
-        - ${self:custom.transcodePendingSNSARN}
-        - ${self:custom.permissionsCompleteSNSARN}
-        - ${self:custom.normalizeAWSCompleteSNSARN}
+        - ${self:custom.sns.topics.transcodePending.arn}
+        - ${self:custom.sns.topics.transcodeComplete.arn}
+        - ${self:custom.sns.topics.permissionsComplete.arn}
+        - ${self:custom.sns.topics.splitComplete.arn}
+        - ${self:custom.sns.topics.normalizeAWSComplete.arn}
+        - ${self:custom.sns.topics.downloadWatsonComplete.arn}
+        - ${self:custom.sns.topics.normalizeWatsonComplete.arn}
+        - ${self:custom.sns.topics.zipComplete.arn}
+        - ${self:custom.sns.topics.combineComplete.arn}
+    
+    #
+    # Transcoder Permissions
+    #
     - Effect: Allow
       Action:
         - elastictranscoder:Read*
         - elastictranscoder:List*
         - elastictranscoder:*Job
       Resource: 
-        - ${self:custom.transcodePipelineARN}
-        - ${self:custom.transcodeJobsARN}
-        - ${self:custom.transcodePresetsARN}
-        - ${self:custom.splitPipelineARN}
+        - ${self:custom.transcoder.jobs.arn}
+        - ${self:custom.transcoder.presets.arn}
+        - ${self:custom.transcoder.pipelines.transcode.arn}
+        - ${self:custom.transcoder.pipelines.split.arn}
+    
+    #
+    # AWS Transcription Service Permissions
+    #
     - Effect: Allow
       Action:
         - transcribe:StartTranscriptionJob
       Resource: "*"
-  environment:
-      PODCASTS_TABLE: ${self:custom.podcastsTable}
-      EPISODES_TABLE: ${self:custom.episodesTable}
-      INSERT_LIMIT: ${self:custom.episodeInsertLimit}
+
+    #
+    # AWS Transcription Service Permissions
+    #
+    - Effect: Allow
+      Action:
+        - transcribe:StartTranscriptionJob
+      Resource: "*"
 
 functions:
+  #
+  # Fetch, transcode and split the audio files
+  #
   podcasts-update-from-feed:
     name: ${self:service}-${self:custom.stage}-podcasts-update-from-feed
     handler: podcasts.checkRSSFeed
@@ -146,8 +207,8 @@ functions:
     handler: podcasts.download
     timeout: 300
     environment:
-      OUTPUT_BUCKET: ${self:custom.podcastInput}
-      TRANSCODE_PENDING_ARN: ${self:custom.transcodePendingSNSARN}
+      OUTPUT_BUCKET: ${self:custom.buckets.audio.original}
+      COMPLETE_TOPIC: ${self:custom.sns.topics.transcodePending.arn}
     events:
       - stream:
           type: dynamodb
@@ -160,134 +221,181 @@ functions:
     handler: podcasts.transcode
     timeout: 60
     environment:
-      TRANSCODE_PIPELINE_ID: ${self:custom.transcodePipelineId}
+      TRANSCODE_PIPELINE_ID: ${self:custom.transcoder.pipelines.transcode.id}
     events:
-      - sns: ${self:custom.transcodePendingSNS}
+      - sns: ${self:custom.sns.topics.transcodePending.name}
   podcasts-file-permissions:
     name: ${self:service}-${self:custom.stage}-podcasts-file-permissions
     handler: podcasts.filePermissions
     timeout: 60
     environment:
-      INPUT_BUCKET: ${self:custom.podcastInput}
-      PERMISSIONS_COMPLETE_ARN: ${self:custom.permissionsCompleteSNSARN}
+      ORIGINAL_BUCKET: ${self:custom.buckets.audio.original}
+      TRANSCODED_BUCKET: ${self:custom.buckets.audio.transcoded}
+      COMPLETE_TOPIC: ${self:custom.sns.topics.permissionsComplete.arn}
     events:
-      - sns: ${self:custom.transcodeCompleteSNS}
+      - sns: ${self:custom.sns.topics.transcodeComplete.name}
   podcasts-split:
     name: ${self:service}-${self:custom.stage}-podcasts-split
     handler: podcasts.split
     timeout: 60
     environment:
-      SPLIT_PIPELINE_ID: ${self:custom.splitPipelineId}
+      SPLIT_PIPELINE_ID: ${self:custom.transcoder.pipelines.split.id}
     events:
-      - sns: ${self:custom.permissionsCompleteSNS}
+      - sns: ${self:custom.sns.topics.permissionsComplete.name}
+
+  #
+  # AWS Transcribe, normalize, and zip
+  #
   aws-transcribe:
     name: ${self:service}-${self:custom.stage}-aws-transcribe
     handler: aws.transcribe
     timeout: 60
     environment:
-      INPUT_BUCKET: ${self:custom.podcastSplits}
-      OUTPUT_BUCKET: ${self:custom.AWSTranscriptions}
+      INPUT_BUCKET: ${self:custom.buckets.audio.splits}
+      OUTPUT_BUCKET: ${self:custom.buckets.transcriptions.aws.raw}
       REGION: ${self:provider.region}
     events:
-      - sns: ${self:custom.splitCompleteSNS}
+      - sns: ${self:custom.sns.topics.splitComplete.name}
   aws-normalize:
     name: ${self:service}-${self:custom.stage}-aws-normalize
     handler: aws.normalize
     timeout: 60
     environment:
-      OUTPUT_BUCKET: ${self:custom.normalizedAWSTranscriptions}
-      NORMALIZE_AWS_COMPLETE_ARN: ${self:custom.normalizeAWSCompleteSNSARN}
+      OUTPUT_BUCKET: ${self:custom.buckets.transcriptions.aws.normalized}
+      COMPLETE_TOPIC: ${self:custom.sns.topics.normalizeAWSComplete.arn}
     events:
       - s3:
-          bucket: ${self:custom.AWSTranscriptions}
+          bucket: ${self:custom.buckets.transcriptions.aws.raw}
           event: s3:ObjectCreated:*
   aws-zip:
-    name: ${self:service}-${self:custom.stage}-normalized-zip
+    name: ${self:service}-${self:custom.stage}-aws-zip
     handler: normalized.zip
     timeout: 300
     environment:
-      INPUT_BUCKET: ${self:custom.normalizedAWSTranscriptions}
-      OUTPUT_BUCKET: ${self:custom.zippedAWSTranscriptions}
+      INPUT_BUCKET: ${self:custom.buckets.transcriptions.aws.normalized}
+      OUTPUT_BUCKET: ${self:custom.buckets.transcriptions.aws.zipped}
+      COMPLETE_TOPIC: ${self:custom.sns.topics.zipComplete.arn}
     events:
-      - sns: ${self:custom.normalizeAWSCompleteSNS}
+      - sns: ${self:custom.sns.topics.normalizeAWSComplete.name}
+  
+  #
+  # Watson Transcribe, download, normalize and zip
+  #
+  watson-transcribe:
+    name: ${self:service}-${self:custom.stage}-watson-transcribe
+    handler: watson.transcribe
+    timeout: 60
+    environment:
+      INPUT_BUCKET: ${self:custom.buckets.audio.splits}
+      WATSON_CALLBACK_URL: ${self:custom.watson.callbackURL}
+      WATSON_USERNAME: ${self:custom.watson.username}
+      WATSON_PASSWORD: ${self:custom.watson.password}
+    events:
+      - sns: ${self:custom.sns.topics.splitComplete.name}
+  watson-verify:
+    name: ${self:service}-${self:custom.stage}-watson-verify
+    handler: watson.verify
+    timeout: 30
+    events:
+      - http: 'GET /watson'
+  watson-download:
+    name: ${self:service}-${self:custom.stage}-watson-download
+    handler: watson.download
+    timeout: 30
+    environment:
+      OUTPUT_BUCKET: ${self:custom.buckets.transcriptions.watson.raw}
+      COMPLETE_TOPIC: ${self:custom.sns.topics.downloadWatsonComplete.arn}
+    events:
+      - http: 'POST /watson'
   watson-normalize:
     name: ${self:service}-${self:custom.stage}-watson-normalize
     handler: watson.normalize
     timeout: 60
     environment:
-      OUTPUT_BUCKET: ${self:custom.normalizedWatsonTranscriptions}
+      OUTPUT_BUCKET: ${self:custom.buckets.transcriptions.watson.normalized}
+      COMPLETE_TOPIC: ${self:custom.sns.topics.normalizeWatsonComplete.arn}
     events:
-      - s3:
-          bucket: ${self:custom.watsonTranscriptions}
-          event: s3:ObjectCreated:*
+      - sns: ${self:custom.sns.topics.downloadWatsonComplete.name}
+  watson-zip:
+    name: ${self:service}-${self:custom.stage}-watson-zip
+    handler: normalized.zip
+    timeout: 300
+    environment:
+      INPUT_BUCKET: ${self:custom.buckets.transcriptions.watson.normalized}
+      OUTPUT_BUCKET: ${self:custom.buckets.transcriptions.watson.zipped}
+      COMPLETE_TOPIC: ${self:custom.sns.topics.zipComplete.arn}
+    events:
+      - sns: ${self:custom.sns.topics.normalizeAWSComplete.name}
   
+  #
+  # Combine the normalized and zipped AWS and Watson transcriptions
+  #
   normalized-combine:
     name: ${self:service}-${self:custom.stage}-normalized-combine
     handler: normalized.combine
     timeout: 300
     environment:
-      AWS_INPUT_BUCKET: ${self:custom.normalizedAWSTranscriptions}
-      WATSON_INPUT_BUCKET: ${self:custom.normalizedWatsonTranscriptions}
-      OUTPUT_BUCKET: ${self:custom.combinedTranscriptions}
-    # events:
-    #   - s3:
-    #       bucket: ${self:custom.normalizedAWSTranscriptions}
-    #       event: s3:ObjectCreated:*
-    #   - s3:
-    #       bucket: ${self:custom.normalizedWatsonTranscriptions}
-    #       event: s3:ObjectCreated:*
+      AWS_INPUT_BUCKET: ${self:custom.buckets.transcriptions.aws.normalized}
+      WATSON_INPUT_BUCKET: ${self:custom.buckets.transcriptions.watson.normalized}
+      OUTPUT_BUCKET: ${self:custom.buckets.transcriptions.combined}
+      COMPLETE_TOPIC: ${self:custom.sns.topics.combineComplete.arn}
+    events:
+      - sns: ${self:custom.sns.topics.zipComplete.name}
 
 resources:
   Resources:
-    combinedtranscriptions:
+
+    #
+    # S3 Buckets for Audio Files
+    #
+    originalAudio:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${self:custom.combinedTranscriptions}
-    normalizedAWStranscriptions:
+        BucketName: ${self:custom.buckets.audio.original}
+    transcodedAudio:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${self:custom.normalizedAWSTranscriptions}
-    zippedAWStranscriptions:
+        BucketName: ${self:custom.buckets.audio.transcoded}
+    splitAudio:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${self:custom.zippedAWSTranscriptions}
-    podcastInput:
+        BucketName: ${self:custom.buckets.audio.splits}
+    
+    #
+    # S3 Buckets for Transcription JSON Files
+    #
+    normalizedAWSTranscriptions:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${self:custom.podcastInput}
-    podcastSplits:
+        BucketName: ${self:custom.buckets.transcriptions.aws.normalized}
+    zippedAWSTranscriptions:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${self:custom.podcastSplits}
-    transcodeQueue:
-      Type: AWS::SQS::Queue
+        BucketName: ${self:custom.buckets.transcriptions.aws.zipped}
+    rawWatsonTranscriptions:
+      Type: AWS::S3::Bucket
       Properties:
-        QueueName: ${self:custom.transcodeQueue}
-        VisibilityTimeout: 300
-    activeJobsTable:
-      Type: AWS::DynamoDB::Table
+        BucketName: ${self:custom.buckets.transcriptions.watson.raw} 
+    normalizedWatsonTranscriptions:
+      Type: AWS::S3::Bucket
       Properties:
-        TableName: ${self:custom.activeJobsTable}
-        AttributeDefinitions:
-          -
-            AttributeName: jobId
-            AttributeType: S
-          -
-            AttributeName: startDate
-            AttributeType: S
-        KeySchema:
-          -
-            AttributeName: jobId
-            KeyType: HASH
-          - AttributeName: startDate
-            KeyType: RANGE
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+        BucketName: ${self:custom.buckets.transcriptions.watson.normalized} 
+    zippedWatsonTranscriptions:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.buckets.transcriptions.watson.zipped}
+    combinedTranscriptions:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.buckets.transcriptions.combined}
+    
+    #
+    # DynamoDB Tables
+    #
     podcastsTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:custom.podcastsTable}
+        TableName: ${self:custom.dynamodb.podcasts}
         AttributeDefinitions:
           -
             AttributeName: feedURL
@@ -302,7 +410,7 @@ resources:
     episodesTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:custom.episodesTable}
+        TableName: ${self:custom.dynamodb.episodes}
         AttributeDefinitions:
           -
             AttributeName: guid
