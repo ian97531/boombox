@@ -280,26 +280,28 @@ def zipTranscriptions(transcriptions):
 def zip(event, context):
 	logger.debug(json.dumps(event))
 
-	aws_bucket = os.environ["AWS_INPUT_BUCKET"]
+	input_bucket = os.environ["INPUT_BUCKET"]
 	output_bucket = os.environ["OUTPUT_BUCKET"]
 
 	for record in event['Records']:
 		message = json.loads(record['Sns']['Message'])
+
 		guid = message['guid']
 		transcriptions = []
 
 		logger.info('Starting reading "' + str(len(message['files'])) + '" transcription files from S3 for episode "' + guid + '".')
 		for file in message['files']:
-			key = file.split('-')[5]
-			startTime = int(file.split('-')[6])
+			name = file.split('.')[0]
+			key = name.split('-')[5]
+			startTime = int(name.split('-')[6])
 
-			aws_object = s3.Object(aws_bucket, key)
-			aws_response = aws_object.get()
-			aws_file_content = aws_response['Body'].read().decode('utf-8')
-			aws_json_content = json.loads(aws_file_content)
+			input_object = s3.Object(input_bucket, file)
+			response = input_object.get()
+			file_content = response['Body'].read().decode('utf-8')
+			json_content = json.loads(file_content)
 
-			transcriptions.append(Transcription(aws_json_content, startTime))
-		logger.info('Starting reading "' + str(len(message['files'])) + '" transcription files from S3 for episode "' + guid + '".')
+			transcriptions.append(Transcription(json_content, startTime))
+		logger.info('Completed reading "' + str(len(message['files'])) + '" transcription files from S3 for episode "' + guid + '".')
 
 		logger.info('Starting zipping "' + str(len(transcriptions)) + '" transcription files for episode "' + guid + '".')
 		output = zipTranscriptions(transcriptions)

@@ -139,16 +139,19 @@ def normalize(event, context):
 			guid = input_file_name.split('-')[5]
 			logger.debug('Starting updating dynamodb record for ' + guid + '.')
 			episode = EpisodeModel.get(hash_key=guid)
-			episode.splitTranscriptions.append(input_file_name)
+			if episode.splitAWSTranscriptions:
+				episode.splitAWSTranscriptions.append(input_file_name)
+			else:
+				episode.splitAWSTranscriptions = [input_file_name]
 			episode.save()
 			logger.debug('Completed updating dynamodb record for ' + guid + '.')
 
-			if len(episode.splitTranscriptions) == len(episode.splits):
+			if len(episode.splitAWSTranscriptions) == len(episode.splits):
 				message = {
 					'files': [],
 					'guid': guid
 				}
-				for key in episode.splitTranscriptions:
+				for key in episode.splitAWSTranscriptions:
 					message['files'].append(key)
 				logger.debug('Sending ' + json.dumps(message) + '\n to the AWS normalization complete SNS.')
 				response = topic.publish(Message=json.dumps({'default': json.dumps(message)}), MessageStructure='json')

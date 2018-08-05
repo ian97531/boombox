@@ -89,10 +89,27 @@ custom:
         id: ${self:custom.transcoder.pipelines.split.ids.${self:custom.stage}}
         arn: arn:aws:elastictranscoder:${self:provider.region}:${self:custom.accountId}:pipeline/${self:custom.transcoder.pipelines.split.id}
 
-  watson:
-    callbackURL: https://00dx5lxdp1.execute-api.us-east-1.amazonaws.com/dev/watson
-    username: 413d132f-c8e0-4d2e-9ae5-c93adef492cd
-    password: 7wigNYcFSz8R
+  secrets:
+    watson:
+      transcribe:
+        credentials:
+          name: watson_transcribe_credentials
+          arn: arn:aws:secretsmanager:${self:provider.region}:${self:custom.accountId}:secret:watson_transcribe_credentials-rRBeuP
+
+
+  apiGateway:
+    baseURLs:
+      dev: https://00dx5lxdp1.execute-api.us-east-1.amazonaws.com/dev
+    baseURL: ${self:custom.apiGateway.baseURLs.${self:custom.stage}}
+    endpoints:
+      watsonCallbacks:
+        verify: /watson
+        jobComplete: /watson
+    urls:
+      watsonCallbacks:
+        verify: ${self:custom.apiGateway.baseURL}${self:custom.apiGateway.endpoints.watsonCallbacks.verify}
+        jobComplete: ${self:custom.apiGateway.baseURL}${self:custom.apiGateway.endpoints.watsonCallbacks.jobComplete}
+      
 
 provider:
   name: aws
@@ -102,6 +119,7 @@ provider:
       PODCASTS_TABLE: ${self:custom.dynamodb.podcasts}
       EPISODES_TABLE: ${self:custom.dynamodb.episodes}
       INSERT_LIMIT: ${self:custom.episodeInsertLimit}
+  tracing: true
   iamRoleStatements:
 
     #
@@ -194,6 +212,20 @@ provider:
         - transcribe:StartTranscriptionJob
       Resource: "*"
 
+    #
+    # AWS Secrets Manager Permissions
+    #
+    - Effect: Allow
+      Action:
+        - secretsmanager:GetSecretValue
+      Resource: ${self:custom.secrets.watson.transcribe.credentials.arn}
+
+    - Effect: Allow
+      Action:
+        - xray:PutTraceSegments
+        - xray:PutTelemetryRecords
+      Resource: "*"
+
 functions:
   #
   # Fetch, transcode and split the audio files
@@ -284,12 +316,11 @@ functions:
   watson-transcribe:
     name: ${self:service}-${self:custom.stage}-watson-transcribe
     handler: watson.transcribe
-    timeout: 60
+    timeout: 300
     environment:
       INPUT_BUCKET: ${self:custom.buckets.audio.splits}
-      WATSON_CALLBACK_URL: ${self:custom.watson.callbackURL}
-      WATSON_USERNAME: ${self:custom.watson.username}
-      WATSON_PASSWORD: ${self:custom.watson.password}
+      WATSON_CALLBACK_URL: ${self:custom.apiGateway.urls.watsonCallbacks.jobComplete}
+      WATSON_TRANSCRIBE_CREDENTIALS: ${self:custom.secrets.watson.transcribe.credentials.name}
     events:
       - sns: ${self:custom.sns.topics.splitComplete.name}
   watson-verify:
@@ -297,21 +328,23 @@ functions:
     handler: watson.verify
     timeout: 30
     events:
-      - http: 'GET /watson'
+      - http: 'GET ${self:custom.apiGateway.endpoints.watsonCallbacks.verify}'
   watson-download:
     name: ${self:service}-${self:custom.stage}-watson-download
     handler: watson.download
     timeout: 30
     environment:
       OUTPUT_BUCKET: ${self:custom.buckets.transcriptions.watson.raw}
+      WATSON_TRANSCRIBE_CREDENTIALS: ${self:custom.secrets.watson.transcribe.credentials.name}
       COMPLETE_TOPIC: ${self:custom.sns.topics.downloadWatsonComplete.arn}
     events:
-      - http: 'POST /watson'
+      - http: 'POST ${self:custom.apiGateway.endpoints.watsonCallbacks.jobComplete}'
   watson-normalize:
     name: ${self:service}-${self:custom.stage}-watson-normalize
     handler: watson.normalize
     timeout: 60
     environment:
+      INPUT_BUCKET: ${self:custom.buckets.transcriptions.watson.raw}
       OUTPUT_BUCKET: ${self:custom.buckets.transcriptions.watson.normalized}
       COMPLETE_TOPIC: ${self:custom.sns.topics.normalizeWatsonComplete.arn}
     events:
@@ -325,7 +358,7 @@ functions:
       OUTPUT_BUCKET: ${self:custom.buckets.transcriptions.watson.zipped}
       COMPLETE_TOPIC: ${self:custom.sns.topics.zipComplete.arn}
     events:
-      - sns: ${self:custom.sns.topics.normalizeAWSComplete.name}
+      - sns: ${self:custom.sns.topics.normalizeWatsonComplete.name}
   
   #
   # Combine the normalized and zipped AWS and Watson transcriptions
