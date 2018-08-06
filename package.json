@@ -21,6 +21,7 @@
     "npm": "^6.1.0"
   },
   "devDependencies": {
+    "serverless-domain-manager": "^2.6.0",
     "serverless-plugin-tracing": "^2.0.0",
     "serverless-python-requirements": "^4.1.1"
   }

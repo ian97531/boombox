@@ -2,6 +2,7 @@ service: boombox
 
 plugins:
   - serverless-python-requirements
+  - serverless-domain-manager
 
 package:
   exclude:
@@ -20,7 +21,18 @@ custom:
   accountId: "095713129403"
   pythonRequirements:
     noDeploy: ""
-  episodeInsertLimit: "2"
+  episodeInsertLimit: "1"
+
+  domains:
+    prod: api.boombox.bingo
+    dev: dev-api.boombox.bingo
+
+  customDomain:
+    domainName: ${self:custom.domains.${self:custom.stage}}
+    certificateName: '*.boombox.bingo'
+    basePath: ''
+    stage: ${self:provider.stage}
+    createRoute53Record: true
 
   buckets:
     transcriptions:
@@ -98,9 +110,7 @@ custom:
 
 
   apiGateway:
-    baseURLs:
-      dev: https://00dx5lxdp1.execute-api.us-east-1.amazonaws.com/dev
-    baseURL: ${self:custom.apiGateway.baseURLs.${self:custom.stage}}
+    baseURL: ${self:custom.domains.${self:custom.stage}}
     endpoints:
       watsonCallbacks:
         verify: /watson

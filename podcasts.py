@@ -19,9 +19,9 @@ INSERT_LIMIT = int(os.environ['INSERT_LIMIT'])
 PODCASTS_TABLE = os.environ['PODCASTS_TABLE']
 EPISODES_TABLE = os.environ['EPISODES_TABLE']
 
-M4A_PRESET = '1351620000001-100120' #M4A AAC 160 44k
-OGG_PRESET = '1531717800275-2wz911' #OGG Vorbis 160 44k
-MP3_PRESET = '1351620000001-300030' #MP3 160 44k
+M4A_PRESET = '1351620000001-100120' # M4A AAC 160 44k
+OGG_PRESET = '1531717800275-2wz911' # OGG Vorbis 160 44k
+MP3_PRESET = '1351620000001-300030' # MP3 160 44k
 
 
 def getEnclosure(links):
@@ -134,7 +134,6 @@ def transcode(event, context):
 
 	for record in event['Records']:
 		data = json.loads(record['Sns']['Message'])
-		filename = data['filename']
 		guid = data['guid']
 		m4a = {
 			'Key': guid + '.m4a',
