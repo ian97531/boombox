@@ -4,12 +4,13 @@ import json
 import math
 import requests
 import feedparser
-from log_cfg import logger
+
 from datetime import datetime
 from time import mktime
 
 from pynamodb.exceptions import DoesNotExist
-from podcast_models import PodcastModel, EpisodeModel
+from functions.utils.pynamodb_models import PodcastModel, EpisodeModel
+from functions.utils.log_cfg import logger
 
 s3 = boto3.resource('s3')
 sns = boto3.resource('sns')

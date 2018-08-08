@@ -1,7 +1,7 @@
 {
-  "name": "boombox",
+  "name": "boombox-pipeline",
   "version": "1.0.0",
-  "description": "",
+  "description": "The pipeline that ingests, processes, and transcribes podcast episodes.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

@@ -8,9 +8,9 @@ import requests
 import datetime
 import uuid
 
-from log_cfg import logger
 from pynamodb.exceptions import DoesNotExist
-from podcast_models import PodcastModel, EpisodeModel
+from functions.utils.pynamodb_models import EpisodeModel
+from functions.utils.log_cfg import logger
 
 s3 = boto3.resource('s3')
 sns = boto3.resource('sns')
@@ -20,10 +20,6 @@ TRANSCRIBE_BASE_URL = 'https://stream.watsonplatform.net/speech-to-text/api/v1/r
 REGISTER_CALLBACK_URL = 'https://stream.watsonplatform.net/speech-to-text/api/v1/register_callback'
 CHALLENGE_STRING = 'challenge_string'
 QUERY_STRING = 'queryStringParameters'
-
-def dateconverter(o):
-    if isinstance(o, datetime.datetime):
-        return o.__str__()
 
 
 def startTranscriptionJob(audioFile, name, credentials, callbackURL):

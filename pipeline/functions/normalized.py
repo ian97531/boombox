@@ -4,8 +4,8 @@ import boto3
 import botocore
 import json
 
-from Transcription import Transcription
-from log_cfg import logger
+from functions.utils.Transcription import Transcription
+from functions.utils.log_cfg import logger
 
 s3 = boto3.resource('s3')
 
