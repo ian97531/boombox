@@ -1,9 +1,7 @@
 # Boombox Pipeline
----
 A  series of Lambda functions that periodically check podcast RSS feeds, downloads any new episodes, and transcribes and preps the episode to be used by the front-end app.
 
 ## Development Setup
----
 
 1. Checkout this repository to your machine:
  ```
