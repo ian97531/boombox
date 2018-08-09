@@ -6,24 +6,42 @@ A  series of Lambda functions that periodically check podcast RSS feeds, downloa
 ---
 
 1. Checkout this repository to your machine:
- `git clone https://github.com/ian97531/boombox.git`
+ ```
+ git clone https://github.com/ian97531/boombox.git
+ ```
 2. Open your terminal and cd the pipeline directory in the repo.
 3. Install the [Serverless Framework](https://serverless.com/framework/docs/providers/aws/guide/quick-start/):
-`npm install -g serverless`
+```
+npm install -g serverless
+```
 4. Install the node dependencies:
-`npm install`
+```
+npm install
+```
 5. Obtain an AWS access key and secret from Ian.  Use these credentials to set up your local Serverless credentials ([link](https://serverless.com/framework/docs/providers/aws/guide/credentials/)):
-`serverless config credentials --provider aws --key [ACCESS KEY] --secret [SECRET]`
+```
+serverless config credentials --provider aws --key [ACCESS KEY] --secret [SECRET]
+```
 6. Install Homebrew:
-`/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
+```
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+```
 7. Update your PATH in  `~/.profile` to include Homebrew’s bin directory by adding the line:
-`export PATH="/usr/local/bin:/usr/local/sbin:$PATH"`
+```
+export PATH="/usr/local/bin:/usr/local/sbin:$PATH"
+```
 8. Install python 2.7:
-`brew install python@2`
+```
+brew install python@2
+```
 9. Install the python requirements for the pipeline:
-`pip install -r ./requirements.txt`
+```
+pip install -r ./requirements.txt
+```
 10. Do a test deploy:
-`sls deploy`
+```
+sls deploy
+```
 
 ## Pipeline Overview
 The pipeline fetches and processes podcast episodes in 6 phases:
@@ -58,11 +76,15 @@ The pipeline fetches and processes podcast episodes in 6 phases:
 	1. Uses the duration information obtained from the previous transcode job to calculate the number and start and stop times for each split file.
 	2. Starts a job in the `split` pipeline of the AWS Amazon Elastic Transcoder Service that takes the original mp3 file as an input and generates the requested number of output mp3 files in the `episode-audio-splits` S3 bucket. The job still runs if the episode is less than 55 minutes, but only creates a single output file that’s identical to the original mp3 file. The split job also publishes of a message to the `split-complete` SNS topic. This message initiates two Lambdas, one that begins the AWS transcription process (described below) and another that simultaneously begins the Watson transcription process (also described below).
 ### Transcribe the audio files using AWS’s Transcribe Service and post-process the results into a normalized format.
+Coming soon
 
 ### Transcribe the audio files using IBM’s Watson Speech-to-Text Service and post-process the results into a normalized format.
+Coming soon
 
 ### Combine both AWS and Watson transcriptions to produce a higher accuracy transcription.
+Coming soon
 
 ### Store the results to a DynamoDB table.
+Coming soon
 
 ![Pipeline Diagram](https://github.com/ian97531/boombox/blob/master/pipeline/docs/Transcription%20Pipeline.png)
