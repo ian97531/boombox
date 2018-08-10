@@ -245,4 +245,4 @@ Understand the intent behind text and returns a corresponding classification, co
 **Description:** The IBM Watson™ Tone Analyzer service uses linguistic analysis to detect emotion, language tones, and sentiment in written text.
 
 ### [IBM Watson Personality Insights](https://www.ibm.com/cloud/watson-personality-insights)
-Predict personality characteristics, needs, and values via written text. Understand habits and preferences on an individual level.
+**Description:** Predict personality characteristics, needs, and values via written text. Understand habits and preferences on an individual level.
