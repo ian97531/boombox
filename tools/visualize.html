@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Visualize</title>
+	<style>
+		body {
+		    background-color: linen;
+		    padding: 20px;
+		}
+
+		textarea {
+			width: 100%;
+			height: 100px;
+		    color: maroon;
+		} 
+
+		.c100 {
+			background-color: rgb(255, 255, 255);
+		}
+
+		.c90 {
+			background-color: rgb(255, 230, 230);
+		}
+
+		.c80 {
+			background-color: rgb(255, 205, 205);
+		}
+
+		.c70 {
+			background-color: rgb(255, 180, 180);
+		}
+
+		.c60 {
+			background-color: rgb(255, 155, 155);
+		}
+
+		.c50 {
+			background-color: rgb(255, 130, 130);
+		}
+
+		.c40 {
+			background-color: rgb(255, 105, 105);
+		}
+
+		.c30 {
+			background-color: rgb(255, 80, 80);
+		}
+
+		.c20 {
+			background-color: rgb(255, 55, 55);
+		}
+
+		.c10 {
+			background-color: rgb(255, 30, 30);
+		}
+
+		.c0 {
+			background-color: rgb(255, 5, 5);
+		}
+
+	</style>
+	<script type="text/javascript">
+		function process() {
+			outputEl = document.getElementById('output');
+			textData = document.getElementById('input').value;
+			speakers = [
+				document.getElementById('speaker1').value,
+				document.getElementById('speaker2').value
+			];
+			jsonData = JSON.parse(textData);
+			lines = []
+			currentSpeaker = undefined
+			currentLine = ''
+			words = []
+
+			jsonData.forEach(function(word) {
+				if (word.speaker !== currentSpeaker) {
+					currentSpeaker = word.speaker;
+					currentLine += words.join(' ') + '</div>';
+					lines.push(currentLine)
+					if (currentSpeaker === 0 || currentSpeaker === 1) {
+						speaker = speakers[currentSpeaker]
+					} else {
+						speaker = 'Speaker ' + (currentSpeaker + 1)
+					}
+					currentLine = '<h3>' + speaker + '</h3>';
+					currentLine += '<div class="line">'
+					words = [];
+				}
+
+
+				theClass = 'c100'
+				confidence = parseFloat(word.confidence);
+				if (confidence >= 0.9 && confidence < 1) {
+					theClass = 'c90'
+				} else if (confidence >= 0.8 && confidence < 0.9) {
+					theClass = 'c80'
+				} else if (confidence >= 0.7 && confidence < 0.8) {
+					theClass = 'c70'
+				} else if (confidence >= 0.6 && confidence < 0.7) {
+					theClass = 'c60'
+				} else if (confidence >= 0.5 && confidence < 0.6) {
+					theClass = 'c50'
+				} else if (confidence >= 0.4 && confidence < 0.5) {
+					theClass = 'c40'
+				} else if (confidence >= 0.3 && confidence < 0.4) {
+					theClass = 'c30'
+				} else if (confidence >= 0.2 && confidence < 0.3) {
+					theClass = 'c20'
+				} else if (confidence >= 0.1 && confidence < 0.2) {
+					theClass = 'c10'
+				} else if (confidence >= 0 && confidence < 0.1) {
+					theClass = 'c0'
+				}
+				words.push('<span title="Confidence: ' + Math.round(confidence * 10000) / 100 + '%" class="' + theClass + '">' + word.word + '</span>')
+			});
+
+			outputEl.innerHTML = lines.join('');
+		}
+
+	</script>
+</head>
+<body>
+	<div>
+		<h4>Paste the normalized json into this text area:</h4>
+		<textarea id="input"></textarea>
+	</div>
+	<div>
+		<h4>Speaker 1: <input type="text" value="Speaker 1" id="speaker1" /></h4>
+		
+	</div>
+	<div>
+		<h4>Speaker 2: <input type="text" value="Speaker 2" id="speaker2" /></h4>
+		
+	</div>
+	<div>
+		<input onClick="process()" value="Visualize" type="button"></input>
+	</div>
+	<hr>
+	<div>
+			Hover over the word to see that word's transcription confidence score. The more red the highlighting of a word, the lower the confidence score.
+	</div>
+	<div id="output"></div>
+</body>
+</html>
