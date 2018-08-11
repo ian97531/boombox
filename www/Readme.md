@@ -1,1 +1,0 @@
-The react app for the front-end goes here.
