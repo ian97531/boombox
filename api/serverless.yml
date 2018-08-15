@@ -1,0 +1,49 @@
+service: ${self:custom.global.product}-api
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-offline
+  - serverless-domain-manager
+
+package:
+  exclude:
+    - "**/*.ts"
+
+custom:
+  global: ${file(../serverless-global.yml)}
+
+  stage: ${opt:stage, 'test'}
+
+  subdomains:
+    prod: "api."
+    test: api-${self:custom.global.environments.test}.
+    ian: api-${self:custom.global.environments.ian}.
+    andrew: api-${self:custom.global.environments.andrew}.
+
+  subdomain: ${self:custom.subdomains.${self:custom.stage}}
+
+  hostname: ${self:custom.subdomain}${self:custom.global.domain}
+
+  customDomain:
+    domainName: ${self:custom.hostname}
+    certificateName: '*.${self:custom.global.domain}'
+    basePath: ''
+    stage: ${self:custom.stage}
+    createRoute53Record: true
+
+  apiGateway:
+    baseURL: ${self:custom.hostname}/api
+    endpoints: None
+    urls: None
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  region: us-east-1
+
+functions:
+  http:
+    handler: src/lambda.http
+    events:
+      - http: ANY /
+      - http: ANY /{proxy+}
