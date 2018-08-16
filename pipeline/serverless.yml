@@ -20,7 +20,8 @@ package:
 custom:
   global: ${file(../serverless-global.yml)}
 
-  stage: ${opt:stage, 'test'}
+  specifiedStage: ${env:AWS_STAGE, opt:stage}
+  stage: ${self:custom.specifiedStage, 'test'}
 
   pythonRequirements:
     noDeploy: ""
@@ -93,6 +94,9 @@ custom:
       combineComplete:
         name: ${self:service}-${self:custom.stage}-combine-complete
         arn: arn:aws:sns:${self:provider.region}:${self:custom.global.awsAccountId}:${self:custom.sns.topics.combineComplete.name}
+      errors:
+        name: ${self:service}-${self:custom.stage}-errors
+        arn: arn:aws:sns:${self:provider.region}:${self:custom.global.awsAccountId}:${self:custom.sns.topics.errors.name}
 
   transcoder:
     jobs:
@@ -102,12 +106,18 @@ custom:
     pipelines:
       transcode:
         ids:
+          prod: None # Requested limit increase from AWS, will add when complete
           test: 1531438545970-0z6rkw
+          ian: 1534397153424-dv9bqz
+          andrew: None # Requested limit increase from AWS, will add when complete
         id: ${self:custom.transcoder.pipelines.transcode.ids.${self:custom.stage}}
         arn: arn:aws:elastictranscoder:${self:provider.region}:${self:custom.global.awsAccountId}:pipeline/${self:custom.transcoder.pipelines.transcode.id}
       split:
         ids:
+          prod: None # Requested limit increase from AWS, will add when complete
           test: 1531803024408-reo2a2
+          ian: 1534397495629-rlv3fd
+          andrew: None # Requested limit increase from AWS, will add when complete
         id: ${self:custom.transcoder.pipelines.split.ids.${self:custom.stage}}
         arn: arn:aws:elastictranscoder:${self:provider.region}:${self:custom.global.awsAccountId}:pipeline/${self:custom.transcoder.pipelines.split.id}
 
@@ -133,10 +143,12 @@ provider:
   name: aws
   runtime: python2.7
   region: us-east-1
+  stage: ${self:custom.stage}
   environment:
     PODCASTS_TABLE: ${self:custom.dynamodb.podcasts}
     EPISODES_TABLE: ${self:custom.dynamodb.episodes}
     INSERT_LIMIT: ${self:custom.episodeInsertLimit}
+    ERROR_TOPIC: ${self:custom.sns.topics.errors.arn}
   iamRoleStatements:
     #
     # S3 Bucket Permissions
@@ -462,3 +474,19 @@ resources:
           WriteCapacityUnits: 5
         StreamSpecification:
           StreamViewType: NEW_IMAGE
+
+    #
+    # SNS for Errors
+    #
+    errorSNSTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        DisplayName: Boombox Pipeline Errors (${self:custom.stage})
+        TopicName: ${self:custom.sns.topics.errors.name}
+
+    errorSNSSubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Endpoint: boombox-pipeline-errors@googlegroups.com
+        Protocol: "email"
+        TopicArn: ${self:custom.sns.topics.errors.arn}
