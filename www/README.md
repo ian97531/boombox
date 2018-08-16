@@ -1,3 +1,40 @@
+# Boombox WWW
+A react app written in typescript.
+
+## Development Setup
+
+1. Checkout this repository to your machine:
+ ```
+ git clone https://github.com/ian97531/boombox.git
+ ```
+2. Open your terminal and cd the pipeline directory in the repo.
+3. Install the [Serverless Framework](https://serverless.com/framework/docs/providers/aws/guide/quick-start/):
+```
+npm install -g serverless
+```
+4. Install the node dependencies:
+```
+npm install
+```
+5. Obtain an AWS access key and secret from Ian.  Use these credentials to set up your local Serverless credentials ([link](https://serverless.com/framework/docs/providers/aws/guide/credentials/)):
+```
+serverless config credentials --provider aws --key [ACCESS KEY] --secret [SECRET]
+```
+6. Set up an environement variable called AWS_STAGE with the value of the environment you want to deploy into ("prod", "test", "andrew", or "ian"). Put this in your ~/.profile, or other shell init file if you want:
+```
+AWS_STAGE=andrew
+```
+7. If this environment has never been deployed before, the DNS and CDN need to be set up to support it. Give it a few minutes to initialize the CDN before proceeding on:
+```
+yarn domain
+```
+8. Do a test deploy:
+```
+yarn deploy
+```
+
+---
+
 This project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app).
 
 Below you will find some information on how to perform common tasks.<br>
