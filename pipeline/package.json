@@ -4,7 +4,9 @@
   "description": "The pipeline that ingests, processes, and transcribes podcast episodes.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "domain": "serverless create_domain",
+    "deploy": "serverless deploy"
   },
   "repository": {
     "type": "git",
