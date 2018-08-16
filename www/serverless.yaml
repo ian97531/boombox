@@ -1,0 +1,109 @@
+service: ${self:custom.global.product}-www
+
+plugins:
+  - serverless-finch
+
+custom:
+  global: ${file(../serverless-global.yaml)}
+
+  stage: ${env:AWS_STAGE, 'test'}
+
+  subdomains:
+    prod: ""
+    test: ${self:custom.global.environments.test}.
+    ian: ${self:custom.global.environments.ian}.
+    andrew: ${self:custom.global.environments.andrew}.
+  subdomain: ${self:custom.subdomains.${self:custom.stage}}
+  hostname: ${self:custom.subdomain}${self:custom.global.domain}
+
+  certificateArn: ${self:custom.global.certificateArns.${self:custom.stage}}
+
+  client:
+    bucketName: ${self:custom.hostname}
+    distributionFolder: build
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  region: ${self:custom.global.region}
+  stage: ${self:custom.stage}
+
+resources:
+  Resources:
+    WebsiteBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.hostname}
+        AccessControl: PublicRead
+        WebsiteConfiguration:
+          IndexDocument: index.html
+          ErrorDocument: index.html
+      DeletionPolicy: Delete
+    WebsiteBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: 
+          Ref: WebsiteBucket
+        PolicyDocument:
+          Statement:
+          - Sid: PublicReadForGetBucketObjects
+            Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource: arn:aws:s3:::${self:custom.hostname}/*
+    WebsiteCloudfront:
+      Type: AWS::CloudFront::Distribution
+      DependsOn:
+      - WebsiteBucket
+      Properties:
+        DistributionConfig:
+          Comment: Cloudfront Distribution pointing to ${self:custom.hostname} S3 bucket
+          Origins:
+          - DomainName: ${self:custom.hostname}.s3-website-${self:custom.global.region}.amazonaws.com
+            Id: S3Origin
+            CustomOriginConfig:
+              HTTPPort: '80'
+              HTTPSPort: '443'
+              OriginProtocolPolicy: http-only
+          Enabled: true
+          HttpVersion: 'http2'
+          DefaultRootObject: index.html
+          Aliases:
+          - ${self:custom.hostname}
+          DefaultCacheBehavior:
+            AllowedMethods:
+            - GET
+            - HEAD
+            Compress: true
+            TargetOriginId: S3Origin
+            ForwardedValues:
+              QueryString: true
+              Cookies:
+                Forward: none
+            ViewerProtocolPolicy: redirect-to-https
+          PriceClass: PriceClass_All
+          ViewerCertificate:
+            AcmCertificateArn: ${self:custom.certificateArn}
+            SslSupportMethod: sni-only
+          CustomErrorResponses:
+            - ErrorCachingMinTTL: 300
+              ErrorCode: 404
+              ResponseCode: 200
+              ResponsePagePath: /index.html
+    WebsiteDNSName:
+      Type: AWS::Route53::RecordSetGroup
+      Properties:
+        HostedZoneName: ${self:custom.global.domain}.
+        RecordSets:
+        - Name: ${self:custom.hostname}.
+          Type: A
+          AliasTarget:
+            HostedZoneId: Z2FDTNDATAQYW2
+            DNSName:
+              "Fn::GetAtt": [ WebsiteCloudfront, DomainName ]
+        - Name: ${self:custom.hostname}.
+          Type: AAAA
+          AliasTarget:
+            HostedZoneId: Z2FDTNDATAQYW2
+            DNSName:
+              "Fn::GetAtt": [ WebsiteCloudfront, DomainName ]
