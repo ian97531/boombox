@@ -36,9 +36,17 @@ brew install python@2
 ```
 pip install -r ./requirements.txt
 ```
+10. Set up an environement variable called AWS_STAGE with the value of the environment you want to deploy into ("prod", "test", "andrew", or "ian"). Put this in your ~/.profile, or other shell init file if you want:
+```
+AWS_STAGE=andrew
+```
+11. If this environment has never been deployed before, the DNS and CDN need to be set up to support it. Give it a few minutes to initialize the CDN before proceeding on:
+```
+yarn domain
+```
 10. Do a test deploy:
 ```
-sls deploy
+yarn deploy
 ```
 
 ## Pipeline Overview
