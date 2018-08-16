@@ -21,6 +21,9 @@
     "start": "react-scripts-ts start",
     "build": "react-scripts-ts build",
     "test": "react-scripts-ts test --env=jsdom",
+    "s3": "serverless client deploy --no-config-change --no-cors-change --no-policy-change --no-confirm",
+    "dns": "serverless deploy",
+    "deploy": "yarn build && yarn dns && yarn s3",
     "eject": "react-scripts-ts eject"
   },
   "devDependencies": {
@@ -28,6 +31,7 @@
     "@types/node": "^10.5.8",
     "@types/react": "^16.4.9",
     "@types/react-dom": "^16.0.7",
+    "serverless-finch": "^2.2.0",
     "typescript": "^3.0.1"
   }
 }

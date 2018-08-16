@@ -1,0 +1,14 @@
+product: "boombox"
+awsAccountId: "095713129403"
+region: us-east-1
+domain: "boombox.bingo"
+environments:
+  prod: ""
+  test: test
+  ian: ian-dev
+  andrew: andrew-dev
+certificateArns:
+  prod: arn:aws:acm:us-east-1:095713129403:certificate/d5737075-e90a-4514-9733-5defcb22cd83
+  test: arn:aws:acm:us-east-1:095713129403:certificate/81542e63-7a47-4ce3-ab71-371f945099fb
+  ian: arn:aws:acm:us-east-1:095713129403:certificate/81542e63-7a47-4ce3-ab71-371f945099fb
+  andrew: arn:aws:acm:us-east-1:095713129403:certificate/81542e63-7a47-4ce3-ab71-371f945099fb
