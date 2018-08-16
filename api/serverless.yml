@@ -12,7 +12,8 @@ package:
 custom:
   global: ${file(../serverless-global.yml)}
 
-  stage: ${opt:stage, 'test'}
+  specifiedStage: ${env:AWS_STAGE, opt:stage}
+  stage: ${self:custom.specifiedStage, 'test'}
 
   subdomains:
     prod: "api."
