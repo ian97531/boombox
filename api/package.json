@@ -1,0 +1,46 @@
+{
+  "name": "boombox-api",
+  "version": "1.0.0",
+  "description": "API for Boombox",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ian97531/boombox.git"
+  },
+  "keywords": [
+    "podcast",
+    "transcription"
+  ],
+  "author": "Ian White, Andrew Hoyer",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ian97531/boombox/issues"
+  },
+  "homepage": "https://github.com/ian97531/boombox#readme",
+  "scripts": {
+    "format": "prettier --write --config .prettierrc.yaml '**/*.ts'",
+    "clean": "rm -f src/*.js && rm -f src/*.js.map",
+    "start": "ts-node src/local.ts",
+    "build": "yarn clean && tsc",
+    "package": "yarn build && serverless package",
+    "deploy": "yarn build && serverless deploy"
+  },
+  "dependencies": {
+    "aws-serverless-express": "^3.2.0",
+    "cors": "^2.8.4",
+    "express": "^4.16.3",
+    "source-map-support": "^0.5.8"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.11",
+    "@types/aws-serverless-express": "^3.0.1",
+    "@types/cors": "^2.8.4",
+    "nodemon": "^1.13.0",
+    "prettier": "^1.14.2",
+    "serverless-domain-manager": "^2.6.0",
+    "serverless-offline": "^3.25.7",
+    "serverless-plugin-typescript": "^1.1.5",
+    "ts-node": "^5.0.0",
+    "tslint": "^5.9.1",
+    "typescript": "^2.7.2"
+  }
+}

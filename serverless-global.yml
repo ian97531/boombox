@@ -1,0 +1,8 @@
+product: "boombox"
+domain: "boombox.bingo"
+environments:
+  prod: ""
+  test: test
+  ian: ian-dev
+  andrew: andrew-dev
+awsAccountId: "095713129403"
