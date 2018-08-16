@@ -24,11 +24,7 @@ serverless config credentials --provider aws --key [ACCESS KEY] --secret [SECRET
 ```
 AWS_STAGE=andrew
 ```
-7. If this environment has never been deployed before, the DNS and CDN need to be set up to support it. Give it a few minutes to initialize the CDN before proceeding on:
-```
-yarn domain
-```
-8. Do a test deploy:
+7. Do a test deploy:
 ```
 yarn deploy
 ```
