@@ -1,4 +1,4 @@
-service: ${self:custom.global.product}-api
+service: ${self:custom.global.product}-${self:custom.component}
 
 plugins:
   - serverless-plugin-typescript
@@ -10,16 +10,17 @@ package:
     - "**/*.ts"
 
 custom:
+  component: api
   global: ${file(../serverless-global.yml)}
 
   specifiedStage: ${env:AWS_STAGE, opt:stage}
   stage: ${self:custom.specifiedStage, 'test'}
 
   subdomains:
-    prod: "api."
-    test: api-${self:custom.global.environments.test}.
-    ian: api-${self:custom.global.environments.ian}.
-    andrew: api-${self:custom.global.environments.andrew}.
+    prod: "${self:custom.component}."
+    test: ${self:custom.component}-${self:custom.global.environments.test}.
+    ian: ${self:custom.component}-${self:custom.global.environments.ian}.
+    andrew: ${self:custom.component}-${self:custom.global.environments.andrew}.
 
   subdomain: ${self:custom.subdomains.${self:custom.stage}}
 
@@ -32,15 +33,11 @@ custom:
     stage: ${self:custom.stage}
     createRoute53Record: true
 
-  apiGateway:
-    baseURL: ${self:custom.hostname}/api
-    endpoints: None
-    urls: None
-
 provider:
   name: aws
   runtime: nodejs8.10
   region: us-east-1
+  stage: ${self:custom.stage}
 
 functions:
   http:

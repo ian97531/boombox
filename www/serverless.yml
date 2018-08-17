@@ -1,18 +1,19 @@
-service: ${self:custom.global.product}-www
+service: ${self:custom.global.product}-${self:custom.component}
 
 plugins:
   - serverless-finch
 
 custom:
-  global: ${file(../serverless-global.yaml)}
+  component: www
+  global: ${file(../serverless-global.yml)}
 
   stage: ${env:AWS_STAGE, 'test'}
 
   subdomains:
-    prod: ""
-    test: ${self:custom.global.environments.test}.
-    ian: ${self:custom.global.environments.ian}.
-    andrew: ${self:custom.global.environments.andrew}.
+    prod: "" # Leave this blank so that the production website is deployed to boombox.bingo.
+    test: ${self:custom.component}-${self:custom.global.environments.test}.
+    ian: ${self:custom.component}-${self:custom.global.environments.ian}.
+    andrew: ${self:custom.component}-${self:custom.global.environments.andrew}.
   subdomain: ${self:custom.subdomains.${self:custom.stage}}
   hostname: ${self:custom.subdomain}${self:custom.global.domain}
 

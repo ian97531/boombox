@@ -4,8 +4,6 @@
   "private": true,
   "dependencies": {
     "husky": "^0.14.3",
-    "lint-staged": "^7.2.0",
-    "prettier-tslint": "^0.4.0",
     "react": "^16.4.2",
     "react-dom": "^16.4.2",
     "react-scripts-ts": "2.17.0"
@@ -21,9 +19,9 @@
     "start": "react-scripts-ts start",
     "build": "react-scripts-ts build",
     "test": "react-scripts-ts test --env=jsdom",
-    "s3": "serverless client deploy --no-config-change --no-cors-change --no-policy-change --no-confirm",
-    "dns": "serverless deploy",
-    "deploy": "yarn build && yarn dns && yarn s3",
+    "copyToS3": "serverless client deploy --no-config-change --no-cors-change --no-policy-change --no-confirm",
+    "domain": "serverless deploy",
+    "deploy": "yarn build && yarn domain && yarn copyToS3",
     "eject": "react-scripts-ts eject"
   },
   "devDependencies": {
@@ -31,6 +29,8 @@
     "@types/node": "^10.5.8",
     "@types/react": "^16.4.9",
     "@types/react-dom": "^16.0.7",
+    "lint-staged": "^7.2.0",
+    "prettier-tslint": "^0.4.0",
     "serverless-finch": "^2.2.0",
     "typescript": "^3.0.1"
   }
