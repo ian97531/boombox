@@ -4,6 +4,7 @@ from datetime import datetime
 from pynamodb.attributes import ListAttribute, NumberAttribute, UnicodeAttribute, UTCDateTimeAttribute
 from pynamodb.models import Model
 
+
 class PodcastModel(Model):
     class Meta:
         table_name = os.environ['PODCASTS_TABLE']
@@ -40,6 +41,8 @@ class EpisodeModel(Model):
     m4aURL = UnicodeAttribute(null=True)
     oggURL = UnicodeAttribute(null=True)
     duration = NumberAttribute(null=True)
+    watsonTranscription = UnicodeAttribute(null=True)
+    awsTranscription = UnicodeAttribute(null=True)
     splits = ListAttribute(null=True, default=[])
     splitAWSTranscriptions = ListAttribute(null=True, default=[])
     splitWatsonTranscriptions = ListAttribute(null=True, default=[])
