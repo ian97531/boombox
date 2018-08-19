@@ -99,6 +99,9 @@ custom:
       errors:
         name: ${self:service}-${self:custom.stage}-errors
         arn: arn:aws:sns:${self:provider.region}:${self:custom.global.awsAccountId}:${self:custom.sns.topics.errors.name}
+      status:
+        name: ${self:service}-${self:custom.stage}-status
+        arn: arn:aws:sns:${self:provider.region}:${self:custom.global.awsAccountId}:${self:custom.sns.topics.status.name}
 
   transcoder:
     jobs:
@@ -151,6 +154,7 @@ provider:
     EPISODES_TABLE: ${self:custom.dynamodb.episodes}
     INSERT_LIMIT: ${self:custom.episodeInsertLimit}
     ERROR_TOPIC: ${self:custom.sns.topics.errors.arn}
+    STATUS_TOPIC: ${self:custom.sns.topics.status.arn}
   iamRoleStatements:
     #
     # S3 Bucket Permissions
@@ -212,6 +216,7 @@ provider:
         - ${self:custom.sns.topics.zipComplete.arn}
         - ${self:custom.sns.topics.combineComplete.arn}
         - ${self:custom.sns.topics.errors.arn}
+        - ${self:custom.sns.topics.status.arn}
 
     #
     # Transcoder Permissions
@@ -497,3 +502,21 @@ resources:
         Endpoint: boombox-pipeline-errors@googlegroups.com
         Protocol: "email"
         TopicArn: ${self:custom.sns.topics.errors.arn}
+
+    #
+    # SNS for Errors
+    #
+    statusSNSTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        DisplayName: Boombox Pipeline Status (${self:custom.stage})
+        TopicName: ${self:custom.sns.topics.status.name}
+
+    statusSNSSubscription:
+      Type: AWS::SNS::Subscription
+      DependsOn:
+        - statusSNSTopic
+      Properties:
+        Endpoint: boombox-pipeline-status@googlegroups.com
+        Protocol: "email"
+        TopicArn: ${self:custom.sns.topics.status.arn}

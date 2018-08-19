@@ -5,6 +5,7 @@ import json
 import math
 import requests
 import feedparser
+import time
 
 from datetime import datetime
 from time import mktime
@@ -13,6 +14,7 @@ from pynamodb.exceptions import DoesNotExist
 from functions.utils.pynamodb_models import PodcastModel, EpisodeModel
 from functions.utils.log_cfg import logger
 from functions.utils.utils import logError
+from functions.utils.constants import EXCLUDE_ENV
 
 s3 = boto3.resource('s3')
 sns = boto3.resource('sns')
@@ -36,6 +38,31 @@ def getEnclosure(links):
 def getSafeGUID(guid):
     keepCharacters = ('_', '-')
     return "".join(c for c in guid if c.isalnum() or c in keepCharacters).rstrip()
+
+
+def logStatus(podcast, episode, guid, url, publishedAt):
+    STATUS_TOPIC = os.environ['STATUS_TOPIC']
+    topic = sns.Topic(STATUS_TOPIC)
+
+    environmentVariables = {}
+
+    for key in os.environ:
+        if key not in EXCLUDE_ENV:
+            environmentVariables[key] = os.environ[key]
+
+    message = json.dumps({
+        'environment': environmentVariables,
+        'podcast': podcast,
+        'episode': episode,
+        'guid': guid,
+        'url': url,
+        'published_at': time.strftime('%Y-%m-%d %H:%M:%S', publishedAt)
+    }, indent=4, sort_keys=True)
+
+    subject = 'Pipeline starting for ' + \
+        podcast + ': ' + episode
+
+    topic.publish(Message=message, Subject=subject)
 
 
 def checkRSSFeed(event, context):
@@ -76,6 +103,9 @@ def checkRSSFeed(event, context):
             guid = getSafeGUID(episode['id'])
             episodeURL = getEnclosure(episode['links'])
             if not guid in processedEpisodes and insertedEpisodes < INSERT_LIMIT:
+                logStatus(channel['title'], episode['title'],
+                          guid, episodeURL, episode['published_parsed'])
+                raise Exception()
                 logger.debug('Inserting "' + episodeURL +
                              '" into the dynamodb table "' + EPISODES_TABLE + '".')
                 newEpisode = EpisodeModel(
