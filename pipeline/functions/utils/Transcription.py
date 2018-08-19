@@ -1,12 +1,5 @@
-START_TIME = 'start_time'
-END_TIME = 'end_time'
-WORD = 'word'
-SPEAKER = 'speaker'
-CONFIDENCE = 'confidence'
+from functions.utils.constants import WORD, SPEAKER, CONFIDENCE, START_TIME, END_TIME, DRIFT, LEFT_OFFSET, RIGHT_OFFSET
 
-DRIFT = 'drift'
-LEFT_OFFSET = 'left_offset'
-RIGHT_OFFSET = 'right_offset'
 
 class Transcription():
     startTime = 0
@@ -22,12 +15,12 @@ class Transcription():
                 item[END_TIME] = item[END_TIME] + self.startTime
 
     def read(self, distance=1):
-        items = self.json[self.index : self.index + distance]
+        items = self.json[self.index: self.index + distance]
         self.index = self.index + distance
         return items
 
     def peek(self, distance=1):
-        items = self.json[self.index : self.index + distance]
+        items = self.json[self.index: self.index + distance]
         return items
 
     def reset(self):
@@ -37,7 +30,7 @@ class Transcription():
         output = []
         leftIndex = 0
         rightIndex = 0
-        while leftIndex >= len(self.json) or rightIndex >= len(transcription.json):
+        while leftIndex < len(self.json) or rightIndex < len(transcription.json):
             left = self.json[leftIndex]
             right = transcription.json[rightIndex]
 
@@ -46,10 +39,13 @@ class Transcription():
                 leftIndex = leftIndex + 1
                 rightIndex = rightIndex + 1
             else:
-                result = getBestTimeMatch(self.json, transcription.json, leftIndex, rightIndex, 1, 1)
-                
-                leftMatch = self.json[leftIndex : leftIndex + result[LEFT_OFFSET]]
-                rightMatch = transcription.json[rightIndex : rightIndex + result[RIGHT_OFFSET]]
+                result = getBestTimeMatch(
+                    self.json, transcription.json, leftIndex, rightIndex, 1, 1)
+
+                leftMatch = self.json[leftIndex: leftIndex +
+                                      result[LEFT_OFFSET]]
+                rightMatch = transcription.json[rightIndex: rightIndex +
+                                                result[RIGHT_OFFSET]]
 
                 leftIndex = leftIndex + result[LEFT_OFFSET]
                 rightIndex = rightIndex + result[RIGHT_OFFSET]
@@ -66,13 +62,8 @@ class Transcription():
                             item[SPEAKER] = leftSpeaker
                     output = output + rightMatch
 
-        while leftIndex < len(self.json):
-            output = output + self.json[leftIndex]
-            leftIndex = leftIndex + 1
-
-        while rightIndex < len(transcription.json):
-            output = output + transcription.json[rightIndex]
-            rightIndex = rightIndex + 1
+        output = output + self.json[leftIndex:]
+        output = output + transcription.json[rightIndex:]
 
         self.json = output
         self.reset()
@@ -86,7 +77,7 @@ class Transcription():
         while not leftStartIndexFound:
             if index >= len(self.json):
                 break
-            
+
             if self.json[index][START_TIME] >= transcription.startTime:
                 leftStartIndexFound = True
                 leftStartIndex = index
@@ -94,20 +85,21 @@ class Transcription():
             index = index + 1
 
         if not leftStartIndexFound:
-            raise Exception('Unable to append transcriptions because their timecodes do not overlap.')
+            raise Exception(
+                'Unable to append transcriptions because their timecodes do not overlap.')
 
         matchFound = False
         rightStartIndex = 0
         leftOffset = 0
         offset = 0
-        
+
         # Search in both transcriptions for a segment of words that within 5 seconds of each other
         # that have the same content in the same order. The length of the overlapping segment is
-        # set by the withOverlap arguement. 
+        # set by the withOverlap arguement.
         while not matchFound and (leftStartIndex + offset + withOverlap) < len(self.json):
             matchSegmentStartIndex = leftStartIndex + offset
             matchSegmeentEndIndex = matchSegmentStartIndex + withOverlap
-            itemsToMatch = self.json[matchSegmentStartIndex : matchSegmeentEndIndex]
+            itemsToMatch = self.json[matchSegmentStartIndex: matchSegmeentEndIndex]
             segmentEndTime = self.json[matchSegmeentEndIndex][START_TIME]
 
             # Skip the first word of the next transcription since it may have been cut off. This
@@ -115,7 +107,7 @@ class Transcription():
             index = 1
             matches = 0
             currentItem = transcription.json[index]
-            
+
             # Iterate through the appending transcript looking for an overlapping segment. Don't overrun
             # the end of the transcript or look further out than 5 seconds from itemsToMatch.
             while not matchFound and index < len(transcription.json) and currentItem[START_TIME] - segmentEndTime < 5:
@@ -133,23 +125,29 @@ class Transcription():
                 index = index + 1
 
             offset = offset + 1
-        
+
         if not matchFound:
-            raise Exception('Unable to append transcriptions because an overlap of ' + withOverlap + ' words could not be found.')
+            raise Exception('Unable to append transcriptions because an overlap of ' +
+                            withOverlap + ' words could not be found.')
 
         # Determine the time code drift between the two transcriptions.
-        drift = round(self.json[leftStartIndex + leftOffset][START_TIME] - transcription.json[rightStartIndex][START_TIME], 3)
-        
+        drift = round(self.json[leftStartIndex + leftOffset][START_TIME] -
+                      transcription.json[rightStartIndex][START_TIME], 3)
+
         # Determine if the speaker classifications have been swapped between the two transriptions.
-        swapSpeakers = self.json[leftStartIndex + leftOffset][SPEAKER] != transcription.json[rightStartIndex][SPEAKER]
+        swapSpeakers = self.json[leftStartIndex +
+                                 leftOffset][SPEAKER] != transcription.json[rightStartIndex][SPEAKER]
 
         # Splice the two transcriptions together, save back to this json.
-        self.json = self.json[0 : leftStartIndex + leftOffset] + transcription.json[rightStartIndex:]
+        self.json = self.json[0: leftStartIndex +
+                              leftOffset] + transcription.json[rightStartIndex:]
 
         # Fix the timecode drift and speaker classifications of the spliced in items.
         for index in range(leftStartIndex + leftOffset, len(self.json)):
-            self.json[index][START_TIME] = round(self.json[index][START_TIME] + drift, 3)
-            self.json[index][END_TIME] = round(self.json[index][END_TIME] + drift, 3)
+            self.json[index][START_TIME] = round(
+                self.json[index][START_TIME] + drift, 3)
+            self.json[index][END_TIME] = round(
+                self.json[index][END_TIME] + drift, 3)
 
             if swapSpeakers:
                 if self.json[index][SPEAKER] == 0:
@@ -162,24 +160,26 @@ class Transcription():
         return a.startTime
 
 
-# Recursively calculates the up to 8 items from the left and right arrays that result in the smallest
-# amount of time drift between the two result sets.
 def getBestTimeMatch(left, right, leftStart, rightStart, leftOffset, rightOffset):
+    """Recursively calculates the up to 8 items from the left and right arrays that 
+    result in the smallest amount of time drift between the two result sets."""
     if leftStart + leftOffset >= len(left) or rightStart + rightOffset >= len(right):
         return None
 
-    leftItems = left[leftStart : leftStart + leftOffset]
-    rightItems = right[rightStart : rightStart + rightOffset]
+    leftItems = left[leftStart: leftStart + leftOffset]
+    rightItems = right[rightStart: rightStart + rightOffset]
     currentDrift = calculateDrift(leftItems, rightItems)
 
     if leftOffset < 8 and rightOffset < 8:
-        leftResult = getBestTimeMatch(left, right, leftStart, rightStart, leftOffset + 1, rightOffset)
-        rightResult = getBestTimeMatch(left, right, leftStart, rightStart, leftOffset, rightOffset + 1)
-        
-        if not leftResult and rightResult[DRIFT] < currentDrift:
+        leftResult = getBestTimeMatch(
+            left, right, leftStart, rightStart, leftOffset + 1, rightOffset)
+        rightResult = getBestTimeMatch(
+            left, right, leftStart, rightStart, leftOffset, rightOffset + 1)
+
+        if not leftResult and rightResult and rightResult[DRIFT] < currentDrift:
             return rightResult
-        
-        if not rightResult and leftResult[DRIFT] < currentDrift:
+
+        if not rightResult and leftResult and leftResult[DRIFT] < currentDrift:
             return leftResult
 
         if leftResult and rightResult:
@@ -187,28 +187,30 @@ def getBestTimeMatch(left, right, leftStart, rightStart, leftOffset, rightOffset
                 return leftResult
             elif rightResult[DRIFT] < currentDrift:
                 return rightResult
-    
+
     return {
         DRIFT: currentDrift,
         LEFT_OFFSET: leftOffset,
         RIGHT_OFFSET: rightOffset
     }
 
-# Calculates the total drift of the start and end times of the items provided.
+
 def calculateDrift(leftItems, rightItems):
+    """Calculates the total drift of the start and end times of the items provided."""
     leftFirst = leftItems[0]
     leftLast = leftItems[len(leftItems) - 1]
 
     rightFirst = rightItems[0]
     rightLast = rightItems[len(rightItems) - 1]
-    
+
     startDrift = abs(leftFirst[START_TIME] - rightFirst[START_TIME])
     endDrift = abs(leftLast[END_TIME] - rightLast[END_TIME])
 
     return startDrift + endDrift
 
-# Returns the average confidence value for the items provided.
+
 def getConfidence(items):
+    """Returns the average confidence value for the items provided."""
     count = 0
     confidence = 0
 
@@ -218,9 +220,10 @@ def getConfidence(items):
 
     return confidence/count
 
-# Returns the value of the speaker if all items have the same speaker value. Otherwise,
-# it returns None.
+
 def getSpeaker(items):
+    """Returns the value of the speaker if all items have the same speaker value. 
+    Otherwise, it returns None."""
     currentSpeaker = None
     failed = False
 
@@ -230,5 +233,5 @@ def getSpeaker(items):
         elif failed == False and currentSpeaker != item[SPEAKER]:
             currentSpeaker = None
             failed = True
-    
+
     return currentSpeaker

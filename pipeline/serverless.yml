@@ -16,6 +16,7 @@ package:
     - LICENSE
     - .gitignore
     - docs/**
+    - tools/**
 
 custom:
   component: pipeline
@@ -130,7 +131,7 @@ custom:
           arn: arn:aws:secretsmanager:${self:provider.region}:${self:custom.global.awsAccountId}:secret:watson_transcribe_credentials-rRBeuP
 
   apiGateway:
-    baseURL: ${self:custom.hostname}
+    baseURL: https://${self:custom.hostname}
     endpoints:
       watsonCallbacks:
         verify: /watson
@@ -210,6 +211,7 @@ provider:
         - ${self:custom.sns.topics.normalizeWatsonComplete.arn}
         - ${self:custom.sns.topics.zipComplete.arn}
         - ${self:custom.sns.topics.combineComplete.arn}
+        - ${self:custom.sns.topics.errors.arn}
 
     #
     # Transcoder Permissions
@@ -330,6 +332,7 @@ functions:
       INPUT_BUCKET: ${self:custom.buckets.transcriptions.aws.normalized}
       OUTPUT_BUCKET: ${self:custom.buckets.transcriptions.aws.zipped}
       COMPLETE_TOPIC: ${self:custom.sns.topics.zipComplete.arn}
+      TRANSCRIPTION_ATTRIBUTE: awsTranscription
     events:
       - sns: ${self:custom.sns.topics.normalizeAWSComplete.name}
 
@@ -380,6 +383,7 @@ functions:
       INPUT_BUCKET: ${self:custom.buckets.transcriptions.watson.normalized}
       OUTPUT_BUCKET: ${self:custom.buckets.transcriptions.watson.zipped}
       COMPLETE_TOPIC: ${self:custom.sns.topics.zipComplete.arn}
+      TRANSCRIPTION_ATTRIBUTE: watsonTranscription
     events:
       - sns: ${self:custom.sns.topics.normalizeWatsonComplete.name}
 
@@ -391,8 +395,8 @@ functions:
     handler: functions.normalized.combine
     timeout: 300
     environment:
-      AWS_INPUT_BUCKET: ${self:custom.buckets.transcriptions.aws.normalized}
-      WATSON_INPUT_BUCKET: ${self:custom.buckets.transcriptions.watson.normalized}
+      AWS_INPUT_BUCKET: ${self:custom.buckets.transcriptions.aws.zipped}
+      WATSON_INPUT_BUCKET: ${self:custom.buckets.transcriptions.watson.zipped}
       OUTPUT_BUCKET: ${self:custom.buckets.transcriptions.combined}
       COMPLETE_TOPIC: ${self:custom.sns.topics.combineComplete.arn}
     events:
@@ -488,7 +492,7 @@ resources:
     errorSNSSubscription:
       Type: AWS::SNS::Subscription
       DependsOn:
-      - errorSNSTopic
+        - errorSNSTopic
       Properties:
         Endpoint: boombox-pipeline-errors@googlegroups.com
         Protocol: "email"
