@@ -1,0 +1,18 @@
+.Player {
+  display: flex;
+  flex-direction: column;
+}
+
+.Player__player-bar {
+  position: relative;
+  height: 20px;
+}
+
+.Player__player-bar-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 100%;
+  background: black;
+}
