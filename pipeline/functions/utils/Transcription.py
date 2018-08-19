@@ -1,4 +1,4 @@
-from functions.utils.constants import WORD, SPEAKER, CONFIDENCE, START_TIME, END_TIME, DRIFT, LEFT_OFFSET, RIGHT_OFFSET
+from functions.utils.constants import WORDS, WORD, SPEAKER, CONFIDENCE, START_TIME, END_TIME, DRIFT, LEFT_OFFSET, RIGHT_OFFSET
 
 
 class Transcription():
@@ -25,6 +25,28 @@ class Transcription():
 
     def reset(self):
         self.index = 0
+
+    def getNextStatement(self):
+        currentWord = self.peek()
+        done = False
+        if currentWord:
+            statement = {
+                START_TIME: currentWord[0][START_TIME],
+                SPEAKER: currentWord[0][SPEAKER],
+                WORDS: []
+            }
+            while not done and currentWord[0][SPEAKER] == statement[SPEAKER]:
+                self.read()
+                statement[WORDS].append(currentWord[0])
+                if len(self.peek()):
+                    currentWord = self.peek()
+                else:
+                    done = True
+            lastWord = statement[WORDS][-1]
+            statement[END_TIME] = lastWord[END_TIME]
+            return statement
+        else:
+            return None
 
     def enhanceTranscription(self, transcription):
         output = []
