@@ -105,7 +105,7 @@ def checkRSSFeed(event, context):
             if not guid in processedEpisodes and insertedEpisodes < INSERT_LIMIT:
                 logStatus(channel['title'], episode['title'],
                           guid, episodeURL, episode['published_parsed'])
-                raise Exception()
+
                 logger.debug('Inserting "' + episodeURL +
                              '" into the dynamodb table "' + EPISODES_TABLE + '".')
                 newEpisode = EpisodeModel(
