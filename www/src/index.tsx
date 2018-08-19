@@ -1,11 +1,29 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import App from './App';
+import { Provider } from 'react-redux';
+import { applyMiddleware, createStore } from 'redux';
+import thunk from 'redux-thunk';
+import App from './components/App';
 import './index.css';
 import registerServiceWorker from './registerServiceWorker';
+import reducers from './store/reducers';
+import AudioController from './utilities/AudioController';
+
+const store = createStore(reducers, applyMiddleware(thunk));
+AudioController.setStore(store);
+
+// TODO(ndrwhr): This should be kicked off somewhere in the app.
+const DEFAULT_AUDIO_URL = './audio/test-45.mp3';
+AudioController.setSrc(DEFAULT_AUDIO_URL);
+setTimeout(() => {
+  AudioController.play();
+}, 1000);
 
 ReactDOM.render(
-  <App />,
-  document.getElementById('root') as HTMLElement
+  <Provider store={store}>
+    <App />
+  </Provider>,
+  document.getElementById('root') as HTMLElement,
 );
+
 registerServiceWorker();

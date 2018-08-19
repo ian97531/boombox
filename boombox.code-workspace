@@ -1,9 +1,7 @@
 {
-  "folders": [
-    {
-      "path": "."
-    }
-  ],
+  "folders": [{
+    "path": "."
+  }],
 
   "settings": {
     "editor.formatOnSave": true,
@@ -16,6 +14,16 @@
       "**/.DS_Store": true,
       "**/.git": true,
       "**/node_modules": true,
+    },
+
+    "[javascript]": {
+      "editor.formatOnSave": true
+    },
+    "[typescript]": {
+      "editor.formatOnSave": true
+    },
+    "[typescriptreact]": {
+      "editor.formatOnSave": true
     },
   },
 }
