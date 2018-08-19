@@ -26,8 +26,11 @@ def logError(exc, event=None):
 
     message = json.dumps({
         'environment': environmentVariables,
-        'traceback': stack,
-        'error': str(exc),
+        'error': {
+            'error_type': exceptionType.__name__,
+            'error_message': str(exc),
+            'traceback': stack
+        },
         'invoking_event': event
     }, indent=4, sort_keys=True)
 
@@ -36,3 +39,36 @@ def logError(exc, event=None):
         ' on line ' + str(exceptionTraceback.tb_lineno)
 
     topic.publish(Message=message, Subject=subject)
+
+
+def logStatus(status, podcast, episode, guid, url, publishedAt):
+    STATUS_TOPIC = os.environ['STATUS_TOPIC']
+    topic = sns.Topic(STATUS_TOPIC)
+
+    environmentVariables = {}
+
+    for key in os.environ:
+        if key not in EXCLUDE_ENV:
+            environmentVariables[key] = os.environ[key]
+
+    message = json.dumps({
+        'environment': environmentVariables,
+        'job': {
+            'status': status,
+            'podcast': podcast,
+            'episode': episode,
+            'guid': guid,
+            'url': url,
+            'published_at': publishedAt
+        }
+    }, indent=4, sort_keys=True)
+
+    subject = 'Pipeline ' + status + ' for ' + \
+        podcast + ': ' + episode
+
+    topic.publish(Message=message, Subject=subject)
+
+
+def getSafeGUID(guid):
+    keepCharacters = ('_', '-')
+    return "".join(c for c in guid if c.isalnum() or c in keepCharacters).rstrip()

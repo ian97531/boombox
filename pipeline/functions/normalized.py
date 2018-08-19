@@ -4,12 +4,14 @@ import os
 import boto3
 import botocore
 import json
+import datetime
 
 from pynamodb.exceptions import DoesNotExist
-from functions.utils.pynamodb_models import EpisodeModel
+from functions.utils.pynamodb_models import PodcastModel, EpisodeModel, StatementModel
 from functions.utils.Transcription import Transcription
 from functions.utils.log_cfg import logger
-from functions.utils.utils import logError
+from functions.utils.utils import logError, logStatus
+from functions.utils.constants import COMPLETE, WORDS, SPEAKER, START_TIME, END_TIME
 
 s3 = boto3.resource('s3')
 sns = boto3.resource('sns')
@@ -21,6 +23,8 @@ def combine(event, context):
         aws_bucket = os.environ["AWS_INPUT_BUCKET"]
         watson_bucket = os.environ["WATSON_INPUT_BUCKET"]
         output_bucket = os.environ["OUTPUT_BUCKET"]
+        complete_topic = os.environ['COMPLETE_TOPIC']
+        topic = sns.Topic(complete_topic)
 
         for record in event['Records']:
             message = json.loads(record['Sns']['Message'])
@@ -72,6 +76,14 @@ def combine(event, context):
                 output_file.put(Body=json.dumps(left.json))
                 logger.info('Completed writing JSON to  "' +
                             output_filename + '" in bucket "' + output_bucket + '".')
+
+                logger.debug('Sending ' + json.dumps(message) +
+                             '\n to the combine complete SNS.')
+                message = {'guid': guid}
+                response = topic.publish(Message=json.dumps(
+                    {'default': json.dumps(message)}), MessageStructure='json')
+                logger.debug(
+                    'Sent message to the combine complete SNS ' + json.dumps(response))
             else:
                 logger.info('Skipping combine for "' + guid +
                             '" because at least one normalization is missing.')
@@ -145,6 +157,58 @@ def zip(event, context):
                     {'default': json.dumps(message)}), MessageStructure='json')
                 logger.debug(
                     'Sent message to the zip complete SNS ' + json.dumps(response))
+    except Exception as e:
+        logError(e, event)
+        raise
+
+
+def insert(event, context):
+    logger.debug(json.dumps(event))
+    try:
+        input_bucket = os.environ["INPUT_BUCKET"]
+
+        for record in event['Records']:
+            message = json.loads(record['Sns']['Message'])
+            guid = message['guid']
+
+            logger.info(
+                'Starting reading the transcription file from S3 for episode "' + guid + '".')
+            inputFilename = guid + '.json'
+            input_object = s3.Object(input_bucket, inputFilename)
+            response = input_object.get()
+            file_content = response['Body'].read().decode('utf-8')
+            json_content = json.loads(file_content)
+            transcription = Transcription(json_content)
+            logger.info(
+                'Completed reading the transcription file from S3 for episode "' + guid + '".')
+
+            logger.info(
+                'Starting inserting statements for episode "' + guid + '".')
+            statement = transcription.getNextStatement()
+            statements = []
+            while statement:
+                statements.append(StatementModel(
+                    guid=guid,
+                    endTime=statement[END_TIME],
+                    startTime=statement[START_TIME],
+                    speaker=statement[SPEAKER],
+                    words=statement[WORDS]
+                ))
+                statement = transcription.getNextStatement()
+            with StatementModel.batch_write() as batch:
+                for item in statements:
+                    batch.save(item)
+
+            logger.info(
+                'Completed inserting statements for episode "' + guid + '".')
+
+            episode = EpisodeModel.get(hash_key=guid)
+            podcast = PodcastModel.get(hash_key=episode.feedURL)
+            published = episode.publishedAt.strftime("%Y-%m-%d %H:%M:%S")
+
+            logStatus(COMPLETE, podcast.title, episode.title, guid,
+                      episode.episodeURL, published)
+
     except Exception as e:
         logError(e, event)
         raise

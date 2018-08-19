@@ -1,6 +1,7 @@
 START_TIME = 'start_time'
 END_TIME = 'end_time'
 WORD = 'word'
+WORDS = 'words'
 SPEAKER = 'speaker'
 CONFIDENCE = 'confidence'
 
@@ -20,3 +21,6 @@ EXCLUDE_ENV = ["AWS_ACCESS_KEY_ID",
                "_AWS_XRAY_DAEMON_ADDRESS",
                "_AWS_XRAY_DAEMON_PORT",
                "_X_AMZN_TRACE_ID"]
+
+COMPLETE = 'complete'
+STARTING = 'starting'
