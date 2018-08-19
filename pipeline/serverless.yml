@@ -211,6 +211,7 @@ provider:
         - ${self:custom.sns.topics.normalizeWatsonComplete.arn}
         - ${self:custom.sns.topics.zipComplete.arn}
         - ${self:custom.sns.topics.combineComplete.arn}
+        - ${self:custom.sns.topics.errors.arn}
 
     #
     # Transcoder Permissions
