@@ -1,23 +1,18 @@
-import express from 'express';
-import { Application, Router, Request, Response } from 'express';
-import { json, urlencoded } from 'body-parser';
-import cors from 'cors';
-import { eventContext } from 'aws-serverless-express/middleware';
+import { eventContext } from 'aws-serverless-express/middleware'
+import { json, urlencoded } from 'body-parser'
+import cors = require('cors')
+import express = require('express')
+import statements from './endpoints/statements'
+import { handleErrors, handleNotFound } from './middleware'
 
-const router: Router = Router();
+const app: express.Application = express()
+app.use(cors())
+app.use(json())
+app.use(urlencoded({ extended: true }))
+app.use(eventContext())
 
-router.get('/', (req: Request, res: Response) => {
-  res.send('Hello World');
-});
+app.use('/statements', statements())
+app.use(handleNotFound)
+app.use(handleErrors)
 
-export function configureApp() {
-  const app: Application = express();
-  app.use(cors());
-  app.use(json());
-  app.use(urlencoded({ extended: true }));
-  app.use(eventContext());
-
-  app.use('/', router);
-
-  return app;
-}
+export default app

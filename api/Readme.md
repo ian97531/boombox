@@ -33,6 +33,11 @@ yarn domain
 yarn deploy
 ```
 
+
+## API Endpoints
+Are documented [here](https://docs.google.com/document/d/1Sb2m7nD0JcTbVk0s5eioHk6-bStxEi7BzhB9uPgVNFw/edit).
+
+
 ## AWS Services (currently in use)
 ### [API Gateway](https://console.aws.amazon.com/apigateway/home?region=us-east-1#/apis)
 **Description:** Amazon API Gateway is an AWS service that enables developers to create, publish, maintain, monitor, and secure APIs at any scale.

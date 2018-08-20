@@ -32,12 +32,49 @@ custom:
     basePath: ''
     stage: ${self:custom.stage}
     createRoute53Record: true
+  
+  sns:
+    topics:
+      errors:
+        name: ${self:service}-${self:custom.stage}-errors
+        arn: arn:aws:sns:${self:provider.region}:${self:custom.global.awsAccountId}:${self:custom.sns.topics.errors.name}
 
 provider:
   name: aws
   runtime: nodejs8.10
   region: us-east-1
   stage: ${self:custom.stage}
+  environment:
+    PODCASTS_TABLE: ${self:custom.global.dynamodb.podcasts}
+    EPISODES_TABLE: ${self:custom.global.dynamodb.episodes}
+    STATEMENTS_TABLE: ${self:custom.global.dynamodb.statements}
+    SPEAKERS_TABLE: ${self:custom.global.dynamodb.speakers}
+    ERROR_TOPIC: ${self:custom.sns.topics.errors.arn}
+  iamRoleStatements:
+    #
+    # DynamoDB Table Permissions
+    #
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:BatchGetItem
+        - dynamodb:DescribeTable
+      Resource:
+        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.global.dynamodb.podcasts}
+        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.global.dynamodb.episodes}
+        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.global.dynamodb.speakers}
+        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.global.dynamodb.statements}
+    
+    #
+    # SNS Topic Publish Permissions
+    #
+    - Effect: Allow
+      Action:
+        - SNS:Publish
+      Resource:
+        - ${self:custom.sns.topics.errors.arn}
 
 functions:
   http:
@@ -45,3 +82,23 @@ functions:
     events:
       - http: ANY /
       - http: ANY /{proxy+}
+
+resources:
+  Resources:
+    #
+    # SNS for Errors
+    #
+    errorSNSTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        DisplayName: Boombox API Errors (${self:custom.stage})
+        TopicName: ${self:custom.sns.topics.errors.name}
+
+    errorSNSSubscription:
+      Type: AWS::SNS::Subscription
+      DependsOn:
+        - errorSNSTopic
+      Properties:
+        Endpoint: boombox-api-errors@googlegroups.com
+        Protocol: "email"
+        TopicArn: ${self:custom.sns.topics.errors.arn}
