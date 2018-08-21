@@ -12,8 +12,3 @@ certificateArns:
   test: arn:aws:acm:us-east-1:095713129403:certificate/81542e63-7a47-4ce3-ab71-371f945099fb
   ian: arn:aws:acm:us-east-1:095713129403:certificate/81542e63-7a47-4ce3-ab71-371f945099fb
   andrew: arn:aws:acm:us-east-1:095713129403:certificate/81542e63-7a47-4ce3-ab71-371f945099fb
-dynamodb:
-  podcasts: ${self:service}-${self:custom.stage}-podcasts
-  episodes: ${self:service}-${self:custom.stage}-episodes
-  statements: ${self:service}-${self:custom.stage}-statements
-  speakers: ${self:service}-${self:custom.stage}-speakers

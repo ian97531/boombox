@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
-import IError from '../types/IError'
+import { IError } from '../types/error'
 
 function defaultHandler(error: IError) {
   const status = error.status || 500

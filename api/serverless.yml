@@ -7,7 +7,7 @@ plugins:
 
 package:
   exclude:
-    - "**/*.ts"
+    - '**/*.ts'
 
 custom:
   component: api
@@ -17,7 +17,7 @@ custom:
   stage: ${self:custom.specifiedStage, 'test'}
 
   subdomains:
-    prod: "${self:custom.component}."
+    prod: '${self:custom.component}.'
     test: ${self:custom.component}-${self:custom.global.environments.test}.
     ian: ${self:custom.component}-${self:custom.global.environments.ian}.
     andrew: ${self:custom.component}-${self:custom.global.environments.andrew}.
@@ -32,7 +32,13 @@ custom:
     basePath: ''
     stage: ${self:custom.stage}
     createRoute53Record: true
-  
+
+  dynamodb:
+    podcasts: boombox-pipeline-${self:custom.stage}-podcasts
+    episodes: boombox-pipeline-${self:custom.stage}-episodes
+    statements: boombox-pipeline-${self:custom.stage}-statements
+    speakers: boombox-pipeline-${self:custom.stage}-speakers
+
   sns:
     topics:
       errors:
@@ -45,10 +51,10 @@ provider:
   region: us-east-1
   stage: ${self:custom.stage}
   environment:
-    PODCASTS_TABLE: ${self:custom.global.dynamodb.podcasts}
-    EPISODES_TABLE: ${self:custom.global.dynamodb.episodes}
-    STATEMENTS_TABLE: ${self:custom.global.dynamodb.statements}
-    SPEAKERS_TABLE: ${self:custom.global.dynamodb.speakers}
+    PODCASTS_TABLE: ${self:custom.dynamodb.podcasts}
+    EPISODES_TABLE: ${self:custom.dynamodb.episodes}
+    STATEMENTS_TABLE: ${self:custom.dynamodb.statements}
+    SPEAKERS_TABLE: ${self:custom.dynamodb.speakers}
     ERROR_TOPIC: ${self:custom.sns.topics.errors.arn}
   iamRoleStatements:
     #
@@ -62,11 +68,11 @@ provider:
         - dynamodb:BatchGetItem
         - dynamodb:DescribeTable
       Resource:
-        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.global.dynamodb.podcasts}
-        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.global.dynamodb.episodes}
-        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.global.dynamodb.speakers}
-        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.global.dynamodb.statements}
-    
+        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dynamodb.podcasts}
+        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dynamodb.episodes}
+        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dynamodb.speakers}
+        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dynamodb.statements}
+
     #
     # SNS Topic Publish Permissions
     #
@@ -100,5 +106,5 @@ resources:
         - errorSNSTopic
       Properties:
         Endpoint: boombox-api-errors@googlegroups.com
-        Protocol: "email"
+        Protocol: 'email'
         TopicArn: ${self:custom.sns.topics.errors.arn}

@@ -1,4 +1,4 @@
-import IError from '../types/IError'
+import { IError } from '../types/error'
 
 export default class BadRequest extends Error implements IError {
   public status = 400

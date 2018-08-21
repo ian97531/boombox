@@ -63,6 +63,12 @@ custom:
       transcoded: ${self:service}-${self:custom.stage}-episode-audio-transcoded
       splits: ${self:service}-${self:custom.stage}-episode-audio-splits
 
+  dynamodb:
+    podcasts: ${self:custom.global.product}-${self:custom.stage}-podcasts
+    episodes: ${self:custom.global.product}-${self:custom.stage}-episodes
+    statements: ${self:custom.global.product}-${self:custom.stage}-statements
+    speakers: ${self:custom.global.product}-${self:custom.stage}-speakers
+
   sns:
     topics:
       transcodePending:
@@ -146,10 +152,10 @@ provider:
   region: us-east-1
   stage: ${self:custom.stage}
   environment:
-    PODCASTS_TABLE: ${self:custom.global.dynamodb.podcasts}
-    EPISODES_TABLE: ${self:custom.global.dynamodb.episodes}
-    STATEMENTS_TABLE: ${self:custom.global.dynamodb.statements}
-    SPEAKERS_TABLE: ${self:custom.global.dynamodb.speakers}
+    PODCASTS_TABLE: ${self:custom.dynamodb.podcasts}
+    EPISODES_TABLE: ${self:custom.dynamodb.episodes}
+    STATEMENTS_TABLE: ${self:custom.dynamodb.statements}
+    SPEAKERS_TABLE: ${self:custom.dynamodb.speakers}
     INSERT_LIMIT: ${self:custom.episodeInsertLimit}
     ERROR_TOPIC: ${self:custom.sns.topics.errors.arn}
     STATUS_TOPIC: ${self:custom.sns.topics.status.arn}
@@ -194,10 +200,10 @@ provider:
         - dynamodb:BatchWriteItem
         - dynamodb:DescribeTable
       Resource:
-        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.global.dynamodb.podcasts}
-        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.global.dynamodb.episodes}
-        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.global.dynamodb.speakers}
-        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.global.dynamodb.statements}
+        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dynamodb.podcasts}
+        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dynamodb.episodes}
+        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dynamodb.speakers}
+        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dynamodb.statements}
 
     #
     # SNS Topic Publish Permissions
@@ -468,7 +474,7 @@ resources:
     podcastsTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:custom.global.dynamodb.podcasts}
+        TableName: ${self:custom.dynamodb.podcasts}
         AttributeDefinitions:
           - AttributeName: feedURL
             AttributeType: S
@@ -481,7 +487,7 @@ resources:
     episodesTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:custom.global.dynamodb.episodes}
+        TableName: ${self:custom.dynamodb.episodes}
         AttributeDefinitions:
           - AttributeName: guid
             AttributeType: S
@@ -496,7 +502,7 @@ resources:
     statementsTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:custom.global.dynamodb.statements}
+        TableName: ${self:custom.dynamodb.statements}
         AttributeDefinitions:
           - AttributeName: guid
             AttributeType: S
@@ -513,7 +519,7 @@ resources:
     speakersTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:custom.global.dynamodb.speakers}
+        TableName: ${self:custom.dynamodb.speakers}
         AttributeDefinitions:
           - AttributeName: guid
             AttributeType: S
