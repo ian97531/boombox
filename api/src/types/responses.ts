@@ -9,6 +9,11 @@ interface IInfo {
   statusCode: number
 }
 
+interface IErrorInfo extends IInfo {
+  error: string
+  message: string
+}
+
 interface IListInfoBase extends IInfo {
   pageSize: number
   numResults: number
@@ -32,6 +37,7 @@ interface IListResponse<ResponseObject>
 interface ITimedListReponse<ResponseObject>
   extends IResponseBase<ITimedListInfo, ResponseObject[]> {}
 
+export interface IErrorResponse extends IResponseBase<IErrorInfo, null> {}
 export interface IEpisodeListResponse extends IListResponse<IEpisode> {}
 export interface IEpisodeResponse extends IResponse<IEpisode> {}
 export interface IPodcastListResponse extends IListResponse<IPodcast> {}

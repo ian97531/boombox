@@ -1,12 +1,13 @@
 import { NextFunction, Response, Router } from 'express'
 import validator = require('validator')
-import { queryStatements } from '../db/statements'
+import { getEpisode, getSpeakers, getStatements } from '../db'
 import {
+  handleAsync,
   validatePageSize,
   validateQueryParams,
   validateStartTime,
 } from '../middleware'
-import returnItems from '../responses/returnTimedList'
+import { returnStatements } from '../responses/returnList'
 import { IStatement } from '../types/models'
 import { IStatementListRequest } from '../types/requests'
 
@@ -18,30 +19,39 @@ export default function() {
     validateQueryParams(['pageSize', 'startTime']),
     validateStartTime(),
     validatePageSize(),
-    findStatements,
-    returnItems
+    handleAsync(findStatements),
+    returnStatements
   )
 
   return router
 }
 
-const findStatements = (
+const findStatements = async (
   req: IStatementListRequest,
   res: Response,
   next: NextFunction
 ) => {
+  const guid = validator.escape(req.params.episodeId)
+  const episodeResult = await getEpisode(guid)
+  const speakerResult = await getSpeakers(episodeResult.speakers)
   const query = {
-    guid: validator.escape(req.params.episodeId),
+    guid,
     pageSize: req.query.pageSize,
     startTime: req.query.startTime,
   }
-  queryStatements(query, (error: AWS.AWSError, data: IStatement[]) => {
-    if (error) {
-      console.error(error)
-      throw new Error()
-    } else {
-      req.items = data
+  const statementResult = await getStatements(query)
+
+  const items: IStatement[] = statementResult.items.map(statement => {
+    const newStatement: IStatement = {
+      endTime: statement.endTime,
+      speaker: speakerResult[statement.speaker],
+      startTime: statement.startTime,
+      words: statement.words,
     }
-    next()
+    return newStatement
   })
+
+  req.items = items
+  req.moreResults = statementResult.moreResults
+  next()
 }

@@ -1,83 +1,32 @@
-import AWS = require('aws-sdk')
-import { IStatement } from '../types/models'
+import { IDBListResponse, ITimedListQuery } from '../types/db'
+import { IStatementDBResult } from '../types/models'
+import { default as dynamo } from './dynamo'
 
-AWS.config.update({
-  region: 'us-east-1',
-})
-
-const dynamo: AWS.DynamoDB = new AWS.DynamoDB({ apiVersion: '2012-10-08' })
-
-interface IQuery {
-  guid: string
-  startTime: number
-  pageSize: number
-}
-
-export function queryStatements(
-  query: IQuery,
-  cb: (error: AWS.AWSError, data: IStatement[]) => void
-) {
-  console.log('in queryStatements')
-  const params: AWS.DynamoDB.QueryInput = {
+export async function getStatements(
+  query: ITimedListQuery
+): Promise<IDBListResponse<IStatementDBResult>> {
+  const params: AWS.DynamoDB.DocumentClient.QueryInput = {
     ExpressionAttributeValues: {
-      ':guid': { S: query.guid },
-      ':startTime': { N: query.startTime.toString() },
+      ':guid': query.guid,
+      ':startTime': query.startTime,
     },
     KeyConditionExpression: 'guid = :guid and endTime > :startTime',
-    Limit: query.pageSize,
+    Limit: query.pageSize + 1,
     ProjectionExpression: 'startTime, endTime, speaker, words',
     TableName: 'boombox-pipeline-ian-statements',
   }
-  dynamo.query(
-    params,
-    (error: AWS.AWSError, data: AWS.DynamoDB.QueryOutput) => {
-      const statements: IStatement[] = data ? prepareQueryResults(data) : []
-      cb(error, statements)
-    }
-  )
-}
 
-function prepareQueryResults(data: AWS.DynamoDB.QueryOutput): IStatement[] {
-  const items: IStatement[] = []
-  if (data.Items) {
-    data.Items.forEach((item: AWS.DynamoDB.AttributeMap) => {
-      const words = item.words.L || []
-      const speakerId = item.speaker.N || '0'
-      const startTime = item.startTime.N ? parseFloat(item.startTime.N) : 0
-      const endTime = item.endTime.N ? parseFloat(item.endTime.N) : 0
+  const data = (await dynamo
+    .query(params)
+    .promise()) as AWS.DynamoDB.DocumentClient.QueryOutput
 
-      const statement: IStatement = {
-        endTime,
-        speaker: {
-          avatarURL: 'http://www.avatarmovie.com/index.html',
-          id: speakerId,
-          isHost: true,
-          name: 'CGP Grey',
-        },
-        startTime,
-        words: words.map(wordObj => {
-          let wordEndTime = 0
-          let wordStartTime = 0
-          let content = ''
-          if (wordObj.M) {
-            const word = wordObj.M
-            wordEndTime = word.end_time.N
-              ? parseFloat(word.end_time.N)
-              : wordEndTime
-            wordStartTime = word.start_time.N
-              ? parseFloat(word.start_time.N)
-              : wordStartTime
-            content = word.word.S || content
-          }
-          return {
-            content,
-            endTime: wordStartTime,
-            startTime: wordEndTime,
-          }
-        }, []),
-      }
-      items.push(statement)
-    })
+  let items: IStatementDBResult[] = data
+    ? (data.Items as IStatementDBResult[])
+    : []
+  let moreResults = false
+  if (items.length === query.pageSize + 1) {
+    items = items.slice(0, query.pageSize)
+    moreResults = true
   }
-  return items
+  return { moreResults, items }
 }

@@ -2,7 +2,7 @@ import { Response } from 'express'
 import { IStatementListRequest } from '../types/requests'
 import { IStatementListResponse } from '../types/responses'
 
-export default function(req: IStatementListRequest, res: Response) {
+export function returnStatements(req: IStatementListRequest, res: Response) {
   const response: IStatementListResponse = {
     info: {
       moreResults: req.moreResults || false,
@@ -13,6 +13,5 @@ export default function(req: IStatementListRequest, res: Response) {
     },
     response: req.items,
   }
-
   res.json(response)
 }

@@ -7,6 +7,7 @@ export interface IEpisode {
   mp3URL: string
   duration: string
   publishedAt: string
+  speakers: string[]
 }
 
 export interface IPodcast {
@@ -29,6 +30,13 @@ export interface ISpeaker {
   name: string
   avatarURL: string
   isHost: boolean
+}
+
+export interface IStatementDBResult {
+  startTime: number
+  endTime: number
+  speaker: number
+  words: IWord[]
 }
 
 export interface IStatement {

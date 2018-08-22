@@ -1,17 +1,18 @@
 import { NextFunction, Request, Response } from 'express'
 import { IError } from '../types/error'
+import { IErrorResponse } from '../types/responses'
 
 function defaultHandler(error: IError) {
   const status = error.status || 500
   const title = error.title || 'Uknown Error'
-  let detail = error.message || ''
+  let message = error.message || ''
 
   if (status === 500) {
     console.error(error.stack)
-    detail = 'Internal Server Error'
+    message = 'Internal Server Error'
   }
 
-  return { status, title, detail }
+  return { status, title, message }
 }
 
 export default function(
@@ -20,12 +21,18 @@ export default function(
   res: Response,
   next: NextFunction
 ) {
-  const { status, title, detail } = defaultHandler(error)
+  const { status, title, message } = defaultHandler(error)
 
-  res.status(status).json({
-    status,
-    title,
-    // tslint:disable-next-line:object-literal-sort-keys
-    detail,
-  })
+  const response: IErrorResponse = {
+    // tslint:disable:object-literal-sort-keys
+    info: {
+      statusCode: status,
+      error: title,
+      message,
+    },
+    response: null,
+    // tslint:enable:object-literal-sort-keys
+  }
+
+  res.status(status).json(response)
 }

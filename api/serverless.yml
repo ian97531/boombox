@@ -33,6 +33,7 @@ custom:
     stage: ${self:custom.stage}
     createRoute53Record: true
 
+  # TODO(ian): These should reference ${self:custom.global.product}-${self:custom.stage}-[table]
   dynamodb:
     podcasts: boombox-pipeline-${self:custom.stage}-podcasts
     episodes: boombox-pipeline-${self:custom.stage}-episodes
