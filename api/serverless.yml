@@ -57,6 +57,7 @@ provider:
     STATEMENTS_TABLE: ${self:custom.dynamodb.statements}
     SPEAKERS_TABLE: ${self:custom.dynamodb.speakers}
     ERROR_TOPIC: ${self:custom.sns.topics.errors.arn}
+    DOMAIN_NAME: ${self:custom.global.domain}
   iamRoleStatements:
     #
     # DynamoDB Table Permissions
