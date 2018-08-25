@@ -1,6 +1,5 @@
-import update from 'immutability-helper';
-import { AnyAction } from 'redux';
-import * as PlayerActions from 'store/actions/player';
+import { PLAYER_UPDATE } from 'store/actions/player';
+import { createBasicReducer } from 'utilities/ReducerUtils';
 
 export enum PlayerStatus {
   Idle = 'IDLE',
@@ -23,21 +22,11 @@ const DEFAULT_STATE: IPlayerStore = {
   status: PlayerStatus.Idle,
 };
 
-const playerReducer = (
-  state = DEFAULT_STATE,
-  action: AnyAction,
-): IPlayerStore => {
-  switch (action.type) {
-    case PlayerActions.PLAYER_UPDATE:
-      // Map the changes into an immutable update object
-      const updates = Object.keys(action.changes).reduce((acc, key) => {
-        acc[key] = { $set: action.changes[key] };
-        return acc;
-      }, {});
-      return update(state, updates);
-    default:
-      return state;
-  }
-};
+const playerReducer = createBasicReducer<IPlayerStore>(DEFAULT_STATE, {
+  [PLAYER_UPDATE]: (state, action) => ({
+    ...state,
+    ...action.changes,
+  }),
+});
 
 export default playerReducer;
