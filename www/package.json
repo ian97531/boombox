@@ -1,8 +1,11 @@
 {
-  "name": "www",
+  "name": "@boombox/www",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@boombox/shared": "1.0.0",
+    "@types/react": "^16.4.11",
+    "@types/react-dom": "^16.0.7",
     "@types/react-redux": "^6.0.6",
     "husky": "^0.14.3",
     "normalize.css": "^8.0.0",
@@ -30,8 +33,6 @@
     "eject": "react-scripts-ts eject"
   },
   "devDependencies": {
-    "@types/react": "^16.4.11",
-    "@types/react-dom": "^16.0.7",
     "babel-core": "^6.26.3",
     "babel-runtime": "^6.26.0",
     "lint-staged": "^7.2.0",

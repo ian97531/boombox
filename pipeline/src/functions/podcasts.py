@@ -38,6 +38,9 @@ def getEnclosure(links):
 def checkRSSFeed(event, context):
     logger.debug(json.dumps(event))
     try:
+        COMPLETE_TOPIC = os.environ['COMPLETE_TOPIC']
+        topic = sns.Topic(COMPLETE_TOPIC)
+
         FEED_URL = 'https://www.hellointernet.fm/podcast?format=rss'
         page = 1
         response = feedparser.parse(FEED_URL)
@@ -95,6 +98,17 @@ def checkRSSFeed(event, context):
                 insertedEpisodes = insertedEpisodes + 1
                 logger.debug('Completed inserting "' + episodeURL +
                              '" into the dynamodb table "' + EPISODES_TABLE + '".')
+
+                message = {
+                    'episodeURL': episodeURL,
+                    'guid': guid
+                }
+                logger.debug('Sending ' + json.dumps(message) +
+                             '\n to the download pending SNS.')
+                response = topic.publish(Message=json.dumps(
+                    {'default': json.dumps(message)}), MessageStructure='json')
+                logger.debug(
+                    'Sent message to the download pending SNS ' + json.dumps(response))
             elif not guid in processedEpisodes:
                 logger.debug('Skipping "' + episodeURL + '" because the insertion max of ' +
                              str(INSERT_LIMIT) + ' has been reached.')
@@ -121,31 +135,31 @@ def download(event, context):
         topic = sns.Topic(COMPLETE_TOPIC)
         downloads = 0
         for record in event['Records']:
-            if record['eventName'] == 'INSERT':
-                podcast_url = record['dynamodb']['NewImage']['episodeURL']['S']
-                guid = record['dynamodb']['NewImage']['guid']['S']
-                filename = guid + '.mp3'
+            data = json.loads(record['Sns']['Message'])
+            guid = data['guid']
+            episode_url = data['episodeURL']
+            filename = guid + '.mp3'
 
-                logger.debug('Starting download of "' + podcast_url +
-                             '" to bucket "s3:/' + OUTPUT_BUCKET + '/' + filename + '".')
-                bucket = s3.Bucket(OUTPUT_BUCKET)
-                data = requests.get(podcast_url, stream=True)
-                bucket.upload_fileobj(data.raw, filename)
-                logger.debug('Completed download of "' + podcast_url +
-                             '" to bucket "s3:/' + OUTPUT_BUCKET + '/' + filename + '".')
+            logger.debug('Starting download of "' + episode_url +
+                         '" to bucket "s3:/' + OUTPUT_BUCKET + '/' + filename + '".')
+            bucket = s3.Bucket(OUTPUT_BUCKET)
+            data = requests.get(episode_url, stream=True)
+            bucket.upload_fileobj(data.raw, filename)
+            logger.debug('Completed download of "' + episode_url +
+                         '" to bucket "s3:/' + OUTPUT_BUCKET + '/' + filename + '".')
 
-                downloads = downloads + 1
+            downloads = downloads + 1
 
-                message = {
-                    'guid': guid,
-                    'filename': filename
-                }
-                logger.debug('Sending ' + json.dumps(message) +
-                             '\n to the transcode pending SNS.')
-                response = topic.publish(Message=json.dumps(
-                    {'default': json.dumps(message)}), MessageStructure='json')
-                logger.debug(
-                    'Sent message to the transcode pending SNS ' + json.dumps(response))
+            message = {
+                'guid': guid,
+                'filename': filename
+            }
+            logger.debug('Sending ' + json.dumps(message) +
+                         '\n to the transcode pending SNS.')
+            response = topic.publish(Message=json.dumps(
+                {'default': json.dumps(message)}), MessageStructure='json')
+            logger.debug(
+                'Sent message to the transcode pending SNS ' + json.dumps(response))
 
         logger.info('Completed downloads for ' + str(downloads) +
                     ' episodes in ' + str(datetime.now() - startTime) + ' .')

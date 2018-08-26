@@ -1,4 +1,4 @@
-import { IEpisode } from '../types/models'
+import { IEpisode } from '@boombox/shared/types/models'
 import { default as dynamo } from './dynamo'
 
 export async function getEpisode(guid: string): Promise<IEpisode> {

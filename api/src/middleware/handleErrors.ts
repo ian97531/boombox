@@ -1,7 +1,7 @@
+import { IErrorResponse } from '@boombox/shared/types/responses'
 import AWS = require('aws-sdk')
 import { NextFunction, Request, Response } from 'express'
 import { IError } from '../types/error'
-import { IErrorResponse } from '../types/responses'
 
 const EXCLUDE_ENV = [
   'AWS_ACCESS_KEY_ID',

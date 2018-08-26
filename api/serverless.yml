@@ -33,12 +33,11 @@ custom:
     stage: ${self:custom.stage}
     createRoute53Record: true
 
-  # TODO(ian): These should reference ${self:custom.global.product}-${self:custom.stage}-[table]
   dynamodb:
-    podcasts: ${self:custom.global.product}-${self:custom.stage}-podcasts
-    episodes: ${self:custom.global.product}-${self:custom.stage}-episodes
-    statements: ${self:custom.global.product}-${self:custom.stage}-statements
-    speakers: ${self:custom.global.product}-${self:custom.stage}-speakers
+    podcasts: ${self:custom.global.product}-${self:custom.stage}-${self:custom.global.dynamodb.podcasts.suffix}
+    episodes: ${self:custom.global.product}-${self:custom.stage}-${self:custom.global.dynamodb.episodes.suffix}
+    statements: ${self:custom.global.product}-${self:custom.stage}-${self:custom.global.dynamodb.statements.suffix}
+    speakers: ${self:custom.global.product}-${self:custom.stage}-${self:custom.global.dynamodb.speakers.suffix}
 
   sns:
     topics:
@@ -49,7 +48,7 @@ custom:
 provider:
   name: aws
   runtime: nodejs8.10
-  region: us-east-1
+  region: ${self:custom.global.region}
   stage: ${self:custom.stage}
   environment:
     PODCASTS_TABLE: ${self:custom.dynamodb.podcasts}
