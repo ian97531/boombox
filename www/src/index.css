@@ -1,3 +1,4 @@
+@import './variables.css';
 * {
   margin: 0;
   padding: 0;
@@ -10,8 +11,9 @@ html {
 
 body {
   display: flex;
-  font-family: sans-serif;
   min-height: 100%;
+  font-family: 'Work Sans', sans-serif;
+  color: var(--main-text-color);
 }
 
 #root {

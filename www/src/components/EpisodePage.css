@@ -1,0 +1,11 @@
+.Episode {
+  display: flex;
+}
+
+.Episode__conversation {
+  flex: 1;
+}
+
+.Episode__metadata {
+  width: 300px;
+}

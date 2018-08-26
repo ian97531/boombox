@@ -1,17 +1,16 @@
-import * as React from 'react';
-
-import ConversationPanel from 'components/ConversationPanel';
-import EpisodeMetadataPanel from 'components/EpisodeMetadataPanel';
+import EpisodePage from 'components/EpisodePage';
 import Player from 'components/player/Player';
+import * as React from 'react';
 
 import './App.css';
 
 const App: React.SFC = () => (
   <div className="App">
-    <div className="App__header">Header...</div>
+    <div className="App__header">
+      <div className="App__header-name">BOOMBOX</div>
+    </div>
     <div className="App__content">
-      <ConversationPanel />
-      <EpisodeMetadataPanel />
+      <EpisodePage />
     </div>
     <div className="App__player">
       <Player />
