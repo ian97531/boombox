@@ -563,8 +563,8 @@ resources:
           - AttributeName: guid
             KeyType: HASH
         ProvisionedThroughput:
-          ReadCapacityUnits: ${self:custom.dynamodb.speakers.tableName}
-          WriteCapacityUnits: ${self:custom.dynamodb.speakers.tableName}
+          ReadCapacityUnits: ${self:custom.dynamodb.speakers.rcu}
+          WriteCapacityUnits: ${self:custom.dynamodb.speakers.wcu}
 
     #
     # SNS for Errors
