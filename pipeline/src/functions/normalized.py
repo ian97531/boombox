@@ -167,6 +167,7 @@ def insert(event, context):
     logger.debug(json.dumps(event))
     try:
         input_bucket = os.environ["INPUT_BUCKET"]
+        statements_wcu = os.environ["STATEMENTS_WCU"]
 
         for record in event['Records']:
             message = json.loads(record['Sns']['Message'])
@@ -213,7 +214,7 @@ def insert(event, context):
                 consumed = response['ConsumedCapacity']['CapacityUnits']
                 capacityUnitsUsed = capacityUnitsUsed + consumed
                 elapsedTime = time.time() - startTime
-                if capacityUnitsUsed / elapsedTime > 10:
+                if capacityUnitsUsed / elapsedTime > statements_wcu:
                     time.sleep(1)
 
             logger.info(
