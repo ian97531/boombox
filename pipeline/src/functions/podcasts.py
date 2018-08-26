@@ -11,10 +11,10 @@ from datetime import datetime
 from time import mktime
 
 from pynamodb.exceptions import DoesNotExist
-from functions.utils.pynamodb_models import PodcastModel, EpisodeModel
-from functions.utils.log_cfg import logger
-from functions.utils.utils import logError, logStatus, getSafeGUID
-from functions.utils.constants import STARTING
+from src.utils.pynamodb_models import PodcastModel, EpisodeModel
+from src.utils.log_cfg import logger
+from src.utils.utils import logError, logStatus, getSafeGUID
+from src.utils.constants import STARTING
 
 s3 = boto3.resource('s3')
 sns = boto3.resource('sns')

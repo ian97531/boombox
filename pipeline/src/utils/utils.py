@@ -3,7 +3,7 @@ import json
 import os
 import traceback
 import sys
-from functions.utils.constants import EXCLUDE_ENV
+from constants import EXCLUDE_ENV
 
 sns = boto3.resource('sns')
 

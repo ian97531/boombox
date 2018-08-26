@@ -1,4 +1,4 @@
-from functions.utils.constants import WORDS, WORD, SPEAKER, CONFIDENCE, START_TIME, END_TIME, DRIFT, LEFT_OFFSET, RIGHT_OFFSET
+from constants import WORDS, WORD, SPEAKER, CONFIDENCE, START_TIME, END_TIME, DRIFT, LEFT_OFFSET, RIGHT_OFFSET
 
 
 class Transcription():
@@ -130,9 +130,8 @@ class Transcription():
             matches = 0
             currentItem = transcription.json[index]
 
-            # Iterate through the appending transcript looking for an overlapping segment. Don't
-            # overrun the end of the transcript or look further out than 5 seconds from
-            # itemsToMatch.
+            # Iterate through the appending transcript looking for an overlapping segment. Don't overrun
+            # the end of the transcript or look further out than 5 seconds from itemsToMatch.
             while not matchFound and index < len(
                     transcription.json) and currentItem[START_TIME] - segmentEndTime < 5:
                 currentItem = transcription.json[index]
