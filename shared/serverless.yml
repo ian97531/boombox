@@ -1,0 +1,98 @@
+service: ${self:custom.global.product}-${self:custom.component}
+
+package:
+  exclude:
+    - node_modules/**
+    - .requirements/**
+    - .idea/**
+    - env/**
+    - package.json
+    - package-lock.json
+    - requirements.txt
+    - LICENSE
+    - .gitignore
+    - docs/**
+    - tools/**
+
+custom:
+  component: shared
+  global: ${file(../serverless-global.yml)}
+
+  specifiedStage: ${env:AWS_STAGE, opt:stage}
+  stage: ${self:custom.specifiedStage, 'test'}
+
+  dynamodb:
+    podcasts: ${self:custom.global.product}-${self:custom.stage}-${self:custom.global.dynamodb.podcasts.suffix}
+    episodes: ${self:custom.global.product}-${self:custom.stage}-${self:custom.global.dynamodb.episodes.suffix}
+    statements: ${self:custom.global.product}-${self:custom.stage}-${self:custom.global.dynamodb.statements.suffix}
+    speakers: ${self:custom.global.product}-${self:custom.stage}-${self:custom.global.dynamodb.speakers.suffix}
+
+provider:
+  name: aws
+  runtime: node8.10
+  region: ${self:custom.global.region}
+  stage: ${self:custom.stage}
+
+resources:
+  Resources:
+    #
+    # DynamoDB Tables
+    #
+    podcastsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.dynamodb.podcasts}
+        AttributeDefinitions:
+          - AttributeName: feedURL
+            AttributeType: S
+        KeySchema:
+          - AttributeName: feedURL
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: ${self:custom.global.dynamodb.podcasts.rcu}
+          WriteCapacityUnits: ${self:custom.global.dynamodb.podcasts.wcu}
+    episodesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.dynamodb.episodes}
+        AttributeDefinitions:
+          - AttributeName: guid
+            AttributeType: S
+        KeySchema:
+          - AttributeName: guid
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: ${self:custom.global.dynamodb.episodes.rcu}
+          WriteCapacityUnits: ${self:custom.global.dynamodb.episodes.wcu}
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE
+    statementsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.dynamodb.statements}
+        AttributeDefinitions:
+          - AttributeName: guid
+            AttributeType: S
+          - AttributeName: endTime
+            AttributeType: N
+        KeySchema:
+          - AttributeName: guid
+            KeyType: HASH
+          - AttributeName: endTime
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: ${self:custom.global.dynamodb.statements.rcu}
+          WriteCapacityUnits: ${self:custom.global.dynamodb.statements.wcu}
+    speakersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.dynamodb.speakers}
+        AttributeDefinitions:
+          - AttributeName: guid
+            AttributeType: S
+        KeySchema:
+          - AttributeName: guid
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: ${self:custom.global.dynamodb.speakers.rcu}
+          WriteCapacityUnits: ${self:custom.global.dynamodb.speakers.wcu}

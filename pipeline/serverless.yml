@@ -65,24 +65,23 @@ custom:
 
   dynamodb:
     podcasts:
-      tableName: ${self:custom.global.product}-${self:custom.stage}-podcasts
-      rcu: 1
-      wcu: 1
+      name: ${self:custom.global.product}-${self:custom.stage}-${self:custom.global.dynamodb.podcasts.suffix}
+      arn: arn:aws:dynamodb:${self:provider.region}:${self:custom.global.awsAccountId}:table/${self:custom.dynamodb.podcasts.name}
     episodes:
-      tableName: ${self:custom.global.product}-${self:custom.stage}-episodes
-      rcu: 2
-      wcu: 5
+      name: ${self:custom.global.product}-${self:custom.stage}-${self:custom.global.dynamodb.episodes.suffix}
+      arn: arn:aws:dynamodb:${self:provider.region}:${self:custom.global.awsAccountId}:table/${self:custom.dynamodb.episodes.name}
     statements:
-      tableName: ${self:custom.global.product}-${self:custom.stage}-statements
-      rcu: 5
-      wcu: 5
+      name: ${self:custom.global.product}-${self:custom.stage}-${self:custom.global.dynamodb.statements.suffix}
+      arn: arn:aws:dynamodb:${self:provider.region}:${self:custom.global.awsAccountId}:table/${self:custom.dynamodb.statements.name}
     speakers:
-      tableName: ${self:custom.global.product}-${self:custom.stage}-speakers
-      rcu: 1
-      wcu: 1
+      name: ${self:custom.global.product}-${self:custom.stage}-${self:custom.global.dynamodb.speakers.suffix}
+      arn: arn:aws:dynamodb:${self:provider.region}:${self:custom.global.awsAccountId}:table/${self:custom.dynamodb.speakers.name}
 
   sns:
     topics:
+      downloadPending:
+        name: ${self:service}-${self:custom.stage}-download-pending
+        arn: arn:aws:sns:${self:provider.region}:${self:custom.global.awsAccountId}:${self:custom.sns.topics.downloadPending.name}
       transcodePending:
         name: ${self:service}-${self:custom.stage}-transcode-pending
         arn: arn:aws:sns:${self:provider.region}:${self:custom.global.awsAccountId}:${self:custom.sns.topics.transcodePending.name}
@@ -170,13 +169,13 @@ custom:
 provider:
   name: aws
   runtime: python2.7
-  region: us-east-1
+  region: ${self:custom.global.region}
   stage: ${self:custom.stage}
   environment:
-    PODCASTS_TABLE: ${self:custom.dynamodb.podcasts.tableName}
-    EPISODES_TABLE: ${self:custom.dynamodb.episodes.tableName}
-    STATEMENTS_TABLE: ${self:custom.dynamodb.statements.tableName}
-    SPEAKERS_TABLE: ${self:custom.dynamodb.speakers.tableName}
+    PODCASTS_TABLE: ${self:custom.dynamodb.podcasts.name}
+    EPISODES_TABLE: ${self:custom.dynamodb.episodes.name}
+    STATEMENTS_TABLE: ${self:custom.dynamodb.statements.name}
+    SPEAKERS_TABLE: ${self:custom.dynamodb.speakers.name}
     INSERT_LIMIT: ${self:custom.episodeInsertLimit}
     ERROR_TOPIC: ${self:custom.sns.topics.errors.arn}
     STATUS_TOPIC: ${self:custom.sns.topics.status.arn}
@@ -221,10 +220,10 @@ provider:
         - dynamodb:BatchWriteItem
         - dynamodb:DescribeTable
       Resource:
-        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dynamodb.podcasts.tableName}
-        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dynamodb.episodes.tableName}
-        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dynamodb.speakers.tableName}
-        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dynamodb.statements.tableName}
+        - ${self:custom.dynamodb.podcasts.arn}
+        - ${self:custom.dynamodb.episodes.arn}
+        - ${self:custom.dynamodb.speakers.arn}
+        - ${self:custom.dynamodb.statements.arn}
 
     #
     # SNS Topic Publish Permissions
@@ -233,6 +232,7 @@ provider:
       Action:
         - SNS:Publish
       Resource:
+        - ${self:custom.sns.topics.downloadPending.arn}
         - ${self:custom.sns.topics.transcodePending.arn}
         - ${self:custom.sns.topics.transcodeComplete.arn}
         - ${self:custom.sns.topics.permissionsComplete.arn}
@@ -294,6 +294,8 @@ functions:
     name: ${self:service}-${self:custom.stage}-podcasts-update-from-feed
     handler: src.functions.podcasts.checkRSSFeed
     timeout: 300
+    environment:
+      COMPLETE_TOPIC: ${self:custom.sns.topics.downloadPending.arn}
   podcasts-download:
     name: ${self:service}-${self:custom.stage}-podcasts-download
     handler: src.functions.podcasts.download
@@ -302,12 +304,7 @@ functions:
       OUTPUT_BUCKET: ${self:custom.buckets.audio.original}
       COMPLETE_TOPIC: ${self:custom.sns.topics.transcodePending.arn}
     events:
-      - stream:
-          type: dynamodb
-          arn:
-            Fn::GetAtt:
-              - episodesTable
-              - StreamArn
+      - sns: ${self:custom.sns.topics.downloadPending.name}
   podcasts-transcode:
     name: ${self:service}-${self:custom.stage}-podcasts-transcode
     handler: src.functions.podcasts.transcode
@@ -454,7 +451,7 @@ functions:
     timeout: 300
     environment:
       INPUT_BUCKET: ${self:custom.buckets.transcriptions.combined}
-      STATEMENTS_WCU: ${self:custom.dynamodb.statements.wcu}
+      STATEMENTS_WCU: ${self:custom.global.dynamodb.statements.wcu}
     events:
       - sns: ${self:custom.sns.topics.combineComplete.name}
 
@@ -503,68 +500,6 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.transcriptions.combined}
-
-    #
-    # DynamoDB Tables
-    #
-    podcastsTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:custom.dynamodb.podcasts.tableName}
-        AttributeDefinitions:
-          - AttributeName: feedURL
-            AttributeType: S
-        KeySchema:
-          - AttributeName: feedURL
-            KeyType: HASH
-        ProvisionedThroughput:
-          ReadCapacityUnits: ${self:custom.dynamodb.podcasts.rcu}
-          WriteCapacityUnits: ${self:custom.dynamodb.podcasts.wcu}
-    episodesTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:custom.dynamodb.episodes.tableName}
-        AttributeDefinitions:
-          - AttributeName: guid
-            AttributeType: S
-        KeySchema:
-          - AttributeName: guid
-            KeyType: HASH
-        ProvisionedThroughput:
-          ReadCapacityUnits: ${self:custom.dynamodb.episodes.rcu}
-          WriteCapacityUnits: ${self:custom.dynamodb.episodes.wcu}
-        StreamSpecification:
-          StreamViewType: NEW_IMAGE
-    statementsTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:custom.dynamodb.statements.tableName}
-        AttributeDefinitions:
-          - AttributeName: guid
-            AttributeType: S
-          - AttributeName: endTime
-            AttributeType: N
-        KeySchema:
-          - AttributeName: guid
-            KeyType: HASH
-          - AttributeName: endTime
-            KeyType: RANGE
-        ProvisionedThroughput:
-          ReadCapacityUnits: ${self:custom.dynamodb.statements.rcu}
-          WriteCapacityUnits: ${self:custom.dynamodb.statements.wcu}
-    speakersTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:custom.dynamodb.speakers.tableName}
-        AttributeDefinitions:
-          - AttributeName: guid
-            AttributeType: S
-        KeySchema:
-          - AttributeName: guid
-            KeyType: HASH
-        ProvisionedThroughput:
-          ReadCapacityUnits: ${self:custom.dynamodb.speakers.rcu}
-          WriteCapacityUnits: ${self:custom.dynamodb.speakers.wcu}
 
     #
     # SNS for Errors

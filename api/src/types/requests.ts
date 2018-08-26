@@ -1,5 +1,5 @@
+import { IStatement } from '@boombox/shared/types/models'
 import { Request } from 'express'
-import { IStatement } from './models'
 
 interface IListRequest<RequestObject> extends Request {
   moreResults: boolean

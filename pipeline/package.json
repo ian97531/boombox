@@ -1,5 +1,5 @@
 {
-  "name": "boombox-pipeline",
+  "name": "@boombox/pipeline",
   "version": "1.0.0",
   "description": "The pipeline that ingests, processes, and transcribes podcast episodes.",
   "main": "index.js",
@@ -23,6 +23,7 @@
     "npm": "^6.1.0"
   },
   "devDependencies": {
+    "@boombox/shared": "1.0.0",
     "serverless-domain-manager": "^2.6.0",
     "serverless-plugin-tracing": "^2.0.0",
     "serverless-python-requirements": "^4.1.1"

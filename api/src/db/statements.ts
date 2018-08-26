@@ -1,5 +1,5 @@
+import { IStatementDBResult } from '@boombox/shared/types/models'
 import { IDBListResponse, ITimedListQuery } from '../types/db'
-import { IStatementDBResult } from '../types/models'
 import { default as dynamo } from './dynamo'
 
 export async function getStatements(

@@ -1,3 +1,4 @@
+import { IStatement } from '@boombox/shared/types/models'
 import { NextFunction, Response, Router } from 'express'
 import validator = require('validator')
 import { getEpisode, getSpeakers, getStatements } from '../db'
@@ -8,7 +9,6 @@ import {
   validateStartTime,
 } from '../middleware'
 import { returnStatements } from '../responses/returnList'
-import { IStatement } from '../types/models'
 import { IStatementListRequest } from '../types/requests'
 
 export default function() {

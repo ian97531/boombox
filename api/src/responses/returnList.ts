@@ -1,6 +1,6 @@
+import { IStatementListResponse } from '@boombox/shared/types/responses'
 import { Response } from 'express'
 import { IStatementListRequest } from '../types/requests'
-import { IStatementListResponse } from '../types/responses'
 
 export function returnStatements(req: IStatementListRequest, res: Response) {
   const response: IStatementListResponse = {

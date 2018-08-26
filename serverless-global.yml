@@ -12,3 +12,21 @@ certificateArns:
   test: arn:aws:acm:us-east-1:095713129403:certificate/81542e63-7a47-4ce3-ab71-371f945099fb
   ian: arn:aws:acm:us-east-1:095713129403:certificate/81542e63-7a47-4ce3-ab71-371f945099fb
   andrew: arn:aws:acm:us-east-1:095713129403:certificate/81542e63-7a47-4ce3-ab71-371f945099fb
+
+dynamodb:
+  episodes:
+    suffix: episodes
+    rcu: 1
+    wcu: 2
+  podcasts:
+    suffix: podcasts
+    rcu: 1
+    wcu: 1
+  speakers:
+    suffix: speakers
+    rcu: 1
+    wcu: 1
+  statements:
+    suffix: statements
+    rcu: 5
+    wcu: 5
