@@ -35,10 +35,10 @@ custom:
 
   # TODO(ian): These should reference ${self:custom.global.product}-${self:custom.stage}-[table]
   dynamodb:
-    podcasts: boombox-pipeline-${self:custom.stage}-podcasts
-    episodes: boombox-pipeline-${self:custom.stage}-episodes
-    statements: boombox-pipeline-${self:custom.stage}-statements
-    speakers: boombox-pipeline-${self:custom.stage}-speakers
+    podcasts: ${self:custom.global.product}-${self:custom.stage}-podcasts
+    episodes: ${self:custom.global.product}-${self:custom.stage}-episodes
+    statements: ${self:custom.global.product}-${self:custom.stage}-statements
+    speakers: ${self:custom.global.product}-${self:custom.stage}-speakers
 
   sns:
     topics:
