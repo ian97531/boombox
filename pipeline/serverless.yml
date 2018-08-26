@@ -64,10 +64,22 @@ custom:
       splits: ${self:service}-${self:custom.stage}-episode-audio-splits
 
   dynamodb:
-    podcasts: ${self:custom.global.product}-${self:custom.stage}-podcasts
-    episodes: ${self:custom.global.product}-${self:custom.stage}-episodes
-    statements: ${self:custom.global.product}-${self:custom.stage}-statements
-    speakers: ${self:custom.global.product}-${self:custom.stage}-speakers
+    podcasts:
+      tableName: ${self:custom.global.product}-${self:custom.stage}-podcasts
+      rcu: 1
+      wcu: 1
+    episodes:
+      tableName: ${self:custom.global.product}-${self:custom.stage}-episodes
+      rcu: 2
+      wcu: 5
+    statements:
+      tableName: ${self:custom.global.product}-${self:custom.stage}-statements
+      rcu: 5
+      wcu: 5
+    speakers:
+      tableName: ${self:custom.global.product}-${self:custom.stage}-speakers
+      rcu: 1
+      wcu: 1
 
   sns:
     topics:
@@ -122,18 +134,18 @@ custom:
     pipelines:
       transcode:
         ids:
-          prod: None # Requested limit increase from AWS, will add when complete
+          prod: 1535242518671-hm5o2r
           test: 1531438545970-0z6rkw
           ian: 1534397153424-dv9bqz
-          andrew: None # Requested limit increase from AWS, will add when complete
+          andrew: 1535242409796-nq5atx
         id: ${self:custom.transcoder.pipelines.transcode.ids.${self:custom.stage}}
         arn: arn:aws:elastictranscoder:${self:provider.region}:${self:custom.global.awsAccountId}:pipeline/${self:custom.transcoder.pipelines.transcode.id}
       split:
         ids:
-          prod: None # Requested limit increase from AWS, will add when complete
+          prod: 1535242598418-8hy4nc
           test: 1531803024408-reo2a2
           ian: 1534397495629-rlv3fd
-          andrew: None # Requested limit increase from AWS, will add when complete
+          andrew: 1535242456767-0vcu3n
         id: ${self:custom.transcoder.pipelines.split.ids.${self:custom.stage}}
         arn: arn:aws:elastictranscoder:${self:provider.region}:${self:custom.global.awsAccountId}:pipeline/${self:custom.transcoder.pipelines.split.id}
 
@@ -161,10 +173,10 @@ provider:
   region: us-east-1
   stage: ${self:custom.stage}
   environment:
-    PODCASTS_TABLE: ${self:custom.dynamodb.podcasts}
-    EPISODES_TABLE: ${self:custom.dynamodb.episodes}
-    STATEMENTS_TABLE: ${self:custom.dynamodb.statements}
-    SPEAKERS_TABLE: ${self:custom.dynamodb.speakers}
+    PODCASTS_TABLE: ${self:custom.dynamodb.podcasts.tableName}
+    EPISODES_TABLE: ${self:custom.dynamodb.episodes.tableName}
+    STATEMENTS_TABLE: ${self:custom.dynamodb.statements.tableName}
+    SPEAKERS_TABLE: ${self:custom.dynamodb.speakers.tableName}
     INSERT_LIMIT: ${self:custom.episodeInsertLimit}
     ERROR_TOPIC: ${self:custom.sns.topics.errors.arn}
     STATUS_TOPIC: ${self:custom.sns.topics.status.arn}
@@ -209,10 +221,10 @@ provider:
         - dynamodb:BatchWriteItem
         - dynamodb:DescribeTable
       Resource:
-        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dynamodb.podcasts}
-        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dynamodb.episodes}
-        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dynamodb.speakers}
-        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dynamodb.statements}
+        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dynamodb.podcasts.tableName}
+        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dynamodb.episodes.tableName}
+        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dynamodb.speakers.tableName}
+        - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dynamodb.statements.tableName}
 
     #
     # SNS Topic Publish Permissions
@@ -442,6 +454,7 @@ functions:
     timeout: 300
     environment:
       INPUT_BUCKET: ${self:custom.buckets.transcriptions.combined}
+      STATEMENTS_WCU: ${self:custom.dynamodb.statements.wcu}
     events:
       - sns: ${self:custom.sns.topics.combineComplete.name}
 
@@ -497,7 +510,7 @@ resources:
     podcastsTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:custom.dynamodb.podcasts}
+        TableName: ${self:custom.dynamodb.podcasts.tableName}
         AttributeDefinitions:
           - AttributeName: feedURL
             AttributeType: S
@@ -505,12 +518,12 @@ resources:
           - AttributeName: feedURL
             KeyType: HASH
         ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+          ReadCapacityUnits: ${self:custom.dynamodb.podcasts.rcu}
+          WriteCapacityUnits: ${self:custom.dynamodb.podcasts.wcu}
     episodesTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:custom.dynamodb.episodes}
+        TableName: ${self:custom.dynamodb.episodes.tableName}
         AttributeDefinitions:
           - AttributeName: guid
             AttributeType: S
@@ -518,14 +531,14 @@ resources:
           - AttributeName: guid
             KeyType: HASH
         ProvisionedThroughput:
-          ReadCapacityUnits: 2
-          WriteCapacityUnits: 5
+          ReadCapacityUnits: ${self:custom.dynamodb.episodes.rcu}
+          WriteCapacityUnits: ${self:custom.dynamodb.episodes.wcu}
         StreamSpecification:
           StreamViewType: NEW_IMAGE
     statementsTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:custom.dynamodb.statements}
+        TableName: ${self:custom.dynamodb.statements.tableName}
         AttributeDefinitions:
           - AttributeName: guid
             AttributeType: S
@@ -537,12 +550,12 @@ resources:
           - AttributeName: endTime
             KeyType: RANGE
         ProvisionedThroughput:
-          ReadCapacityUnits: 5
-          WriteCapacityUnits: 5
+          ReadCapacityUnits: ${self:custom.dynamodb.statements.rcu}
+          WriteCapacityUnits: ${self:custom.dynamodb.statements.wcu}
     speakersTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:custom.dynamodb.speakers}
+        TableName: ${self:custom.dynamodb.speakers.tableName}
         AttributeDefinitions:
           - AttributeName: guid
             AttributeType: S
@@ -550,8 +563,8 @@ resources:
           - AttributeName: guid
             KeyType: HASH
         ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+          ReadCapacityUnits: ${self:custom.dynamodb.speakers.tableName}
+          WriteCapacityUnits: ${self:custom.dynamodb.speakers.tableName}
 
     #
     # SNS for Errors
