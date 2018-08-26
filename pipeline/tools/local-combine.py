@@ -1,14 +1,17 @@
 #!/usr/bin/python
-import sys
 import datetime
-import pytz
+import json
 import os
+import pytz
+import sys
 
-from functions.utils.Transcription import Transcription
+
+sys.path.append('../src')
+
+from utils.Transcription import Transcription
+
 
 # Output: Array of words with content, speakers, start time, stop time, confidence.
-
-import json
 
 
 file1 = sys.argv[1]

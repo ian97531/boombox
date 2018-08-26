@@ -10,10 +10,10 @@ import datetime
 import uuid
 
 from pynamodb.exceptions import DoesNotExist
-from functions.utils.pynamodb_models import EpisodeModel
-from functions.utils.log_cfg import logger
-from functions.utils.constants import WORD, SPEAKER, CONFIDENCE, START_TIME, END_TIME
-from functions.utils.utils import logError
+from src.utils.pynamodb_models import EpisodeModel
+from src.utils.log_cfg import logger
+from src.utils.constants import WORD, SPEAKER, CONFIDENCE, START_TIME, END_TIME
+from src.utils.utils import logError
 
 s3 = boto3.resource('s3')
 sns = boto3.resource('sns')

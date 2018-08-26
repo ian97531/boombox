@@ -5,13 +5,14 @@ import boto3
 import botocore
 import json
 import datetime
+import time
 
 from pynamodb.exceptions import DoesNotExist
-from functions.utils.pynamodb_models import PodcastModel, EpisodeModel, StatementModel
-from functions.utils.Transcription import Transcription
-from functions.utils.log_cfg import logger
-from functions.utils.utils import logError, logStatus
-from functions.utils.constants import COMPLETE, WORDS, SPEAKER, START_TIME, END_TIME
+from src.utils.pynamodb_models import PodcastModel, EpisodeModel, StatementModel
+from src.utils.Transcription import Transcription
+from src.utils.log_cfg import logger
+from src.utils.utils import logError, logStatus
+from src.utils.constants import COMPLETE, WORDS, SPEAKER, START_TIME, END_TIME, WORD
 
 s3 = boto3.resource('s3')
 sns = boto3.resource('sns')
@@ -187,17 +188,33 @@ def insert(event, context):
             statement = transcription.getNextStatement()
             statements = []
             while statement:
+                statementWords = []
+                for word in statement[WORDS]:
+                    statementWords.append({
+                        START_TIME: word[START_TIME],
+                        END_TIME: word[END_TIME],
+                        WORD: word[WORD]
+                    })
                 statements.append(StatementModel(
                     guid=guid,
                     endTime=statement[END_TIME],
                     startTime=statement[START_TIME],
                     speaker=statement[SPEAKER],
-                    words=statement[WORDS]
+                    words=statementWords
                 ))
                 statement = transcription.getNextStatement()
-            with StatementModel.batch_write() as batch:
-                for item in statements:
-                    batch.save(item)
+
+            startTime = time.time()
+            capacityUnitsUsed = 0
+            for item in statements:
+                response = item.save()
+
+                # Make sure we don't get too far ahead of the provisioned capacity units.
+                consumed = response['ConsumedCapacity']['CapacityUnits']
+                capacityUnitsUsed = capacityUnitsUsed + consumed
+                elapsedTime = time.time() - startTime
+                if capacityUnitsUsed / elapsedTime > 10:
+                    time.sleep(1)
 
             logger.info(
                 'Completed inserting statements for episode "' + guid + '".')
