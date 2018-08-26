@@ -3,3 +3,25 @@
   display: grid;
   grid-template-rows: auto 1fr auto;
 }
+
+.App__header {
+  padding: var(--std-padding);
+}
+
+.App__header-name {
+  font-weight: 900;
+  font-size: 30px;
+  margin: 0 var(--std-padding) var(--std-padding) var(--std-padding);
+}
+
+.App__header::after {
+  display: block;
+  content: '';
+  border: 1px solid var(--main-text-color);
+  margin-top: var(--std-padding);
+}
+
+.App__content {
+  display: flex;
+  padding: var(--std-padding);
+}
