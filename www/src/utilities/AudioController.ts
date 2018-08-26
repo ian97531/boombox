@@ -1,6 +1,16 @@
-import { Store } from 'redux';
-import { playerUpdate } from 'store/actions/player';
-import { PlayerStatus } from 'store/reducers/player';
+export enum AudioControllerEventName {
+  StatusChange,
+  CurrentTimeUpdated,
+}
+
+export enum AudioControllerStatus {
+  Idle = 'IDLE',
+  Playing = 'PLAYING',
+  Loading = 'LOADING',
+  Error = 'ERROR',
+}
+
+type AudioControllerCallback = (eventName: AudioControllerEventName) => void;
 
 /**
  * An AudioController is a singleton class that is used to control the audio that the page
@@ -22,24 +32,26 @@ import { PlayerStatus } from 'store/reducers/player';
  *   +-----------------+    +-------+    +------------+
  *
  * The gist is that the AudioController listens to changes from its underlying HTML5 Audio element
- * and forwards that information along to the redux store. When a component wishes to update the
+ * and forwards that information along to any listeners. When a component wishes to update the
  * playing audio it should only ever dispatch actions which will under the hood update the
  * AudioController.
  */
 class AudioController {
-  private store: Store;
+  public status: AudioControllerStatus;
+  public currentTime: number;
+  public duration: number;
+
   private audioEl: HTMLAudioElement | null;
+  private listeners: AudioControllerCallback[];
 
   constructor() {
-    ['onTimeUpdated', 'onLoadedMetadata', 'onPlay', 'onPause'].forEach(
-      method => {
-        this[method] = this[method].bind(this);
-      },
-    );
+    this.status = AudioControllerStatus.Idle;
+    this.currentTime = 0;
+    this.listeners = [];
   }
 
-  public setStore(store: Store) {
-    this.store = store;
+  public addListener(callback: AudioControllerCallback) {
+    this.listeners.push(callback);
   }
 
   public setSrc(src: string) {
@@ -69,7 +81,9 @@ class AudioController {
       this.audioEl = null;
     }
 
-    this.store.dispatch(playerUpdate({ status: PlayerStatus.Loading }));
+    this.status = AudioControllerStatus.Loading;
+    this.callListeners(AudioControllerEventName.StatusChange);
+
     this.audioEl = document.createElement('audio');
     this.audioEl.addEventListener('timeupdate', this.onTimeUpdated);
     this.audioEl.addEventListener('loadedmetadata', this.onLoadedMetadata);
@@ -78,37 +92,34 @@ class AudioController {
     this.audioEl.src = src;
   }
 
-  private onTimeUpdated(evt: Event) {
+  private callListeners(eventName: AudioControllerEventName) {
+    this.listeners.forEach(cb => cb(eventName));
+  }
+
+  private onTimeUpdated = (evt: Event) => {
     if (this.audioEl) {
-      this.store.dispatch(
-        playerUpdate({ currentTime: this.audioEl.currentTime }),
-      );
+      this.currentTime = this.audioEl.currentTime;
+      this.callListeners(AudioControllerEventName.CurrentTimeUpdated);
     }
-  }
+  };
 
-  private onLoadedMetadata(evt: Event) {
-    if (!this.audioEl) {
-      return;
+  private onLoadedMetadata = (evt: Event) => {
+    if (this.audioEl) {
+      this.status = AudioControllerStatus.Idle;
+      this.duration = this.audioEl.duration;
+      this.callListeners(AudioControllerEventName.StatusChange);
     }
-    this.store.dispatch(
-      playerUpdate({
-        duration: this.audioEl.duration,
-        status: PlayerStatus.Idle,
-      }),
-    );
-  }
+  };
 
-  private onPlay() {
-    this.store.dispatch(
-      playerUpdate({
-        status: PlayerStatus.Playing,
-      }),
-    );
-  }
+  private onPlay = () => {
+    this.status = AudioControllerStatus.Playing;
+    this.callListeners(AudioControllerEventName.StatusChange);
+  };
 
-  private onPause() {
-    this.store.dispatch(playerUpdate({ status: PlayerStatus.Idle }));
-  }
+  private onPause = () => {
+    this.status = AudioControllerStatus.Idle;
+    this.callListeners(AudioControllerEventName.StatusChange);
+  };
 }
 
 export default new AudioController();
