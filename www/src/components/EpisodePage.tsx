@@ -4,11 +4,11 @@ import * as React from 'react';
 import './EpisodePage.css';
 
 const EpisodePage: React.SFC = () => (
-  <div className="Episode">
-    <div className="Episode__conversation">
+  <div className="EpisodePage">
+    <div className="EpisodePage__conversation">
       <ConversationPanel />
     </div>
-    <div className="Episode__metadata">
+    <div className="EpisodePage__metadata">
       <EpisodeMetadataPanel />
     </div>
   </div>

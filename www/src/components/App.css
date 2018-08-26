@@ -22,5 +22,6 @@
 }
 
 .App__content {
+  display: flex;
   padding: var(--std-padding);
 }

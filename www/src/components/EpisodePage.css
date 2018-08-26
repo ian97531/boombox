@@ -1,11 +1,12 @@
-.Episode {
+.EpisodePage {
   display: flex;
+  width: 100%;
 }
 
-.Episode__conversation {
+.EpisodePage__conversation {
   flex: 1;
 }
 
-.Episode__metadata {
+.EpisodePage__metadata {
   width: 300px;
 }
