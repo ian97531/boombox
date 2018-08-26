@@ -4,7 +4,7 @@ import { default as dynamo } from './dynamo'
 export async function getEpisode(guid: string): Promise<IEpisode> {
   const params: AWS.DynamoDB.DocumentClient.GetItemInput = {
     Key: { guid },
-    TableName: 'boombox-pipeline-ian-episodes',
+    TableName: process.env.EPISODES_TABLE as string,
   }
   const response = (await dynamo
     .get(params)

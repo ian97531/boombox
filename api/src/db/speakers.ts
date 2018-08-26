@@ -7,7 +7,7 @@ export async function getSpeakers(guids: string[]): Promise<ISpeaker[]> {
   for (const guid of guids) {
     const params: AWS.DynamoDB.DocumentClient.GetItemInput = {
       Key: { guid },
-      TableName: 'boombox-pipeline-ian-speakers',
+      TableName: process.env.SPEAKERS_TABLE as string,
     }
     const response = (await dynamo
       .get(params)

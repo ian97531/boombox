@@ -13,7 +13,7 @@ export async function getStatements(
     KeyConditionExpression: 'guid = :guid and endTime > :startTime',
     Limit: query.pageSize + 1,
     ProjectionExpression: 'startTime, endTime, speaker, words',
-    TableName: 'boombox-pipeline-ian-statements',
+    TableName: process.env.STATEMENTS_TABLE as string,
   }
 
   const data = (await dynamo
