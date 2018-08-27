@@ -25,8 +25,8 @@ custom:
     distributionFolder: build
     objectHeaders:
       index.html:
-        - headerName: Cache-Control
-          headerValue: 'no-store'
+        - name: 'Cache-Control'
+          value: 'no-store'
 
 provider:
   name: aws
