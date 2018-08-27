@@ -1,12 +1,12 @@
-import * as StatementsActions from 'store/actions/statements';
-import { createBasicReducer } from 'utilities/ReducerUtils';
+import * as StatementsActions from 'store/actions/statements'
+import { createBasicReducer } from 'utilities/ReducerUtils'
 
 export interface IStatementsStore {
-  pending: boolean;
-  error: string | null;
-  fetched: boolean;
+  pending: boolean
+  error: string | null
+  fetched: boolean
   // TODO(ndrwhr): Include the actual type for API responses.
-  statements: object[];
+  statements: object[]
 }
 
 const DEFAULT_STATE: IStatementsStore = {
@@ -14,7 +14,7 @@ const DEFAULT_STATE: IStatementsStore = {
   fetched: false,
   pending: false,
   statements: [],
-};
+}
 
 const statementsReducer = createBasicReducer(DEFAULT_STATE, {
   [StatementsActions.GET_STATEMENTS_PENDING]: state => ({
@@ -35,6 +35,6 @@ const statementsReducer = createBasicReducer(DEFAULT_STATE, {
     // sorted correctly. Also be better about typing one we have API types in the client.
     statements: [...state.statements, action.response.results],
   }),
-});
+})
 
-export default statementsReducer;
+export default statementsReducer

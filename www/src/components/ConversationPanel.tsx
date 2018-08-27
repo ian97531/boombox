@@ -1,12 +1,12 @@
-import Statement from 'components/Statement';
-import * as React from 'react';
-import { connect } from 'react-redux';
-import { Dispatch } from 'redux';
-import { getStatements } from 'store/actions/statements';
-import { IStatementsStore } from 'store/reducers/statements';
+import Statement from 'components/Statement'
+import * as React from 'react'
+import { connect } from 'react-redux'
+import { Dispatch } from 'redux'
+import { getStatements } from 'store/actions/statements'
+import { IStatementsStore } from 'store/reducers/statements'
 
 interface IConversationPanelProps extends IStatementsStore {
-  dispatch: Dispatch;
+  dispatch: Dispatch
 }
 
 class ConversationPanel extends React.Component<IConversationPanelProps> {
@@ -19,16 +19,16 @@ class ConversationPanel extends React.Component<IConversationPanelProps> {
           <Statement key={index} {...statement} />
         ))}
       </div>
-    );
+    )
   }
 
   public componentDidMount() {
-    this.props.dispatch(getStatements());
+    this.props.dispatch(getStatements())
   }
 }
 
 function mapStateToProps({ statements }: { statements: IStatementsStore }) {
-  return statements;
+  return statements
 }
 
-export default connect(mapStateToProps)(ConversationPanel);
+export default connect(mapStateToProps)(ConversationPanel)
