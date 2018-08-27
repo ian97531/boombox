@@ -12,3 +12,7 @@ export const playerUpdate: ActionCreator<AnyAction> = (changes: object) => ({
 // TODO(ndrwhr): Figure out redux thunk typing.
 export const playerCurrentTimeSeek: ActionCreator<any> = (currentTime: number) => () =>
   AudioController.seek(currentTime)
+
+export const playerPlay: ActionCreator<any> = () => () => AudioController.play()
+
+export const playerPause: ActionCreator<any> = () => () => AudioController.pause()
