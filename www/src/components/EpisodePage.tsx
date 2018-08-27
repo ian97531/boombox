@@ -1,7 +1,7 @@
-import ConversationPanel from 'components/ConversationPanel';
-import EpisodeMetadataPanel from 'components/EpisodeMetadataPanel';
-import * as React from 'react';
-import './EpisodePage.css';
+import ConversationPanel from 'components/ConversationPanel'
+import EpisodeMetadataPanel from 'components/EpisodeMetadataPanel'
+import * as React from 'react'
+import './EpisodePage.css'
 
 const EpisodePage: React.SFC = () => (
   <div className="EpisodePage">
@@ -12,6 +12,6 @@ const EpisodePage: React.SFC = () => (
       <EpisodeMetadataPanel />
     </div>
   </div>
-);
+)
 
-export default EpisodePage;
+export default EpisodePage

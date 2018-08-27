@@ -1,8 +1,8 @@
-import EpisodePage from 'components/EpisodePage';
-import Player from 'components/player/Player';
-import * as React from 'react';
+import EpisodePage from 'components/EpisodePage'
+import Player from 'components/player/Player'
+import * as React from 'react'
 
-import './App.css';
+import './App.css'
 
 const App: React.SFC = () => (
   <div className="App">
@@ -16,6 +16,6 @@ const App: React.SFC = () => (
       <Player />
     </div>
   </div>
-);
+)
 
-export default App;
+export default App
