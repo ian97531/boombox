@@ -69,6 +69,7 @@ def combine(event, context):
                 left = Transcription(watson_json_content)
                 right = Transcription(aws_json_content)
                 left.enhanceTranscription(right)
+                left.updateSpeakers(right)
 
                 output_filename = guid + '.json'
                 logger.info('Starting writing JSON to  "' +
