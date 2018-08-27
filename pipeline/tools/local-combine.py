@@ -2,37 +2,36 @@
 import datetime
 import json
 import os
-import pytz
 import sys
+import pytz
 
 
-sys.path.append('../src')
-
+sys.path.append('./pipeline/src')
+# pylint: disable=E0401, C0413
 from utils.Transcription import Transcription
 
 
 # Output: Array of words with content, speakers, start time, stop time, confidence.
+FILE_1 = sys.argv[1]
+FILE_2 = sys.argv[2]
+
+LEFT = None
+RIGHT = None
+
+with open(FILE_1) as transcriptionData:
+    LEFT = Transcription(json.load(transcriptionData))
+
+with open(FILE_2) as transcriptionData:
+    RIGHT = Transcription(json.load(transcriptionData))
 
 
-file1 = sys.argv[1]
-file2 = sys.argv[2]
+LEFT.enhanceTranscription(RIGHT)
+LEFT.updateSpeakers(RIGHT)
 
-left = None
-right = None
+NOW = datetime.datetime.now(pytz.UTC)
 
-with open(file1) as transcriptionData:
-    left = Transcription(json.load(transcriptionData))
+FILENAME = os.getcwd() + '/combined-' + \
+    NOW.strftime('%A, %B, %d, %Y %H%M%S') + '.json'
 
-with open(file2) as transcriptionData:
-    right = Transcription(json.load(transcriptionData))
-
-
-left.enhanceTranscription(right)
-
-now = datetime.datetime.now(pytz.UTC)
-
-filename = os.getcwd() + '/combined-' + \
-    now.strftime('%A, %B, %d, %Y %H%M%S') + '.json'
-
-with open(filename, 'w') as outfile:
-    json.dump(left.json, outfile)
+with open(FILENAME, 'w') as outfile:
+    json.dump(LEFT.json, outfile)
