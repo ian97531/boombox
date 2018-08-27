@@ -1,25 +1,19 @@
 import { PLAYER_UPDATE } from 'store/actions/player'
+import { AudioControllerStatus } from 'utilities/AudioController'
 import { createBasicReducer } from 'utilities/ReducerUtils'
-
-export enum PlayerStatus {
-  Idle = 'IDLE',
-  Playing = 'PLAYING',
-  Loading = 'LOADING',
-  Error = 'ERROR',
-}
 
 export interface IPlayerStore {
   currentSrc: string | null
   currentTime: number
   duration: number
-  status: PlayerStatus
+  status: AudioControllerStatus
 }
 
 const DEFAULT_STATE: IPlayerStore = {
   currentSrc: null,
   currentTime: 0,
   duration: 0,
-  status: PlayerStatus.Idle,
+  status: AudioControllerStatus.Idle,
 }
 
 const playerReducer = createBasicReducer<IPlayerStore>(DEFAULT_STATE, {
