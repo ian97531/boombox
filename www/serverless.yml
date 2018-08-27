@@ -23,6 +23,10 @@ custom:
   client:
     bucketName: ${self:custom.hostname}
     distributionFolder: build
+    objectHeaders:
+      index.html:
+        - name: 'Cache-Control'
+          value: 'no-store'
 
 provider:
   name: aws
