@@ -1,18 +1,14 @@
 .Player {
   display: flex;
-  flex-direction: column;
+  padding: var(--std-padding);
 }
 
-.Player__player-bar {
-  position: relative;
-  height: 20px;
+.Player__controls {
+  display: flex;
+  justify-content: center;
+  width: 150px;
 }
 
-.Player__player-bar-progress {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 0;
-  height: 100%;
-  background: var(--main-text-color);
+.Player__bar-wrapper {
+  flex: 1;
 }

@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 	<title>Visualize</title>
 	<style>
 		body {
-		    background-color: linen;
-		    padding: 20px;
+			background-color: linen;
+			padding: 20px;
 		}
 
 		textarea {
 			width: 100%;
 			height: 100px;
-		    color: maroon;
-		} 
+			color: maroon;
+		}
 
 		.c100 {
 			background-color: rgb(255, 255, 255);
@@ -57,7 +58,6 @@
 		.c0 {
 			background-color: rgb(255, 5, 5);
 		}
-
 	</style>
 	<script type="text/javascript">
 		function process() {
@@ -73,7 +73,7 @@
 			currentLine = ''
 			words = []
 
-			jsonData.forEach(function(word) {
+			jsonData.forEach(function (word) {
 				if (word.speaker !== currentSpeaker) {
 					currentSpeaker = word.speaker;
 					currentLine += words.join(' ') + '</div>';
@@ -112,7 +112,7 @@
 				} else if (confidence >= 0 && confidence < 0.1) {
 					theClass = 'c0'
 				}
-				words.push('<span title="Confidence: ' + Math.round(confidence * 10000) / 100 + '%" class="' + theClass + '">' + word.word + '</span>')
+				words.push('<span title="Confidence: ' + Math.round(confidence * 10000) / 100 + '%" class="' + theClass + '">' + word.content + '</span>')
 			});
 
 			outputEl.innerHTML = lines.join('');
@@ -120,26 +120,33 @@
 
 	</script>
 </head>
+
 <body>
 	<div>
 		<h4>Paste the normalized json into this text area:</h4>
 		<textarea id="input"></textarea>
 	</div>
 	<div>
-		<h4>Speaker 1: <input type="text" value="Speaker 1" id="speaker1" /></h4>
-		
+		<h4>Speaker 1:
+			<input type="text" value="Speaker 1" id="speaker1" />
+		</h4>
+
 	</div>
 	<div>
-		<h4>Speaker 2: <input type="text" value="Speaker 2" id="speaker2" /></h4>
-		
+		<h4>Speaker 2:
+			<input type="text" value="Speaker 2" id="speaker2" />
+		</h4>
+
 	</div>
 	<div>
 		<input onClick="process()" value="Visualize" type="button"></input>
 	</div>
 	<hr>
 	<div>
-			Hover over the word to see that word's transcription confidence score. The more red the highlighting of a word, the lower the confidence score.
+		Hover over the word to see that word's transcription confidence score. The more red the highlighting of a word, the lower
+		the confidence score.
 	</div>
 	<div id="output"></div>
 </body>
+
 </html>

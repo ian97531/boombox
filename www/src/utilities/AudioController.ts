@@ -64,6 +64,12 @@ class AudioController {
     }
   }
 
+  public pause() {
+    if (this.audioEl) {
+      this.audioEl.pause()
+    }
+  }
+
   public seek(newTime: number) {
     if (this.audioEl) {
       this.audioEl.currentTime = newTime

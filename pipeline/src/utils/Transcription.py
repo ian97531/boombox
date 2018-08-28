@@ -8,6 +8,7 @@ class Transcription():
         self.json = transcription
         self.startTime = startTime
         self.index = 0
+        self._pointer = 0
 
         if self.startTime != 0:
             for item in self.json:
@@ -78,10 +79,6 @@ class Transcription():
                 if leftConfidence >= rightConfidence:
                     output = output + leftMatch
                 else:
-                    leftSpeaker = getSpeaker(leftMatch)
-                    if leftSpeaker != None:
-                        for item in rightMatch:
-                            item[SPEAKER] = leftSpeaker
                     output = output + rightMatch
 
         output = output + self.json[leftIndex:]
@@ -89,6 +86,57 @@ class Transcription():
 
         self.json = output
         self.reset()
+
+    def findSpeakerAtTime(self, startTime, endTime):
+        if self._pointer >= len(self.json) or endTime < self.json[self._pointer][START_TIME]:
+            self._pointer = 0
+
+        fallbackSpeaker = None
+        speakers = []
+        while self._pointer < len(self.json):
+            word = self.json[self._pointer]
+            fallbackSpeaker = word[SPEAKER]
+            if endTime < word[START_TIME]:
+                break
+            elif startTime > word[END_TIME]:
+                self._pointer = self._pointer + 1
+            else:
+                result = {
+                    SPEAKER: word[SPEAKER]
+                }
+
+                if word[START_TIME] <= startTime:
+                    result[START_TIME] = startTime
+                else:
+                    result[START_TIME] = word[START_TIME]
+
+                if word[END_TIME] >= endTime:
+                    result[END_TIME] = endTime
+                else:
+                    result[END_TIME] = word[END_TIME]
+
+                result['duration'] = result[END_TIME] - result[START_TIME]
+                speakers.append(result)
+                self._pointer = self._pointer + 1
+
+        maxSpeaker = None
+        maxDuration = None
+        for speaker in speakers:
+            if maxDuration == None or speaker['duration'] > maxDuration:
+                maxDuration = speaker['duration']
+                maxSpeaker = speaker[SPEAKER]
+
+        if maxSpeaker != None:
+            return maxSpeaker
+        else:
+            return fallbackSpeaker
+
+    def updateSpeakers(self, transcription):
+        for word in self.json:
+            speaker = transcription.findSpeakerAtTime(word[START_TIME], word[END_TIME])
+            if speaker != None:
+                word[SPEAKER] = speaker
+        self._pointer = 0
 
     def appendTranscription(self, transcription, withOverlap=10):
         leftStartIndexFound = False

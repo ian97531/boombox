@@ -1,5 +1,51 @@
+/**
+ * Colors:
+ */
+:root {
+  --color-ruby: #e44939;
+  --color-smoke: #cecece;
+}
+
+/**
+ * Padding and Sizes:
+ */
 :root {
   --main-text-color: #e44939;
   --highlight-background-color: #ecb6c9;
   --std-padding: 15px;
+}
+
+/**
+ * Z-Indexes:
+ *
+ * If we ever need more than this I will shoot myself.
+ */
+:root {
+  --z-index-1: 100;
+  --z-index-2: 200;
+  --z-index-3: 300;
+  --z-index-4: 400;
+  --z-index-5: 500;
+  --z-index-6: 600;
+  --z-index-7: 700;
+  --z-index-8: 800;
+  --z-index-9: 900;
+  --z-index-10: 1000;
+}
+
+/**
+ * Z-index Applications:
+ */
+:root {
+  /**
+   * This is just an example:
+   */
+  --z-index-2--search-modal: var(--z-index-2);
+}
+
+/**
+ * Derived Variables:
+ */
+:root {
+  --main-text-color: var(--color-ruby);
 }
