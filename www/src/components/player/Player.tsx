@@ -2,7 +2,7 @@ import PlayerBar from 'components/player/PlayerBar'
 import * as React from 'react'
 import { connect } from 'react-redux'
 import { Dispatch } from 'redux'
-import { playerCurrentTimeSeek, playerPause, playerPlay } from 'store/actions/player'
+import { playerPause, playerPlay } from 'store/actions/player'
 import { IPlayerStore } from 'store/reducers/player'
 import { AudioControllerStatus } from 'utilities/AudioController'
 import './Player.css'
@@ -25,18 +25,10 @@ class Player extends React.Component<IPlayerProps> {
           </button>
         </div>
         <div className="Player__bar-wrapper">
-          <PlayerBar
-            currentTime={this.props.currentTime}
-            duration={this.props.duration}
-            onSeek={this.onSeek}
-          />
+          <PlayerBar />
         </div>
       </div>
     )
-  }
-
-  private onSeek = (newCurrentTime: number) => {
-    this.props.dispatch(playerCurrentTimeSeek(newCurrentTime))
   }
 
   private onPlayButtonClick = () => {

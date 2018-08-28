@@ -11,5 +11,15 @@
   left: 0;
   width: 0;
   height: 100%;
+  background: var(--color-smoke);
+}
+
+.PlayerBar__progress--active {
   background: var(--main-text-color);
+  opacity: 0;
+  transition: opacity 150ms ease-in-out;
+}
+
+.PlayerBar:hover .PlayerBar__progress--active {
+  opacity: 1;
 }
