@@ -9,8 +9,8 @@ const Statement: React.SFC<IStatement> = props => (
   <div className="Statement">
     <div className="Statement__speaker">
       <div className="Statement__name">{props.speaker.name}</div>
-      <div className="Statement__startTime">
-        <span className="Statement__startTimeBottom">{formatTime(props.startTime)}</span>
+      <div className="Statement__start-time">
+        <span className="Statement__start-time-bottom">{formatTime(props.startTime)}</span>
       </div>
     </div>
     <div className="Statement__content">
