@@ -1,0 +1,33 @@
+.Statement {
+  display: block;
+  padding: var(--std-padding);
+}
+
+.Statment-selected {
+  background-color: var(--highlight-background-color);
+}
+
+.Statement__speaker {
+  display: flex;
+  flex: 1;
+  padding-bottom: 3px;
+}
+
+.Statement__name {
+  font-weight: 900;
+}
+
+.Statement__start-time {
+  display: flex;
+  padding-left: 9px;
+}
+
+.Statement__start-time-bottom {
+  font-size: 0.7em;
+  align-self: flex-end;
+}
+
+.Statement__content {
+  flex: 1;
+  grid-template-rows: auto 1fr auto;
+}

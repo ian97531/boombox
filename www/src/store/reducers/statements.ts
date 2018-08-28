@@ -1,3 +1,4 @@
+import { IStatement } from '@boombox/shared/types/models'
 import * as StatementsActions from 'store/actions/statements'
 import { createBasicReducer } from 'utilities/ReducerUtils'
 
@@ -5,8 +6,7 @@ export interface IStatementsStore {
   pending: boolean
   error: string | null
   fetched: boolean
-  // TODO(ndrwhr): Include the actual type for API responses.
-  statements: object[]
+  statements: IStatement[]
 }
 
 const DEFAULT_STATE: IStatementsStore = {
@@ -33,7 +33,7 @@ const statementsReducer = createBasicReducer(DEFAULT_STATE, {
     pending: false,
     // TODO(ndrwhr): Don't just blindly append onto the end, i.e. make sure the statements are
     // sorted correctly. Also be better about typing one we have API types in the client.
-    statements: [...state.statements, action.response.results],
+    statements: [...state.statements, ...action.response.response],
   }),
 })
 

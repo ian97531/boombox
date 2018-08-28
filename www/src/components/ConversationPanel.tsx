@@ -16,7 +16,7 @@ class ConversationPanel extends React.Component<IConversationPanelProps> {
         {this.props.statements.map((statement, index) => (
           // HACK(ndrwhr): We should use startTime as the key but since we don't have the response
           // types in www yet I can't get typescript to not freak out.
-          <Statement key={index} {...statement} />
+          <Statement key={statement.startTime} {...statement} />
         ))}
       </div>
     )

@@ -26,10 +26,10 @@ export interface IPodcast {
 }
 
 export interface ISpeaker {
-  id: string
+  guid: string
   name: string
   avatarURL: string
-  isHost: boolean
+  isHost?: boolean
 }
 
 export interface IStatementDBResult {

@@ -10,6 +10,8 @@
  * Padding and Sizes:
  */
 :root {
+  --main-text-color: #e44939;
+  --highlight-background-color: #ecb6c9;
   --std-padding: 15px;
 }
 
