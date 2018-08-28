@@ -18,7 +18,7 @@ def remove_processed_files(stage, service, episode_id):
     """Removes all of the files and DB attributes for the specified episode.
     """
     to_reprocess = []
-    table_name = 'boombox-pipeline-' + stage.lower() + '-episodes'
+    table_name = 'boombox-' + stage.lower() + '-episodes'
     response = DYNAMODB.get_item(TableName=table_name, Key={'guid': {'S': episode_id}},)
     episode = response['Item']
     print 'Retrieved Episode ' + episode_id + ' from ' + table_name
@@ -57,7 +57,7 @@ def start_reprocess(stage, service, items):
 
 def delete_from_db(stage, service, episode_id):
     """Deletes the records of the transcription processing jobs from the db."""
-    table_name = 'boombox-pipeline-' + stage.lower() + '-episodes'
+    table_name = 'boombox-' + stage.lower() + '-episodes'
     episode_attribute = 'split' + service + 'Transcriptions'
     DYNAMODB.update_item(TableName=table_name,
                          Key={'guid': {'S': episode_id}},
