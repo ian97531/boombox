@@ -17,12 +17,12 @@
   font-weight: 900;
 }
 
-.Statement__startTime {
+.Statement__start-time {
   display: flex;
   padding-left: 9px;
 }
 
-.Statement__startTimeBottom {
+.Statement__start-time-bottom {
   font-size: 0.7em;
   align-self: flex-end;
 }

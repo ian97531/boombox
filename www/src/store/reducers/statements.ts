@@ -6,7 +6,6 @@ export interface IStatementsStore {
   pending: boolean
   error: string | null
   fetched: boolean
-  // TODO(ndrwhr): Include the actual type for API responses.
   statements: IStatement[]
 }
 

@@ -1,20 +1,19 @@
-const IN_SECONDS = 60
-const IN_MINUTES = 60
-
-function padNumber(num: number, width = 2, character = '0'): string {
-  let stringNum = num.toString()
-  while (stringNum.length < width) {
-    stringNum = character + stringNum
-  }
-  return stringNum
-}
+const MINUTE_IN_SECONDS = 60
+const HOUR_IN_MINUTES = 60
+const HOUR_IN_SECONDS = HOUR_IN_MINUTES * MINUTE_IN_SECONDS
 
 export function formatTime(time: number): string {
   const totalSeconds = Math.round(time)
-  const totalMinutes = Math.floor(totalSeconds / IN_MINUTES)
-  const hours = Math.floor(totalMinutes / 60)
-  const minutes = totalMinutes - hours * IN_MINUTES
-  const seconds = totalSeconds - minutes * IN_SECONDS - hours * IN_MINUTES * IN_SECONDS
+  const totalMinutes = Math.floor(totalSeconds / MINUTE_IN_SECONDS)
 
-  return `${padNumber(hours)}:${padNumber(minutes)}:${padNumber(seconds)}`
+  const hours = Math.floor(totalMinutes / HOUR_IN_MINUTES)
+  const minutes = totalMinutes - hours * HOUR_IN_MINUTES
+  const seconds = totalSeconds - minutes * MINUTE_IN_SECONDS - hours * HOUR_IN_SECONDS
+
+  const padCharacter = '0'
+  const padWidth = 2
+  const paddedHours = hours.toString().padStart(padWidth, padCharacter)
+  const paddedMinutes = minutes.toString().padStart(padWidth, padCharacter)
+  const paddedSeconds = seconds.toString().padStart(padWidth, padCharacter)
+  return `${paddedHours}:${paddedMinutes}:${paddedSeconds}`
 }
