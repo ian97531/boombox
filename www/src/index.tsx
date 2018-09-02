@@ -25,10 +25,6 @@ AudioController.addListener(() =>
   )
 )
 
-// TODO(ndrwhr): This should be kicked off somewhere in the app.
-const DEFAULT_AUDIO_URL = './audio/test-45.mp3'
-AudioController.setSrc(DEFAULT_AUDIO_URL)
-
 ReactDOM.render(
   <Provider store={store}>
     <BrowserRouter>
