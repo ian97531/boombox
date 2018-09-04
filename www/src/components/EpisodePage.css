@@ -3,10 +3,10 @@
   width: 100%;
 }
 
-.EpisodePage__conversation {
-  flex: 1;
+.EpisodePage__left-panel {
+  width: 300px;
 }
 
-.EpisodePage__metadata {
-  width: 300px;
+.EpisodePage__right-panel {
+  flex: 1;
 }

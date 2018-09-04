@@ -2,6 +2,7 @@ import 'normalize.css'
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import { Provider } from 'react-redux'
+import { BrowserRouter } from 'react-router-dom'
 import { applyMiddleware, createStore } from 'redux'
 import thunk from 'redux-thunk'
 import { playerUpdate } from 'store/actions/player'
@@ -25,13 +26,11 @@ AudioController.addListener(() =>
   )
 )
 
-// TODO(ndrwhr): This should be kicked off somewhere in the app.
-const DEFAULT_AUDIO_URL = './audio/test-45.mp3'
-AudioController.setSrc(DEFAULT_AUDIO_URL)
-
 ReactDOM.render(
   <Provider store={store}>
-    <App />
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
   </Provider>,
   document.getElementById('root') as HTMLElement
 )
