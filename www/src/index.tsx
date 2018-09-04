@@ -8,6 +8,7 @@ import { playerUpdate } from 'store/actions/player'
 import App from './components/App'
 import './index.css'
 import registerServiceWorker from './registerServiceWorker'
+import { unregister } from './registerServiceWorker'
 import reducers from './store/reducers'
 import AudioController from './utilities/AudioController'
 
@@ -35,4 +36,9 @@ ReactDOM.render(
   document.getElementById('root') as HTMLElement
 )
 
-registerServiceWorker()
+// Only register the service worker cache on production.
+if (window.location.origin === 'https://boombox.bingo') {
+  registerServiceWorker()
+} else {
+  unregister()
+}
