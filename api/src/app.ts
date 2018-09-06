@@ -14,6 +14,7 @@ const whitelist = [
   'https://www-test.' + domainName,
   'https://www-ian.' + domainName,
   'https://www-andrew.' + domainName,
+  'http://localhost:3000',
 ]
 const corsOptions: cors.CorsOptions = {
   origin(origin, callback) {

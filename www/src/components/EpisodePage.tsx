@@ -36,15 +36,18 @@ class EpisodePage extends React.Component<IEpisodePageProps> {
   }
 
   public render() {
+    const conversationPanel = this.props.episode ? (
+      <ConversationPanel requestedEpisodeId={this.props.episode.episodeId} />
+    ) : (
+      ''
+    )
     return (
       <div className="EpisodePage">
         <div className="EpisodePage__left-panel">
           <EpisodeMetadataPanel episode={this.props.episode} />
         </div>
         <div className="EpisodePage__right-panel">
-          <div className="EpisodePage__conversation">
-            <ConversationPanel />
-          </div>
+          <div className="EpisodePage__conversation">{conversationPanel}</div>
           <div className="EpisodePage__player">
             <Player />
           </div>
