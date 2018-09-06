@@ -54,6 +54,18 @@ export const getEpisodes: ActionCreator<any> = () => (dispatch: Dispatch, getSta
                 'Grey & Brady discuss the British ‘heat wave’, water on Mars, Trypophobia, Kit Kat Trademarks, anti-dog discrimination, and YouTube’s new news initiative and fake news.',
               title: 'H.I. #106: Water on Mars',
             },
+            {
+              duration: '1 Hour 26 Minutes 23 Seconds',
+              episodeId: 'd44ebdcc752044118844c62b4d090137',
+              imageURL: '',
+              mp3URL: '/audio/test-45.mp3',
+              podcastId: '1916e5de8675429fa6e378083629ddd8',
+              publishedAt: 'July 20, 2018',
+              speakers: ['40706f5e633a4615abd3d981e096b9d0', '36983581cbcb4d878a303c62ca47cf2b'],
+              summary:
+                'Brady & Grey discuss: the fasten your seatbelt sign, breaking news feedback about Garth the Deer, a big round of Hello Internet show and tell, and Grey reviews his time on Instagram.',
+              title: 'A Recent Hello Internet',
+            },
           ],
         })
       )
