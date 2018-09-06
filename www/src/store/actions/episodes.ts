@@ -44,7 +44,7 @@ export const getEpisodes: ActionCreator<any> = () => (dispatch: Dispatch, getSta
           response: [
             {
               duration: '1 Hour 43 Minutes 23 Seconds',
-              episodeId: 'c7cbba770d264388b1bc32faf6d882a4',
+              episodeId: '52d66949e4b0a8cec3bcdd4652d67282e4b0cca8969714fa5b805772562fa70992d6c494',
               imageURL: '',
               mp3URL: '/audio/test-45.mp3',
               podcastId: '1916e5de8675429fa6e378083629ddd8',
