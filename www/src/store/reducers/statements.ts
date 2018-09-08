@@ -21,7 +21,7 @@ const DEFAULT_STATE: IStatementsStore = {
 const statementsReducer = createBasicReducer(DEFAULT_STATE, {
   [StatementsActions.GET_STATEMENTS_PENDING]: (state, action) => ({
     ...state,
-    episodeId: action.episodeId,
+    episodeId: action.options.episodeId,
     pending: true,
     statements: [],
   }),

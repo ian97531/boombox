@@ -23,7 +23,11 @@ class ConversationPanel extends React.Component<IConversationPanelProps> {
 
   public componentDidMount() {
     if (this.props.episodeId !== this.props.requestedEpisodeId) {
-      this.props.dispatch(getStatements(this.props.requestedEpisodeId))
+      this.props.dispatch(
+        getStatements({
+          episodeId: this.props.requestedEpisodeId,
+        })
+      )
     }
   }
 }

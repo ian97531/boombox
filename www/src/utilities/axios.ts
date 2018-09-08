@@ -17,10 +17,10 @@ const paramsApiHostMap = {
 }
 
 const originApiHostMap = {
-  'boombox.bingo': API_PROD,
-  'www-andrew.boombox.bingo': API_ANDREW,
-  'www-ian.boombox.bingo': API_IAN,
-  'www-test.boombox.bingo': API_TEST,
+  [DOMAIN]: API_PROD,
+  ['www-andrew.' + DOMAIN]: API_ANDREW,
+  ['www-ian.' + DOMAIN]: API_IAN,
+  ['www-test.' + DOMAIN]: API_TEST,
 }
 
 const defaultApiHost = API_TEST
@@ -32,7 +32,7 @@ const queryStringApiHost = params.api ? paramsApiHostMap[params.api] : undefined
 // host instead of the origin of the current page.
 const apiHost = queryStringApiHost || originApiHost || defaultApiHost
 
-export default Axios.create({
+export const api = Axios.create({
   baseURL: 'https://' + apiHost + DOMAIN + '/',
   timeout: 3000,
 })
