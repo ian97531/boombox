@@ -7,6 +7,7 @@ import { IStatementsStore } from 'store/reducers/statements'
 
 interface IConversationPanelProps extends IStatementsStore {
   dispatch: Dispatch
+  requestedEpisodeId: string
 }
 
 class ConversationPanel extends React.Component<IConversationPanelProps> {
@@ -21,7 +22,13 @@ class ConversationPanel extends React.Component<IConversationPanelProps> {
   }
 
   public componentDidMount() {
-    this.props.dispatch(getStatements())
+    if (this.props.episodeId !== this.props.requestedEpisodeId) {
+      this.props.dispatch(
+        getStatements({
+          episodeId: this.props.requestedEpisodeId,
+        })
+      )
+    }
   }
 }
 

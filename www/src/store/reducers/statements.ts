@@ -3,6 +3,7 @@ import * as StatementsActions from 'store/actions/statements'
 import { createBasicReducer } from 'utilities/ReducerUtils'
 
 export interface IStatementsStore {
+  episodeId: string | null
   pending: boolean
   error: string | null
   fetched: boolean
@@ -10,6 +11,7 @@ export interface IStatementsStore {
 }
 
 const DEFAULT_STATE: IStatementsStore = {
+  episodeId: null,
   error: null,
   fetched: false,
   pending: false,
@@ -17,9 +19,11 @@ const DEFAULT_STATE: IStatementsStore = {
 }
 
 const statementsReducer = createBasicReducer(DEFAULT_STATE, {
-  [StatementsActions.GET_STATEMENTS_PENDING]: state => ({
+  [StatementsActions.GET_STATEMENTS_PENDING]: (state, action) => ({
     ...state,
+    episodeId: action.options.episodeId,
     pending: true,
+    statements: [],
   }),
   [StatementsActions.GET_STATEMENTS_ERROR]: (state, action) => ({
     ...state,
