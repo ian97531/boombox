@@ -1,5 +1,10 @@
 import { IStatement } from '@boombox/shared/types/models'
-import * as StatementsActions from 'store/actions/statements'
+import {
+  IGetStatementErrorAction,
+  IGetStatementPendingAction,
+  IGetStatementSuccessAction,
+  StatementAction,
+} from 'store/actions/statements'
 import { createBasicReducer } from 'utilities/ReducerUtils'
 
 export interface IStatementsStore {
@@ -19,25 +24,25 @@ const DEFAULT_STATE: IStatementsStore = {
 }
 
 const statementsReducer = createBasicReducer(DEFAULT_STATE, {
-  [StatementsActions.GET_STATEMENTS_PENDING]: (state, action) => ({
+  [StatementAction.GET_STATEMENTS_PENDING]: (state, action: IGetStatementPendingAction) => ({
     ...state,
     episodeId: action.options.episodeId,
     pending: true,
     statements: [],
   }),
-  [StatementsActions.GET_STATEMENTS_ERROR]: (state, action) => ({
+  [StatementAction.GET_STATEMENTS_ERROR]: (state, action: IGetStatementErrorAction) => ({
     ...state,
-    error: action.error as string,
+    error: action.error,
     pending: false,
   }),
-  [StatementsActions.GET_STATEMENTS_SUCCESS]: (state, action) => ({
+  [StatementAction.GET_STATEMENTS_SUCCESS]: (state, action: IGetStatementSuccessAction) => ({
     ...state,
     error: null,
     fetched: true,
-    pending: false,
+    pending: action.moreResults,
     // TODO(ndrwhr): Don't just blindly append onto the end, i.e. make sure the statements are
-    // sorted correctly. Also be better about typing one we have API types in the client.
-    statements: [...state.statements, ...action.response.response],
+    // sorted correctly.
+    statements: [...state.statements, ...action.statements],
   }),
 })
 
