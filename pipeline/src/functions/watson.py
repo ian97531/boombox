@@ -13,7 +13,7 @@ from pynamodb.exceptions import DoesNotExist
 from src.utils.pynamodb_models import EpisodeModel
 from src.utils.log_cfg import logger
 from src.utils.constants import WORD, SPEAKER, CONFIDENCE, START_TIME, END_TIME
-from src.utils.utils import logError
+from src.utils.utils import buildFilename, getFileInfo, logError
 
 s3 = boto3.resource('s3')
 sns = boto3.resource('sns')
@@ -77,8 +77,6 @@ def transcribe(event, context):
                 message = json.loads(record['Sns']['Message'])
                 for output in message['outputs']:
                     key = output['key']
-                    episode = key.split('.')[0]
-
                     logger.info('Starting Recognition job.')
                     # Get the audio file from the S3 bucket as a streamable object.
                     audioObject = s3.Object(INPUT_BUCKET, key)
@@ -86,7 +84,7 @@ def transcribe(event, context):
 
                     # POST the audio file to the Watson transcription start job endpoint with the correct query params.
                     response = startTranscriptionJob(
-                        audioFile, episode, credentials, WATSON_CALLBACK_URL)
+                        audioFile, key, credentials, WATSON_CALLBACK_URL)
                     logger.info('Started Recognition job with response code: ' +
                                 str(response.status_code) + ' and body ' + response.text)
         else:
@@ -148,9 +146,10 @@ def download(event, context):
             logger.info(
                 'Retreived transcription results from Watson for job: ' + status['id'])
 
-            episode = status['user_token'].split('/')[0]
-            offset = status['user_token'].split('/')[1]
-            filename = status['id'] + '-' + episode + '-' + offset + '.json'
+            podcastSlug, episodeSlug, publishTimestamp, startTime = getFileInfo(
+                status['user_token'])
+            filename = buildFilename('json', podcastSlug, episodeSlug,
+                                     publishTimestamp, startTime, True)
 
             logger.info('Uploading transcription results to S3 ' +
                         OUTPUT_BUCKET + '/' + filename)
@@ -161,6 +160,10 @@ def download(event, context):
 
             message = {
                 'filename': filename,
+                'podcastSlug': podcastSlug,
+                'episodeSlug': episodeSlug,
+                'publishTimestamp': publishTimestamp,
+                'startTime': startTime
             }
             logger.debug('Sending ' + json.dumps(message) +
                          '\n to the Watson download complete SNS.')
@@ -188,6 +191,9 @@ def normalize(event, context):
             message = json.loads(record['Sns']['Message'])
 
             input_file_name = message['filename']
+            podcastSlug = message['podcastSlug']
+            episodeSlug = message['episodeSlug']
+            publishTimestamp = message['publishTimestamp']
 
             logger.info('Starting fetching input JSON file "' +
                         input_file_name + '" from bucket "' + INPUT_BUCKET + '".')
@@ -251,9 +257,9 @@ def normalize(event, context):
             logger.info('Completed writing JSON to  "' +
                         input_file_name + '" in bucket "' + OUTPUT_BUCKET + '".')
 
-            guid = input_file_name.split('-')[5]
-            logger.debug('Starting updating dynamodb record for ' + guid + '.')
-            episode = EpisodeModel.get(hash_key=guid)
+            logger.debug(
+                'Starting updating dynamodb record for ' + podcastSlug + ' ' + episodeSlug + '.')
+            episode = EpisodeModel.get(podcastSlug, publishTimestamp)
             if episode.splitWatsonTranscriptions:
                 if input_file_name not in episode.splitWatsonTranscriptions:
                     episode.splitWatsonTranscriptions.append(input_file_name)
@@ -261,12 +267,14 @@ def normalize(event, context):
                 episode.splitWatsonTranscriptions = [input_file_name]
             episode.save()
             logger.debug(
-                'Completed updating dynamodb record for ' + guid + '.')
+                'Completed updating dynamodb record for ' + podcastSlug + ' ' + episodeSlug + '.')
 
             if len(episode.splitWatsonTranscriptions) == len(episode.splits):
                 message = {
                     'files': [],
-                    'guid': guid
+                    'podcastSlug': podcastSlug,
+                    'episodeSlug': episodeSlug,
+                    'publishTimestamp': publishTimestamp,
                 }
                 for key in episode.splitWatsonTranscriptions:
                     message['files'].append(key)
