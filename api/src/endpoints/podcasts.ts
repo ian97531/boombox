@@ -1,7 +1,7 @@
 import { IStatement } from '@boombox/shared/types/models'
 import { NextFunction, Response, Router } from 'express'
 import validator = require('validator')
-import { getEpisode, getSpeakers, getStatements } from '../db'
+import { getEpisodeForSlugs, getSpeakers, getStatements } from '../db'
 import {
   handleAsync,
   validatePageSize,
@@ -15,7 +15,7 @@ export default function() {
   const router = Router()
 
   router.get(
-    '/:episodeId',
+    '/:podcastSlug/episodes/:episodeSlug/statements',
     validateQueryParams(['pageSize', 'startTime']),
     validateStartTime(),
     validatePageSize(),
@@ -26,20 +26,22 @@ export default function() {
   return router
 }
 
-const findStatements = async (
-  req: IStatementListRequest,
-  res: Response,
-  next: NextFunction
-) => {
-  const guid = validator.escape(req.params.episodeId)
-  const episodeResult = await getEpisode(guid)
+const findStatements = async (req: IStatementListRequest, res: Response, next: NextFunction) => {
+  const podcastSlug = validator.escape(req.params.podcastSlug)
+  const episodeSlug = validator.escape(req.params.episodeSlug)
+
+  console.log('finding episode for ' + podcastSlug + ' ' + episodeSlug)
+  const episodeResult = await getEpisodeForSlugs(podcastSlug, episodeSlug)
+
+  console.log('finding speakers for ' + episodeResult.speakers)
   const speakerResult = await getSpeakers(episodeResult.speakers)
   const query = {
-    guid,
     pageSize: req.query.pageSize,
     startTime: req.query.startTime,
   }
-  const statementResult = await getStatements(query)
+
+  console.log('finding statements for ' + podcastSlug + ' ' + episodeResult.publishTimestamp)
+  const statementResult = await getStatements(podcastSlug, episodeResult.publishTimestamp, query)
 
   const items: IStatement[] = statementResult.items.map(statement => {
     const newStatement: IStatement = {

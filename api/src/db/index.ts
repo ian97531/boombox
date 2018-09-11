@@ -1,3 +1,4 @@
+export { getEpisode, getEpisodeForSlugs } from './episodes'
+export { getPodcast } from './podcasts'
 export { getSpeakers } from './speakers'
-export { getEpisode } from './episodes'
 export { getStatements } from './statements'

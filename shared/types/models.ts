@@ -1,6 +1,8 @@
 export interface IEpisode {
-  podcastId: string
-  episodeId: string
+  podcastSlug: string
+  publishTimestamp: number
+  slug: string
+  guid: string
   title: string
   summary: string
   imageURL: string
@@ -11,7 +13,8 @@ export interface IEpisode {
 }
 
 export interface IPodcast {
-  podcastId: string
+  podcastSlug: string
+  feedURL: string
   title: string
   subtitle: string
   author: string
@@ -19,7 +22,7 @@ export interface IPodcast {
   category: string
   language: string
   imageURL: string
-  episodeIds: string[]
+  episodes: string
   createdAt: string
   lastModifiedAt: string
   lastCheckedAt: string

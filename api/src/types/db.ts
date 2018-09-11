@@ -1,5 +1,4 @@
 export interface ITimedListQuery {
-  guid: string
   startTime: number
   pageSize: number
 }
