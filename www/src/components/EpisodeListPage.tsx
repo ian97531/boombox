@@ -1,21 +1,32 @@
 import { IEpisode } from '@boombox/shared/types/models'
 import * as React from 'react'
 import { connect } from 'react-redux'
+import { RouteComponentProps, withRouter } from 'react-router'
 import { Link } from 'react-router-dom'
 import { Dispatch } from 'redux'
 import { getEpisodes } from 'store/actions/episodes'
 import { IEpisodesStore } from 'store/reducers/episodes'
 import './EpisodeListPage.css'
 
-interface IEpisodeListPageProps {
-  episodes: IEpisodesStore
+interface IEpisodeListRouterProps {
+  podcastSlug: string
+}
+
+interface IEpisodeListPageRouterProps extends RouteComponentProps<IEpisodeListRouterProps> {}
+
+interface IEpisodeListPageProps extends IEpisodeListPageRouterProps {
+  episodes: { [id: string]: IEpisode }
   dispatch: Dispatch
+  pending: boolean
 }
 
 const EpisodeEntry: React.SFC<{ episode: IEpisode }> = ({ episode }: { episode: IEpisode }) => (
   <li className="EpisodeListPage__entry">
     <h4 className="EpisodeListPage__entry-heading">
-      <Link className="EpisodeListPage__entry-heading-link" to={`episode/${episode.episodeId}`}>
+      <Link
+        className="EpisodeListPage__entry-heading-link"
+        to={`/podcast/${episode.podcastSlug}/${episode.slug}`}
+      >
         {episode.title}
       </Link>
     </h4>
@@ -31,7 +42,8 @@ class EpisodeListPage extends React.Component<IEpisodeListPageProps> {
     this.props.dispatch(getEpisodes())
   }
   public render() {
-    const { pending, episodeIds, episodes } = this.props.episodes
+    const { episodes, pending } = this.props
+
     return (
       <div className="EpisodeListPage">
         <div className="EpisodeListPage__sidebar">
@@ -44,8 +56,8 @@ class EpisodeListPage extends React.Component<IEpisodeListPageProps> {
         <div className="EpisodeListPage__content">
           {pending ? 'Loading Episodes...' : ''}
           <ol className="EpisodeListPage__entry-list">
-            {episodeIds.map((episodeId: string) => (
-              <EpisodeEntry key={episodeId} episode={episodes[episodeId]} />
+            {Object.keys(episodes).map((episodeSlug: string) => (
+              <EpisodeEntry key={episodeSlug} episode={episodes[episodeSlug]} />
             ))}
           </ol>
         </div>
@@ -54,8 +66,15 @@ class EpisodeListPage extends React.Component<IEpisodeListPageProps> {
   }
 }
 
-const mapStateToProps = ({ episodes }: { episodes: IEpisodesStore }) => ({
-  episodes,
-})
+const mapStateToProps = (
+  { episodes }: { episodes: IEpisodesStore },
+  ownProps: IEpisodeListPageRouterProps
+) => {
+  // TODO(ndrwhr): Add error handling case (i.e. if the podcast isn't in the episodes store).
+  return {
+    episodes: episodes.episodes[ownProps.match.params.podcastSlug] || {},
+    pending: episodes.pending,
+  }
+}
 
-export default connect(mapStateToProps)(EpisodeListPage)
+export default withRouter(connect(mapStateToProps)(EpisodeListPage))

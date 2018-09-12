@@ -2,7 +2,6 @@ export interface IEpisode {
   podcastSlug: string
   publishTimestamp: number
   slug: string
-  guid: string
   title: string
   summary: string
   imageURL: string

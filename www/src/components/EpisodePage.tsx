@@ -12,13 +12,14 @@ import AudioController from 'utilities/AudioController'
 import './EpisodePage.css'
 
 interface IEpisodeRouterProps {
-  episodeId: string
+  episodeSlug: string
+  podcastSlug: string
 }
 
 interface IEpisodePageRouterProps extends RouteComponentProps<IEpisodeRouterProps> {}
 
 interface IEpisodePageProps extends IEpisodePageRouterProps {
-  episode: IEpisode
+  episode: IEpisode | undefined
   dispatch: Dispatch
 }
 
@@ -36,18 +37,25 @@ class EpisodePage extends React.Component<IEpisodePageProps> {
   }
 
   public render() {
-    const conversationPanel = this.props.episode ? (
-      <ConversationPanel requestedEpisodeId={this.props.episode.episodeId} />
+    const epidsodeConversationPanel = this.props.episode ? (
+      <ConversationPanel
+        requestedEpisodeSlug={this.props.episode.slug}
+        requestedPodcastSlug={this.props.episode.podcastSlug}
+      />
+    ) : (
+      ''
+    )
+
+    const episodeMetadataPanel = this.props.episode ? (
+      <EpisodeMetadataPanel episode={this.props.episode} />
     ) : (
       ''
     )
     return (
       <div className="EpisodePage">
-        <div className="EpisodePage__left-panel">
-          <EpisodeMetadataPanel episode={this.props.episode} />
-        </div>
+        <div className="EpisodePage__left-panel">{episodeMetadataPanel}</div>
         <div className="EpisodePage__right-panel">
-          <div className="EpisodePage__conversation">{conversationPanel}</div>
+          <div className="EpisodePage__conversation">{epidsodeConversationPanel}</div>
           <div className="EpisodePage__player">
             <Player />
           </div>
@@ -60,9 +68,17 @@ class EpisodePage extends React.Component<IEpisodePageProps> {
 const mapStateToProps = (
   { episodes }: { episodes: IEpisodesStore },
   ownProps: IEpisodePageRouterProps
-) => ({
-  // TODO(ndrwhr): Add error handling case (i.e. if the episode id isn't in the episodes store).
-  episode: episodes.episodes[ownProps.match.params.episodeId],
-})
+) => {
+  const podcastSlug = ownProps.match.params.podcastSlug
+  const episodeSlug = ownProps.match.params.episodeSlug
+  const episode = episodes.episodes[podcastSlug]
+    ? episodes.episodes[podcastSlug][episodeSlug]
+    : undefined
+
+  return {
+    // TODO(ndrwhr): Add error handling case (i.e. if the episode id isn't in the episodes store).
+    episode,
+  }
+}
 
 export default withRouter(connect(mapStateToProps)(EpisodePage))

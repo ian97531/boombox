@@ -8,7 +8,8 @@ import {
 import { createBasicReducer } from 'utilities/ReducerUtils'
 
 export interface IStatementsStore {
-  episodeId: string | null
+  episodeSlug: string | null
+  podcastSlug: string | null
   pending: boolean
   error: string | null
   fetched: boolean
@@ -16,18 +17,20 @@ export interface IStatementsStore {
 }
 
 const DEFAULT_STATE: IStatementsStore = {
-  episodeId: null,
+  episodeSlug: null,
   error: null,
   fetched: false,
   pending: false,
+  podcastSlug: null,
   statements: [],
 }
 
 const statementsReducer = createBasicReducer(DEFAULT_STATE, {
   [StatementAction.GET_STATEMENTS_PENDING]: (state, action: IGetStatementPendingAction) => ({
     ...state,
-    episodeId: action.options.episodeId,
+    episodeSlug: action.options.episodeSlug,
     pending: true,
+    podcastSlug: action.options.podcastSlug,
     statements: [],
   }),
   [StatementAction.GET_STATEMENTS_ERROR]: (state, action: IGetStatementErrorAction) => ({
