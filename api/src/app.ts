@@ -2,7 +2,7 @@ import { eventContext } from 'aws-serverless-express/middleware'
 import { json, urlencoded } from 'body-parser'
 import cors = require('cors')
 import express = require('express')
-import statements from './endpoints/statements'
+import podcasts from './endpoints/podcasts'
 import { Forbidden } from './errors'
 import { handleErrors, handleNotFound } from './middleware'
 
@@ -31,7 +31,7 @@ app.use(json())
 app.use(urlencoded({ extended: true }))
 app.use(eventContext())
 
-app.use('/statements', statements())
+app.use('/podcasts', podcasts())
 app.use(handleNotFound)
 app.use(handleErrors)
 

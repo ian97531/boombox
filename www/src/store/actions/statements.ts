@@ -12,7 +12,8 @@ export enum StatementAction {
 }
 
 export interface IGetStatementsOptions {
-  episodeId: string
+  episodeSlug: string
+  podcastSlug: string
   pageSize?: number
   startTime?: number
 }
@@ -75,7 +76,7 @@ export const getStatements: ActionCreator<any> = (options: IGetStatementsOptions
     try {
       while (moreResults) {
         const response: AxiosResponse<IStatementListResponse> = await api.get(
-          '/statements/' + options.episodeId,
+          '/podcasts/' + options.podcastSlug + '/episodes/' + options.episodeSlug + '/statements/',
           { params }
         )
 

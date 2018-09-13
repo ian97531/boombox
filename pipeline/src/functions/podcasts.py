@@ -8,12 +8,13 @@ import feedparser
 import time
 
 from datetime import datetime
+from slugify import slugify
 from time import mktime
 
 from pynamodb.exceptions import DoesNotExist
 from src.utils.pynamodb_models import PodcastModel, EpisodeModel
 from src.utils.log_cfg import logger
-from src.utils.utils import logError, logStatus, getSafeGUID
+from src.utils.utils import buildFilename, getFileInfo, logError, logStatus
 from src.utils.constants import STARTING
 
 s3 = boto3.resource('s3')
@@ -44,18 +45,20 @@ def checkRSSFeed(event, context):
         FEED_URL = 'https://www.hellointernet.fm/podcast?format=rss'
         page = 1
         response = feedparser.parse(FEED_URL)
+        channel = response['feed']
         podcast = None
-        processedEpisodes = []
+        processedEpisodes = {}
         insertedEpisodes = 0
+        podcastSlug = slugify(channel['title']).replace('_', '-')
         try:
-            podcast = PodcastModel.get(hash_key=FEED_URL)
-            processedEpisodes = podcast.episodes
+            podcast = PodcastModel.get(hash_key=podcastSlug)
+            processedEpisodes = json.loads(podcast.episodes)
         except DoesNotExist:
-            podcast = PodcastModel(feedURL=FEED_URL)
+            podcast = PodcastModel(hash_key=podcastSlug)
             logger.info('Could not find a record for: "' + FEED_URL +
                         '". Creating a new record in the dynamodb table "' + PODCASTS_TABLE + '".')
 
-        channel = response['feed']
+        podcast.feedURL = FEED_URL
         podcast.title = channel['title']
         podcast.subtitle = channel['subtitle']
         podcast.author = channel['author']
@@ -73,35 +76,43 @@ def checkRSSFeed(event, context):
             publishedEpisodes = publishedEpisodes + response['entries']
 
         for episode in publishedEpisodes:
-            guid = getSafeGUID(episode['id'])
+            episodeSlug = slugify(episode['title']).replace('_', '-')
+            publishTimestamp = int(mktime(episode['published_parsed']))
+            publishedAt = datetime.fromtimestamp(publishTimestamp)
             episodeURL = getEnclosure(episode['links'])
-            if not guid in processedEpisodes and insertedEpisodes < INSERT_LIMIT:
+            if not episodeSlug in processedEpisodes and insertedEpisodes < INSERT_LIMIT:
                 published = time.strftime(
                     '%Y-%m-%d %H:%M:%S', episode['published_parsed'])
-                logStatus(STARTING, channel['title'], episode['title'],
-                          guid, episodeURL, published)
+                logStatus(
+                    STARTING, channel['title'],
+                    episode['title'],
+                    episodeURL, published)
 
                 logger.debug('Inserting "' + episodeURL +
                              '" into the dynamodb table "' + EPISODES_TABLE + '".')
                 newEpisode = EpisodeModel(
-                    guid=guid,
+                    podcastSlug=podcastSlug,
+                    publishTimestamp=publishTimestamp,
+                    publishedAt=publishedAt,
+                    slug=episodeSlug,
+                    guid=episode['id'],
                     title=episode['title'],
                     summary=episode['summary'],
                     episodeURL=episodeURL,
                     imageURL=episode['image']['href'],
-                    feedURL=FEED_URL,
-                    publishedAt=datetime.fromtimestamp(
-                        mktime(episode['published_parsed']))
+
                 )
                 newEpisode.save()
-                processedEpisodes.append(guid)
+                processedEpisodes[episodeSlug] = publishTimestamp
                 insertedEpisodes = insertedEpisodes + 1
                 logger.debug('Completed inserting "' + episodeURL +
                              '" into the dynamodb table "' + EPISODES_TABLE + '".')
 
                 message = {
                     'episodeURL': episodeURL,
-                    'guid': guid
+                    'podcastSlug': podcastSlug,
+                    'publishTimestamp': publishTimestamp,
+                    'episodeSlug': episodeSlug
                 }
                 logger.debug('Sending ' + json.dumps(message) +
                              '\n to the download pending SNS.')
@@ -109,7 +120,7 @@ def checkRSSFeed(event, context):
                     {'default': json.dumps(message)}), MessageStructure='json')
                 logger.debug(
                     'Sent message to the download pending SNS ' + json.dumps(response))
-            elif not guid in processedEpisodes:
+            elif not episodeSlug in processedEpisodes:
                 logger.debug('Skipping "' + episodeURL + '" because the insertion max of ' +
                              str(INSERT_LIMIT) + ' has been reached.')
             else:
@@ -118,7 +129,7 @@ def checkRSSFeed(event, context):
 
         logger.info(str(insertedEpisodes) +
                     ' new episodes were inserted into the dynamodb table "' + EPISODES_TABLE + '".')
-        podcast.episodes = processedEpisodes
+        podcast.episodes = json.dumps(processedEpisodes)
         podcast.save()
     except Exception as e:
         logError(e, event)
@@ -136,9 +147,11 @@ def download(event, context):
         downloads = 0
         for record in event['Records']:
             data = json.loads(record['Sns']['Message'])
-            guid = data['guid']
+            podcastSlug = data['podcastSlug']
+            episodeSlug = data['episodeSlug']
+            publishTimestamp = data['publishTimestamp']
             episode_url = data['episodeURL']
-            filename = guid + '.mp3'
+            filename = buildFilename('mp3', podcastSlug, episodeSlug, publishTimestamp)
 
             logger.debug('Starting download of "' + episode_url +
                          '" to bucket "s3:/' + OUTPUT_BUCKET + '/' + filename + '".')
@@ -151,7 +164,9 @@ def download(event, context):
             downloads = downloads + 1
 
             message = {
-                'guid': guid,
+                'podcastSlug': podcastSlug,
+                'publishTimestamp': publishTimestamp,
+                'episodeSlug': episodeSlug,
                 'filename': filename
             }
             logger.debug('Sending ' + json.dumps(message) +
@@ -175,17 +190,21 @@ def transcode(event, context):
 
         for record in event['Records']:
             data = json.loads(record['Sns']['Message'])
-            guid = data['guid']
+            podcastSlug = data['podcastSlug']
+            episodeSlug = data['episodeSlug']
+            publishTimestamp = data['publishTimestamp']
+            mp3Filename = data['filename']
+
             m4a = {
-                'Key': guid + '.m4a',
+                'Key': buildFilename('m4a', podcastSlug, episodeSlug, publishTimestamp),
                 'PresetId': M4A_PRESET
             }
             ogg = {
-                'Key': guid + '.ogg',
+                'Key': buildFilename('ogg', podcastSlug, episodeSlug, publishTimestamp),
                 'PresetId': OGG_PRESET
             }
             response = transcoder.create_job(PipelineId=TRANSCODE_PIPELINE_ID,
-                                             Input={'Key': data['filename']},
+                                             Input={'Key': mp3Filename},
                                              Outputs=[m4a, ogg])
             logger.debug(json.dumps(response))
     except Exception as e:
@@ -215,7 +234,8 @@ def filePermissions(event, context):
             mp3Filename = jobResult['input']['key']
             m4aFilename = None
             oggFilename = None
-            guid = mp3Filename.split('.')[0]
+
+            podcastSlug, episodeSlug, publishTimestamp, _ = getFileInfo(mp3Filename)
 
             for output in jobResult['outputs']:
                 duration = output['duration']
@@ -225,7 +245,8 @@ def filePermissions(event, context):
                     oggFilename = output['key']
 
             logger.debug(
-                'Starting setting public read permissions for ' + guid + '.')
+                'Starting setting public read permissions for ' + podcastSlug + ' ' + episodeSlug +
+                '.')
             mp3_acl = s3.ObjectAcl(ORIGINAL_BUCKET, mp3Filename)
             m4a_acl = s3.ObjectAcl(TRANSCODED_BUCKET, m4aFilename)
             ogg_acl = s3.ObjectAcl(TRANSCODED_BUCKET, oggFilename)
@@ -233,22 +254,26 @@ def filePermissions(event, context):
             m4a_acl.put(ACL='public-read')
             ogg_acl.put(ACL='public-read')
             logger.debug(
-                'Completed setting public read permissions for ' + guid + '.')
+                'Completed setting public read permissions for ' + podcastSlug + ' ' + episodeSlug +
+                '.')
 
-            logger.debug('Starting updating dynamodb record for ' + guid + '.')
-            episode = EpisodeModel.get(hash_key=guid)
+            logger.debug(
+                'Starting updating dynamodb record for ' + podcastSlug + ' ' + episodeSlug + '.')
+            episode = EpisodeModel.get(podcastSlug, publishTimestamp)
             episode.mp3URL = ORIGINAL_BUCKET_URL_PREFIX + mp3Filename
             episode.m4aURL = TRANSCODED_BUCKET_URL_PREFIX + m4aFilename
             episode.oggURL = TRANSCODED_BUCKET_URL_PREFIX + oggFilename
             episode.duration = duration
             episode.save()
             logger.debug(
-                'Completed updating dynamodb record for ' + guid + '.')
+                'Completed updating dynamodb record for ' + podcastSlug + ' ' + episodeSlug + '.')
 
             records = records + 1
 
             message = {
-                'guid': guid,
+                'podcastSlug': podcastSlug,
+                'episodeSlug': episodeSlug,
+                'publishTimestamp': publishTimestamp,
                 'filename': mp3Filename,
                 'duration': duration
             }
@@ -277,7 +302,9 @@ def split(event, context):
             message = json.loads(record['Sns']['Message'])
             duration = message['duration']
             filename = message['filename']
-            guid = message['guid']
+            podcastSlug = message['podcastSlug']
+            episodeSlug = message['episodeSlug']
+            publishTimestamp = message['publishTimestamp']
 
             segments = math.ceil(duration/MAX_LENGTH)
             segmentDuration = int(math.ceil(duration/segments))
@@ -293,7 +320,8 @@ def split(event, context):
                     }
                 }]
 
-                outputFilename = guid + '/' + str(startTime) + '.mp3'
+                outputFilename = buildFilename(
+                    'mp3', podcastSlug, episodeSlug, publishTimestamp, startTime)
                 splits.append(outputFilename)
                 outputs = [{
                     'Key': outputFilename,
@@ -318,7 +346,8 @@ def split(event, context):
                     }
                 }]
 
-                outputFilename = guid + '/' + str(overlapStartTime) + '.mp3'
+                outputFilename = buildFilename(
+                    'mp3', podcastSlug, episodeSlug, publishTimestamp, overlapStartTime)
                 splits.append(outputFilename)
                 outputs = [{
                     'Key': outputFilename,
@@ -344,7 +373,8 @@ def split(event, context):
                 }
             }]
 
-            outputFilename = guid + '/' + str(startTime) + '.mp3'
+            outputFilename = buildFilename(
+                'mp3', podcastSlug, episodeSlug, publishTimestamp, startTime)
             splits.append(outputFilename)
             outputs = [{
                 'Key': outputFilename,
@@ -359,12 +389,13 @@ def split(event, context):
                                   Inputs=inputs,
                                   Outputs=outputs)
 
-            logger.debug('Starting updating dynamodb record for ' + guid + '.')
-            episode = EpisodeModel.get(hash_key=guid)
+            logger.debug(
+                'Starting updating dynamodb record for ' + podcastSlug + ' ' + episodeSlug + '.')
+            episode = EpisodeModel.get(podcastSlug, publishTimestamp)
             episode.splits = splits
             episode.save()
             logger.debug(
-                'Completed updating dynamodb record for ' + guid + '.')
+                'Completed updating dynamodb record for ' + podcastSlug + ' ' + episodeSlug + '.')
     except Exception as e:
         logError(e, event)
         raise

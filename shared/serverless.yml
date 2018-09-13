@@ -43,10 +43,10 @@ resources:
       Properties:
         TableName: ${self:custom.dynamodb.podcasts}
         AttributeDefinitions:
-          - AttributeName: feedURL
+          - AttributeName: slug
             AttributeType: S
         KeySchema:
-          - AttributeName: feedURL
+          - AttributeName: slug
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: ${self:custom.global.dynamodb.podcasts.rcu}
@@ -56,11 +56,15 @@ resources:
       Properties:
         TableName: ${self:custom.dynamodb.episodes}
         AttributeDefinitions:
-          - AttributeName: guid
+          - AttributeName: podcastSlug
             AttributeType: S
+          - AttributeName: publishTimestamp
+            AttributeType: N
         KeySchema:
-          - AttributeName: guid
+          - AttributeName: podcastSlug
             KeyType: HASH
+          - AttributeName: publishTimestamp
+            KeyType: RANGE
         ProvisionedThroughput:
           ReadCapacityUnits: ${self:custom.global.dynamodb.episodes.rcu}
           WriteCapacityUnits: ${self:custom.global.dynamodb.episodes.wcu}
@@ -71,12 +75,12 @@ resources:
       Properties:
         TableName: ${self:custom.dynamodb.statements}
         AttributeDefinitions:
-          - AttributeName: guid
+          - AttributeName: episodeKey
             AttributeType: S
           - AttributeName: endTime
             AttributeType: N
         KeySchema:
-          - AttributeName: guid
+          - AttributeName: episodeKey
             KeyType: HASH
           - AttributeName: endTime
             KeyType: RANGE
@@ -88,10 +92,10 @@ resources:
       Properties:
         TableName: ${self:custom.dynamodb.speakers}
         AttributeDefinitions:
-          - AttributeName: guid
+          - AttributeName: slug
             AttributeType: S
         KeySchema:
-          - AttributeName: guid
+          - AttributeName: slug
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: ${self:custom.global.dynamodb.speakers.rcu}

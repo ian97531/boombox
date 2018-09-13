@@ -1,12 +1,12 @@
 import { ISpeaker } from '@boombox/shared/types/models'
 import { default as dynamo } from './dynamo'
 
-export async function getSpeakers(guids: string[]): Promise<ISpeaker[]> {
+export async function getSpeakers(slugs: string[]): Promise<ISpeaker[]> {
   const speakers: ISpeaker[] = []
 
-  for (const guid of guids) {
+  for (const slug of slugs) {
     const params: AWS.DynamoDB.DocumentClient.GetItemInput = {
-      Key: { guid },
+      Key: { slug },
       TableName: process.env.SPEAKERS_TABLE as string,
     }
     const response = (await dynamo

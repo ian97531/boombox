@@ -11,7 +11,7 @@ from pynamodb.exceptions import DoesNotExist
 from src.utils.pynamodb_models import EpisodeModel
 from src.utils.log_cfg import logger
 from src.utils.constants import WORD, SPEAKER, CONFIDENCE, START_TIME, END_TIME
-from src.utils.utils import logError
+from src.utils.utils import buildFilename, getFileInfo, logError
 
 s3 = boto3.resource('s3')
 sns = boto3.resource('sns')
@@ -64,12 +64,16 @@ def transcribe(event, context):
         for record in event['Records']:
             message = json.loads(record['Sns']['Message'])
             for output in message['outputs']:
-                key = output['key']
-                uri = 'https://s3-' + REGION + '.amazonaws.com/' + INPUT_BUCKET + '/' + key
-                jobName = key.split('.')[0]
+                uri = 'https://s3-' + REGION + '.amazonaws.com/' + \
+                    INPUT_BUCKET + '/' + output['key']
+
+                podcastSlug, episodeSlug, publishTimestamp, startTime = getFileInfo(output['key'])
+
+                jobName = buildFilename(None, podcastSlug, episodeSlug,
+                                        publishTimestamp, startTime, True)
+
                 response = transcribeService.start_transcription_job(
-                    TranscriptionJobName=str(
-                        uuid.uuid4()) + '-' + getSafeGUID(jobName),
+                    TranscriptionJobName=jobName.replace('/', '__'),
                     LanguageCode='en-US',
                     MediaSampleRateHertz=44100,
                     MediaFormat='mp3',
@@ -97,10 +101,15 @@ def transcribeComplete(event, context):
 
         for record in event['Records']:
             input_file_name = record['s3']['object']['key']
-
+            key = input_file_name.replace('__', '/')
             if input_file_name != '.write_access_check_file.temp':
+                podcastSlug, episodeSlug, publishTimestamp, startTime = getFileInfo(key)
                 message = {
-                    'filename': input_file_name
+                    'filename': input_file_name,
+                    'podcastSlug': podcastSlug,
+                    'episodeSlug': episodeSlug,
+                    'publishTimestamp': publishTimestamp,
+                    'startTime': startTime
                 }
 
                 logger.debug('Sending ' + json.dumps(message) +
@@ -124,6 +133,10 @@ def normalize(event, context):
         for record in event['Records']:
             message = json.loads(record['Sns']['Message'])
             input_file_name = message['filename']
+            podcastSlug = message['podcastSlug']
+            episodeSlug = message['episodeSlug']
+            publishTimestamp = message['publishTimestamp']
+            startTime = message['startTime']
 
             logger.info('Starting fetching input JSON file "' +
                         input_file_name + '" from bucket "' + INPUT_BUCKET + '".')
@@ -167,33 +180,37 @@ def normalize(event, context):
                         ' words and ' + str(num_punctuation) + ' punctuation.')
 
             output_bucket = os.environ["OUTPUT_BUCKET"]
+            output_file_name = buildFilename(
+                'json', podcastSlug, episodeSlug, publishTimestamp, startTime)
             logger.info('Starting writing JSON to  "' +
-                        input_file_name + '" in bucket "' + output_bucket + '".')
-            output_file = s3.Object(output_bucket, input_file_name)
+                        output_file_name + '" in bucket "' + output_bucket + '".')
+
+            output_file = s3.Object(output_bucket, output_file_name)
             output_file.put(Body=json.dumps(output_json))
             logger.info('Completed writing JSON to  "' +
-                        input_file_name + '" in bucket "' + output_bucket + '".')
+                        output_file_name + '" in bucket "' + output_bucket + '".')
 
-            guid = input_file_name.split('-')[5]
             logger.debug(
-                'Starting updating dynamodb record for ' + guid + '.')
+                'Starting updating dynamodb record for ' + podcastSlug + ' ' + episodeSlug + '.')
 
-            episode = EpisodeModel.get(hash_key=guid)
+            episode = EpisodeModel.get(podcastSlug, publishTimestamp)
             if episode.splitAWSTranscriptions:
-                if input_file_name not in episode.splitAWSTranscriptions:
-                    episode.splitAWSTranscriptions.append(input_file_name)
+                if output_file_name not in episode.splitAWSTranscriptions:
+                    episode.splitAWSTranscriptions.append(output_file_name)
                     episode.save()
             else:
-                episode.splitAWSTranscriptions = [input_file_name]
+                episode.splitAWSTranscriptions = [output_file_name]
                 episode.save()
 
             logger.debug(
-                'Completed updating dynamodb record for ' + guid + '.')
+                'Completed updating dynamodb record for ' + podcastSlug + ' ' + episodeSlug + '.')
 
             if len(episode.splitAWSTranscriptions) == len(episode.splits):
                 message = {
                     'files': [],
-                    'guid': guid
+                    'podcastSlug': podcastSlug,
+                    'episodeSlug': episodeSlug,
+                    'publishTimestamp': publishTimestamp,
                 }
                 for key in episode.splitAWSTranscriptions:
                     message['files'].append(key)
