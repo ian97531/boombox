@@ -30,17 +30,12 @@ const findStatements = async (req: IStatementListRequest, res: Response, next: N
   const podcastSlug = validator.escape(req.params.podcastSlug)
   const episodeSlug = validator.escape(req.params.episodeSlug)
 
-  console.log('finding episode for ' + podcastSlug + ' ' + episodeSlug)
   const episodeResult = await getEpisodeForSlugs(podcastSlug, episodeSlug)
-
-  console.log('finding speakers for ' + episodeResult.speakers)
   const speakerResult = await getSpeakers(episodeResult.speakers)
   const query = {
     pageSize: req.query.pageSize,
     startTime: req.query.startTime,
   }
-
-  console.log('finding statements for ' + podcastSlug + ' ' + episodeResult.publishTimestamp)
   const statementResult = await getStatements(podcastSlug, episodeResult.publishTimestamp, query)
 
   const items: IStatement[] = statementResult.items.map(statement => {
