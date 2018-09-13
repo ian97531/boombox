@@ -1,4 +1,5 @@
-import { IEpisodeListResponse } from '@boombox/shared/types/responses'
+import { IEpisode } from '@boombox/shared/types/models'
+import { IListResponse } from '@boombox/shared/types/responses'
 import { ActionCreator, Dispatch } from 'redux'
 import { IEpisodesStore } from 'store/reducers/episodes'
 
@@ -16,7 +17,7 @@ export const getEpisodesError = (error: any) => ({
   type: GET_EPISODES_ERROR,
 })
 
-export const getEpisodesSuccess = (response: IEpisodeListResponse) => ({
+export const getEpisodesSuccess = (response: IListResponse<IEpisode>) => ({
   episodes: response.items,
   type: GET_EPISODES_SUCCESS,
 })
