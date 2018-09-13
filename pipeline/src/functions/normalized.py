@@ -224,9 +224,11 @@ def insert(event, context):
 
             startTime = time.time()
             capacityUnitsUsed = 0
+            totalStatements = len(statements)
 
             item = statements.pop(0)
             response = item.save()
+
             while len(statements):
                 # Make sure we don't get too far ahead of the provisioned capacity units.
                 consumed = response['ConsumedCapacity']['CapacityUnits']
@@ -236,6 +238,7 @@ def insert(event, context):
                     item = statements.pop(0)
                     try:
                         response = item.save()
+                        totalStatements = totalStatements + 1
                     except:
                         statements.insert(0, item)
                         logger.info(
@@ -251,6 +254,8 @@ def insert(event, context):
             episode = EpisodeModel.get(podcastSlug, publishTimestamp)
             podcast = PodcastModel.get(podcastSlug)
             published = episode.publishedAt.strftime("%Y-%m-%d %H:%M:%S")
+            episode.totalStatements = totalStatements
+            episode.save()
 
             logStatus(COMPLETE, podcast.title, episode.title, episode.episodeURL, published)
 

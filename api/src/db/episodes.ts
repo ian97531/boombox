@@ -16,13 +16,9 @@ export async function getEpisodeForSlugs(
   podcastSlug: string,
   episodeSlug: string
 ): Promise<IEpisode> {
-  console.log('getting podcast ' + podcastSlug)
   const podcast = await getPodcast(podcastSlug)
-  console.log(podcast.episodes)
   const episodeMap = JSON.parse(podcast.episodes)
-  console.log(episodeMap)
   const publishTimestamp = episodeMap[episodeSlug]
 
-  console.log('getting episode with ' + podcastSlug + ' ' + publishTimestamp)
   return await getEpisode(podcastSlug, publishTimestamp)
 }

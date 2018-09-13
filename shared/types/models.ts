@@ -6,7 +6,8 @@ export interface IEpisode {
   summary: string
   imageURL: string
   mp3URL: string
-  duration: string
+  duration: number
+  totalStatements: number
   publishedAt: string
   speakers: string[]
 }

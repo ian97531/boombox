@@ -30,7 +30,7 @@ export interface IGetStatementErrorAction extends Action {
 }
 
 export interface IGetStatementSuccessAction extends Action {
-  moreResults: boolean
+  totalItems: number
   options: IGetStatementsOptions
   statements: IStatement[]
   type: StatementAction
@@ -54,12 +54,12 @@ export const getStatementsError = (
 
 export const getStatementsSuccess = (
   options: IGetStatementsOptions,
-  moreResults: boolean,
+  totalItems: number,
   statements: IStatement[]
 ): IGetStatementSuccessAction => ({
-  moreResults,
   options,
   statements,
+  totalItems,
   type: StatementAction.GET_STATEMENTS_SUCCESS,
 })
 
@@ -70,7 +70,7 @@ export const getStatements: ActionCreator<any> = (options: IGetStatementsOptions
     let moreResults = true
     const params = {
       pageSize: options.pageSize || 50,
-      startTime: options.startTime || 0,
+      start: options.startTime || 0,
     }
 
     try {
@@ -80,14 +80,13 @@ export const getStatements: ActionCreator<any> = (options: IGetStatementsOptions
           { params }
         )
 
-        if (response.data.info.moreResults) {
-          const lastStatement = response.data.response[response.data.response.length - 1]
-          params.startTime = lastStatement.endTime
+        if (response.data.info.nextItem) {
+          params.start = response.data.info.nextItem
         } else {
           moreResults = false
         }
 
-        dispatch(getStatementsSuccess(options, moreResults, response.data.response))
+        dispatch(getStatementsSuccess(options, response.data.info.totalItems, response.data.items))
       }
     } catch (err) {
       dispatch(getStatementsError(options, err.message))

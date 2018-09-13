@@ -17,7 +17,7 @@ export const getEpisodesError = (error: any) => ({
 })
 
 export const getEpisodesSuccess = (response: IEpisodeListResponse) => ({
-  episodes: response.response,
+  episodes: response.items,
   type: GET_EPISODES_SUCCESS,
 })
 
@@ -35,14 +35,16 @@ export const getEpisodes: ActionCreator<any> = () => (dispatch: Dispatch, getSta
       dispatch(
         getEpisodesSuccess({
           info: {
-            moreResults: true,
-            numResults: 3,
+            nextItem: 111,
+            numItems: 2,
             pageSize: 3,
+            start: 0,
             statusCode: 200,
+            totalItems: 2,
           },
-          response: [
+          items: [
             {
-              duration: '1 Hour 43 Minutes 23 Seconds',
+              duration: 7307,
               imageURL: '',
               mp3URL: '/audio/test-45.mp3',
               podcastSlug: 'hello-internet',
@@ -53,9 +55,10 @@ export const getEpisodes: ActionCreator<any> = () => (dispatch: Dispatch, getSta
               summary:
                 "Grey and Brady discuss: Brady story time, KSI vs Logan Paul, left vs right & heroes vs villains, why-don't-you-just-ism, Formula One, and Grey is concerned about the attention economy and his own attention span.",
               title: 'H.I. #108: Project Cyclops',
+              totalStatements: 732,
             },
             {
-              duration: '1 Hour 26 Minutes 23 Seconds',
+              duration: 5871,
               imageURL: '',
               mp3URL: '/audio/test-45.mp3',
               podcastSlug: 'hello-internet',
@@ -66,6 +69,7 @@ export const getEpisodes: ActionCreator<any> = () => (dispatch: Dispatch, getSta
               summary:
                 'Brady and Grey discuss: a FOT5k story (or is it?), passing the Brady Turing Test, paper straws, liveable cities, the morality of snakes and ladders, pony painting parties, and Space Force.',
               title: 'H.I. #107: One Year of Weird',
+              totalStatements: 674,
             },
           ],
         })

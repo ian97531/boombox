@@ -1,9 +1,9 @@
-export interface ITimedListQuery {
-  startTime: number
+export interface IListQuery {
+  start: number
   pageSize: number
 }
 
 export interface IDBListResponse<ObjectType> {
-  moreResults: boolean
+  nextItem?: number
   items: ObjectType[]
 }
