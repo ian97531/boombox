@@ -14,6 +14,7 @@ export interface IStatementsStore {
   error: string | null
   fetched: boolean
   statements: IStatement[]
+  totalStatements: number
 }
 
 const DEFAULT_STATE: IStatementsStore = {
@@ -23,6 +24,7 @@ const DEFAULT_STATE: IStatementsStore = {
   pending: false,
   podcastSlug: null,
   statements: [],
+  totalStatements: 0,
 }
 
 const statementsReducer = createBasicReducer(DEFAULT_STATE, {
@@ -42,10 +44,11 @@ const statementsReducer = createBasicReducer(DEFAULT_STATE, {
     ...state,
     error: null,
     fetched: true,
-    pending: action.moreResults,
+    pending: state.statements.length + action.statements.length === action.totalItems,
     // TODO(ndrwhr): Don't just blindly append onto the end, i.e. make sure the statements are
     // sorted correctly.
     statements: [...state.statements, ...action.statements],
+    totalStatements: action.totalItems,
   }),
 })
 

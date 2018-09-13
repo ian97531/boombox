@@ -57,14 +57,9 @@ function sendErrorSNS(error: IError, req: any) {
   })
 }
 
-export default function(
-  error: IError,
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
+export default function(error: IError, req: Request, res: Response, next: NextFunction) {
   const status = error.status || 500
-  const title = error.title || 'Uknown Error'
+  const title = error.title || 'Unknown Error'
   let message = error.message || ''
 
   if (status === 500) {
@@ -84,7 +79,6 @@ export default function(
       error: title,
       message,
     },
-    response: null,
     // tslint:enable:object-literal-sort-keys
   }
 
