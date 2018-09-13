@@ -1,5 +1,5 @@
 import { IStatement } from '@boombox/shared/types/models'
-import { IStatementListResponse } from '@boombox/shared/types/responses'
+import { IListResponse } from '@boombox/shared/types/responses'
 import { Action, ActionCreator, AnyAction, Dispatch } from 'redux'
 import { api } from 'utilities/axios'
 import { AxiosResponse } from '../../../node_modules/axios'
@@ -75,7 +75,7 @@ export const getStatements: ActionCreator<any> = (options: IGetStatementsOptions
 
     try {
       while (moreResults) {
-        const response: AxiosResponse<IStatementListResponse> = await api.get(
+        const response: AxiosResponse<IListResponse<IStatement>> = await api.get(
           '/podcasts/' + options.podcastSlug + '/episodes/' + options.episodeSlug + '/statements/',
           { params }
         )

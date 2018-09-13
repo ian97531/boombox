@@ -1,10 +1,10 @@
 import { IStatement, IStatementDBResult } from '@boombox/shared/types/models'
 import { NextFunction, Response, Router } from 'express'
 import validator = require('validator')
-import { getEpisodeForSlugs, getSpeakers, getStatements } from '../db'
+import { getEpisodeForSlugs, getEpisodes, getPodcast, getSpeakers, getStatements } from '../db'
 import { handleAsync, validatePageSize, validateQueryParams, validateStart } from '../middleware'
-import { returnStatements } from '../responses/returnList'
-import { IListRequest } from '../types/requests'
+import { returnItem, returnList } from '../middleware/response'
+import { IItemRequest, IListRequest } from '../types/requests'
 
 export default function() {
   const router = Router()
@@ -15,13 +15,60 @@ export default function() {
     validateStart(),
     validatePageSize(),
     handleAsync(findStatements),
-    returnStatements
+    returnList
   )
+
+  router.get('/:podcastSlug/episodes/:episodeSlug', handleAsync(findEpisode), returnItem)
+
+  router.get(
+    '/:podcastSlug/episodes',
+    validateQueryParams(['pageSize', 'start']),
+    validateStart(),
+    validatePageSize(),
+    handleAsync(findEpisodes),
+    returnList
+  )
+
+  router.get('/:podcastSlug', handleAsync(findPodcast), returnItem)
 
   return router
 }
 
-const findStatements = async (req: IListRequest<IStatement>, res: Response, next: NextFunction) => {
+const findPodcast = async (req: IItemRequest, res: Response, next: NextFunction) => {
+  const podcastSlug = validator.escape(req.params.podcastSlug)
+  req.item = await getPodcast(podcastSlug)
+
+  next()
+}
+
+const findEpisode = async (req: IItemRequest, res: Response, next: NextFunction) => {
+  const podcastSlug = validator.escape(req.params.podcastSlug)
+  const episodeSlug = validator.escape(req.params.episodeSlug)
+
+  req.item = await getEpisodeForSlugs(podcastSlug, episodeSlug)
+
+  next()
+}
+
+const findEpisodes = async (req: IListRequest, res: Response, next: NextFunction) => {
+  const podcastSlug = validator.escape(req.params.podcastSlug)
+  const podcast = await getPodcast(podcastSlug)
+  const query = {
+    pageSize: req.query.pageSize as number,
+    start: req.query.start as number,
+  }
+  const episodeResult = await getEpisodes(podcastSlug, query)
+
+  req.items = episodeResult.items
+  req.totalItems = Object.keys(podcast.episodes).length
+  if (episodeResult.nextItem) {
+    req.nextItem = episodeResult.nextItem
+  }
+
+  next()
+}
+
+const findStatements = async (req: IListRequest, res: Response, next: NextFunction) => {
   const podcastSlug = validator.escape(req.params.podcastSlug)
   const episodeSlug = validator.escape(req.params.episodeSlug)
 
