@@ -25,7 +25,7 @@ const EpisodeEntry: React.SFC<{ episode: IEpisode }> = ({ episode }: { episode: 
     <h4 className="EpisodeListPage__entry-heading">
       <Link
         className="EpisodeListPage__entry-heading-link"
-        to={`/podcast/${episode.podcastSlug}/${episode.slug}`}
+        to={`/podcasts/${episode.podcastSlug}/${episode.slug}`}
       >
         {episode.title}
       </Link>

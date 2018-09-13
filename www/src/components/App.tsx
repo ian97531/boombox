@@ -12,8 +12,8 @@ const App: React.SFC = () => (
       </Link>
     </div>
     <div className="App__content">
-      <Route exact={true} path="/podcast/:podcastSlug" component={EpisodeListPage} />
-      <Route exact={true} path="/podcast/:podcastSlug/:episodeSlug" component={EpisodePage} />
+      <Route exact={true} path="/podcasts/:podcastSlug" component={EpisodeListPage} />
+      <Route exact={true} path="/podcasts/:podcastSlug/:episodeSlug" component={EpisodePage} />
     </div>
   </div>
 )
