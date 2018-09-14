@@ -3,9 +3,27 @@ import { IDBListResponse, IListQuery } from '../types/db'
 import { default as dynamo } from './dynamo'
 import { getPodcast } from './podcasts'
 
+const ProjectionExpression = [
+  '#duration',
+  'imageURL',
+  'mp3URL',
+  'podcastSlug',
+  'publishedAt',
+  'publishTimestamp',
+  'slug',
+  'speakers',
+  'summary',
+  'title',
+  'totalStatements',
+].join(', ')
+
+const ExpressionAttributeNames = { '#duration': 'duration' }
+
 export async function getEpisode(podcastSlug: string, publishTimestamp: number): Promise<IEpisode> {
   const params: AWS.DynamoDB.DocumentClient.GetItemInput = {
+    ExpressionAttributeNames,
     Key: { podcastSlug, publishTimestamp },
+    ProjectionExpression,
     TableName: process.env.EPISODES_TABLE as string,
   }
   const response = (await dynamo.get(params).promise()) as AWS.DynamoDB.DocumentClient.GetItemOutput
@@ -18,18 +36,14 @@ export async function getEpisodes(
   query: IListQuery
 ): Promise<IDBListResponse<IEpisode>> {
   const params: AWS.DynamoDB.DocumentClient.QueryInput = {
-    ExpressionAttributeNames: {
-      '#duration': 'duration',
-    },
+    ExpressionAttributeNames,
     ExpressionAttributeValues: {
       ':podcastSlug': podcastSlug,
       ':start': query.start,
     },
     KeyConditionExpression: 'podcastSlug = :podcastSlug and publishTimestamp >= :start',
     Limit: query.pageSize + 1,
-    ProjectionExpression:
-      'podcastSlug, publishTimestamp, slug, title, summary, imageURL, ' +
-      'mp3URL, #duration, totalStatements, publishedAt, speakers',
+    ProjectionExpression,
     TableName: process.env.EPISODES_TABLE as string,
   }
 
