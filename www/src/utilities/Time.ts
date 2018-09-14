@@ -31,7 +31,10 @@ export function formatTimeMarker(seconds: number): string {
   const padCharacter = '0'
   const padWidth = 2
 
-  const paddedHours = timeParts.hours.toString()
+  const paddedHours =
+    timeParts.hours === 0
+      ? timeParts.hours.toString().padStart(padWidth, padCharacter)
+      : timeParts.hours.toString()
   const paddedMinutes = timeParts.minutes.toString().padStart(padWidth, padCharacter)
   const paddedSeconds = timeParts.seconds.toString().padStart(padWidth, padCharacter)
 
@@ -40,7 +43,12 @@ export function formatTimeMarker(seconds: number): string {
 
 export function formatDuration(seconds: number): string {
   const timeParts = secondsToTimeParts(seconds)
-  return `${timeParts.hours} hours ${timeParts.minutes} minutes ${timeParts.seconds} seconds`
+  const hourString = timeParts.hours === 1 ? 'hour' : 'hours'
+  const minuteString = timeParts.minutes === 1 ? 'minute' : 'minutes'
+  const secondString = timeParts.seconds === 1 ? 'second' : 'seconds'
+  return `${timeParts.hours} ${hourString} ${timeParts.minutes} ${minuteString} ${
+    timeParts.seconds
+  } ${secondString}`
 }
 
 export function formatDate(datetime: string): string {
