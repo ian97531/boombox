@@ -36,22 +36,20 @@ class EpisodePage extends React.Component<IEpisodePageProps> {
   }
 
   public render() {
-    const epidsodeConversationPanel = this.props.episode ? (
-      <ConversationPanel
-        requestedEpisodeSlug={this.props.episode.slug}
-        requestedPodcastSlug={this.props.episode.podcastSlug}
-      />
-    ) : (
-      ''
-    )
+    let epidsodeConversationPanel: any = ''
+    let episodeMetadataPanel: any = ''
+    let player: any = ''
 
-    const episodeMetadataPanel = this.props.episode ? (
-      <EpisodeMetadataPanel episode={this.props.episode} />
-    ) : (
-      ''
-    )
-
-    const player = this.props.episode ? <Player audioUrl={this.props.episode.mp3URL} /> : ''
+    if (this.props.episode) {
+      epidsodeConversationPanel = (
+        <ConversationPanel
+          requestedEpisodeSlug={this.props.episode.slug}
+          requestedPodcastSlug={this.props.episode.podcastSlug}
+        />
+      )
+      episodeMetadataPanel = <EpisodeMetadataPanel episode={this.props.episode} />
+      player = <Player audioUrl={this.props.episode.mp3URL} />
+    }
 
     return (
       <div className="EpisodePage">
