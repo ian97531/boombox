@@ -1,8 +1,8 @@
 import { IStatement } from '@boombox/shared/types/models'
 import { IListResponse } from '@boombox/shared/types/responses'
+import { AxiosResponse } from 'axios'
 import { Action, ActionCreator, AnyAction, Dispatch } from 'redux'
 import { api } from 'utilities/axios'
-import { AxiosResponse } from '../../../node_modules/axios'
 
 export enum StatementAction {
   GET_STATEMENTS = 'GET_STATEMENTS',
@@ -15,25 +15,25 @@ export interface IGetStatementsOptions {
   episodeSlug: string
   podcastSlug: string
   pageSize?: number
-  startTime?: number
+  start?: number
 }
 
 export interface IGetStatementPendingAction extends Action {
   options: IGetStatementsOptions
-  type: StatementAction
+  type: StatementAction.GET_STATEMENTS_PENDING
 }
 
 export interface IGetStatementErrorAction extends Action {
   error: string
   options: IGetStatementsOptions
-  type: StatementAction
+  type: StatementAction.GET_STATEMENTS_ERROR
 }
 
 export interface IGetStatementSuccessAction extends Action {
   totalItems: number
   options: IGetStatementsOptions
   statements: IStatement[]
-  type: StatementAction
+  type: StatementAction.GET_STATEMENTS_SUCCESS
 }
 
 export const getStatementsPending = (
@@ -70,7 +70,7 @@ export const getStatements: ActionCreator<any> = (options: IGetStatementsOptions
     let moreResults = true
     const params = {
       pageSize: options.pageSize || 50,
-      start: options.startTime || 0,
+      start: options.start || 0,
     }
 
     try {

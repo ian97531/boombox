@@ -1,5 +1,7 @@
 import { IEpisode } from '@boombox/shared/types/models'
 import * as React from 'react'
+import { formatDate, formatDuration, formatTime } from '../utilities/Time'
+
 import './EpisodeMetadataPanel.css'
 
 interface IEpisodeMetadataPanelProps {
@@ -23,13 +25,18 @@ const EpisodeMetadataPanel: React.SFC<IEpisodeMetadataPanelProps> = ({
     ) : (
       <React.Fragment>
         <Heading>{episode.title}</Heading>
-        <Subtext>{episode.summary}</Subtext>
+        <div
+          dangerouslySetInnerHTML={{ __html: episode.summary }}
+          className="EpisodeMetadataPanel__subtext"
+        />
 
         <Heading>Duration</Heading>
-        <Subtext>{episode.duration}</Subtext>
+        <Subtext>{formatDuration(episode.duration)}</Subtext>
 
         <Heading>Publish Date</Heading>
-        <Subtext>{episode.publishedAt}</Subtext>
+        <Subtext>
+          {formatDate(episode.publishedAt)} at {formatTime(episode.publishedAt)}
+        </Subtext>
       </React.Fragment>
     )}
   </div>

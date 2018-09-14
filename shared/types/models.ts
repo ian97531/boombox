@@ -13,7 +13,7 @@ export interface IEpisode {
 }
 
 export interface IPodcast {
-  podcastSlug: string
+  slug: string
   feedURL: string
   title: string
   subtitle: string
@@ -22,7 +22,7 @@ export interface IPodcast {
   category: string
   language: string
   imageURL: string
-  episodes: string
+  episodes: { [id: string]: number }
   createdAt: string
   lastModifiedAt: string
   lastCheckedAt: string

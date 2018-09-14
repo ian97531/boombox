@@ -4,14 +4,18 @@ import { connect } from 'react-redux'
 import { Dispatch } from 'redux'
 import { playerPause, playerPlay } from 'store/actions/player'
 import { IPlayerStore } from 'store/reducers/player'
-import { AudioControllerStatus } from 'utilities/AudioController'
+import { AudioControllerStatus, default as AudioController } from 'utilities/AudioController'
 import './Player.css'
 
 interface IPlayerProps extends IPlayerStore {
+  audioUrl: string
   dispatch: Dispatch
 }
 
 class Player extends React.Component<IPlayerProps> {
+  public componentWillMount() {
+    AudioController.setSrc(this.props.audioUrl)
+  }
   public render() {
     const buttonText = this.props.status === AudioControllerStatus.Playing ? 'Pause' : 'Play'
     return (
