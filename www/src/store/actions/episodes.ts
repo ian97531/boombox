@@ -1,80 +1,158 @@
 import { IEpisode } from '@boombox/shared/types/models'
-import { IListResponse } from '@boombox/shared/types/responses'
-import { ActionCreator, Dispatch } from 'redux'
-import { IEpisodesStore } from 'store/reducers/episodes'
+import { IItemResponse, IListResponse } from '@boombox/shared/types/responses'
+import { AxiosResponse } from 'axios'
+import { Action, ActionCreator, AnyAction, Dispatch } from 'redux'
+import { api } from 'utilities/axios'
 
-export const GET_EPISODES = 'GET_EPISODES'
-export const GET_EPISODES_PENDING = 'GET_EPISODES_PENDING'
-export const GET_EPISODES_ERROR = 'GET_EPISODES_ERROR'
-export const GET_EPISODES_SUCCESS = 'GET_EPISODES_SUCCESS'
+export enum EpisodesAction {
+  GET_EPISODES = 'GET_EPISODES',
+  GET_EPISODES_PENDING = 'GET_EPISODES_PENDING',
+  GET_SINGLE_EPISODE_PENDING = 'GET_SINGLE_EPISODE_PENDING',
+  GET_EPISODES_ERROR = 'GET_EPISODES_ERROR',
+  GET_SINGLE_EPISODE_ERROR = 'GET_SINGLE_EPISODE_ERROR',
+  GET_EPISODES_SUCCESS = 'GET_EPISODES_SUCCESS',
+  GET_SINGLE_EPISODE_SUCCESS = 'GET_SINGLE_EPISODE_SUCCESS',
+}
 
-export const getEpisodesPending = () => ({
-  type: GET_EPISODES_PENDING,
+export interface IGetEpisodesOptions {
+  podcastSlug: string
+  pageSize?: number
+  start?: number
+}
+
+export interface IGetSingleEpisodeOptions {
+  podcastSlug: string
+  episodeSlug: string
+}
+
+export interface IGetEpisodesPendingAction extends Action {
+  options: IGetEpisodesOptions
+  type: EpisodesAction.GET_EPISODES_PENDING
+}
+
+export interface IGetEpisodesErrorAction extends Action {
+  error: string
+  options: IGetEpisodesOptions
+  type: EpisodesAction.GET_EPISODES_ERROR
+}
+
+export interface IGetEpisodesSuccessAction extends Action {
+  options: IGetEpisodesOptions
+  episodes: IEpisode[]
+  totalItems: number
+  type: EpisodesAction.GET_EPISODES_SUCCESS
+}
+
+export interface IGetSingleEpisodePendingAction extends Action {
+  options: IGetSingleEpisodeOptions
+  type: EpisodesAction.GET_SINGLE_EPISODE_PENDING
+}
+
+export interface IGetSingleEpisodeErrorAction extends Action {
+  error: string
+  options: IGetSingleEpisodeOptions
+  type: EpisodesAction.GET_SINGLE_EPISODE_ERROR
+}
+
+export interface IGetSingleEpisodeSuccessAction extends Action {
+  options: IGetSingleEpisodeOptions
+  episode: IEpisode
+  type: EpisodesAction.GET_SINGLE_EPISODE_SUCCESS
+}
+
+export const getEpisodesPending = (options: IGetEpisodesOptions): IGetEpisodesPendingAction => ({
+  options,
+  type: EpisodesAction.GET_EPISODES_PENDING,
 })
 
-export const getEpisodesError = (error: any) => ({
+export const getEpisodesError = (
+  options: IGetEpisodesOptions,
+  error: string
+): IGetEpisodesErrorAction => ({
   error,
-  type: GET_EPISODES_ERROR,
+  options,
+  type: EpisodesAction.GET_EPISODES_ERROR,
 })
 
-export const getEpisodesSuccess = (response: IListResponse<IEpisode>) => ({
-  episodes: response.items,
-  type: GET_EPISODES_SUCCESS,
+export const getEpisodesSuccess = (
+  options: IGetEpisodesOptions,
+  totalItems: number,
+  episodes: IEpisode[]
+): IGetEpisodesSuccessAction => ({
+  episodes,
+  options,
+  totalItems,
+  type: EpisodesAction.GET_EPISODES_SUCCESS,
 })
 
-// TODO(ndrwhr): This action should accept a podcast id.
-// TODO(ndrwhr): Figure out typing of the getStateFunction.
-export const getEpisodes: ActionCreator<any> = () => (dispatch: Dispatch, getState: any) => {
-  const state: { episodes: IEpisodesStore } = getState()
+export const getSingleEpisodePending = (
+  options: IGetSingleEpisodeOptions
+): IGetSingleEpisodePendingAction => ({
+  options,
+  type: EpisodesAction.GET_SINGLE_EPISODE_PENDING,
+})
 
-  // Only fetch once for now.
-  if (!Object.keys(state.episodes.episodes).length) {
-    dispatch(getEpisodesPending())
+export const getSingleEpisodeError = (
+  options: IGetSingleEpisodeOptions,
+  error: string
+): IGetSingleEpisodeErrorAction => ({
+  error,
+  options,
+  type: EpisodesAction.GET_SINGLE_EPISODE_ERROR,
+})
 
-    // TODO(ndrwhr): Replace this with an actual fetch.
-    setTimeout(() => {
-      dispatch(
-        getEpisodesSuccess({
-          info: {
-            nextItem: 111,
-            numItems: 2,
-            pageSize: 3,
-            start: 0,
-            statusCode: 200,
-            totalItems: 2,
-          },
-          items: [
-            {
-              duration: 7307,
-              imageURL: '',
-              mp3URL: '/audio/test-45.mp3',
-              podcastSlug: 'hello-internet',
-              publishTimestamp: 1535564596,
-              publishedAt: 'July 31st, 2018',
-              slug: 'hi-108-project-cyclops',
-              speakers: ['brady-haran', 'cgp-grey'],
-              summary:
-                "Grey and Brady discuss: Brady story time, KSI vs Logan Paul, left vs right & heroes vs villains, why-don't-you-just-ism, Formula One, and Grey is concerned about the attention economy and his own attention span.",
-              title: 'H.I. #108: Project Cyclops',
-              totalStatements: 732,
-            },
-            {
-              duration: 5871,
-              imageURL: '',
-              mp3URL: '/audio/test-45.mp3',
-              podcastSlug: 'hello-internet',
-              publishTimestamp: 1535137731,
-              publishedAt: 'July 20, 2018',
-              slug: 'hi-107-one-year-of-weird',
-              speakers: ['brady-haran', 'cgp-grey'],
-              summary:
-                'Brady and Grey discuss: a FOT5k story (or is it?), passing the Brady Turing Test, paper straws, liveable cities, the morality of snakes and ladders, pony painting parties, and Space Force.',
-              title: 'H.I. #107: One Year of Weird',
-              totalStatements: 674,
-            },
-          ],
-        })
+export const getSingleEpisodeSuccess = (
+  options: IGetSingleEpisodeOptions,
+  episode: IEpisode
+): IGetSingleEpisodeSuccessAction => ({
+  episode,
+  options,
+  type: EpisodesAction.GET_SINGLE_EPISODE_SUCCESS,
+})
+
+export const getEpisodes: ActionCreator<any> = (options: IGetEpisodesOptions) => {
+  return async (dispatch: Dispatch<AnyAction>): Promise<void> => {
+    dispatch(getEpisodesPending(options))
+
+    let moreResults = true
+    const params = {
+      pageSize: options.pageSize || 50,
+      start: options.start || 0,
+    }
+
+    try {
+      while (moreResults) {
+        const response: AxiosResponse<IListResponse<IEpisode>> = await api.get(
+          '/podcasts/' + options.podcastSlug + '/episodes',
+          { params }
+        )
+
+        if (response.data.info.nextItem) {
+          params.start = response.data.info.nextItem
+        } else {
+          moreResults = false
+        }
+
+        dispatch(getEpisodesSuccess(options, response.data.info.totalItems, response.data.items))
+      }
+    } catch (err) {
+      dispatch(getEpisodesError(options, err.message))
+    }
+  }
+}
+
+export const getEpisode: ActionCreator<any> = (options: IGetSingleEpisodeOptions) => {
+  return async (dispatch: Dispatch<AnyAction>): Promise<void> => {
+    dispatch(getSingleEpisodePending(options))
+
+    try {
+      const response: AxiosResponse<IItemResponse<IEpisode>> = await api.get(
+        '/podcasts/' + options.podcastSlug + '/episodes/' + options.episodeSlug
       )
-    }, 1500)
+
+      dispatch(getSingleEpisodeSuccess(options, response.data.item))
+    } catch (err) {
+      dispatch(getSingleEpisodeError(options, err.message))
+    }
   }
 }
