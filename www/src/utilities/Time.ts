@@ -9,8 +9,12 @@ interface ITimeParts {
 }
 
 interface ILocaleStringOptions {
-  hour: 'numeric' | '2-digit'
-  minute: 'numeric' | '2-digit'
+  weekday?: 'narrow' | 'short' | 'long'
+  year?: 'numeric' | '2-digit'
+  month?: 'numeric' | '2-digit' | 'narrow' | 'short' | 'long'
+  day?: 'numeric' | '2-digit'
+  hour?: 'numeric' | '2-digit'
+  minute?: 'numeric' | '2-digit'
   second?: 'numeric' | '2-digit'
 }
 
@@ -66,7 +70,12 @@ export function formatDuration(seconds: number): string {
 
 export function formatDate(datetime: string): string {
   const date = new Date(datetime)
-  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
+  const options: ILocaleStringOptions = {
+    day: 'numeric',
+    month: 'long',
+    weekday: 'long',
+    year: 'numeric',
+  }
   return date.toLocaleString(navigator.language, options)
 }
 
