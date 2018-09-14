@@ -46,9 +46,22 @@ export function formatDuration(seconds: number): string {
   const hourString = timeParts.hours === 1 ? 'hour' : 'hours'
   const minuteString = timeParts.minutes === 1 ? 'minute' : 'minutes'
   const secondString = timeParts.seconds === 1 ? 'second' : 'seconds'
-  return `${timeParts.hours} ${hourString} ${timeParts.minutes} ${minuteString} ${
-    timeParts.seconds
-  } ${secondString}`
+
+  let durationString = ''
+
+  if (timeParts.seconds || !(timeParts.minutes || timeParts.hours)) {
+    durationString = `${timeParts.seconds} ${secondString}`
+  }
+
+  if (timeParts.minutes) {
+    durationString = `${timeParts.minutes} ${minuteString} ${durationString}`
+  }
+
+  if (timeParts.hours) {
+    durationString = `${timeParts.hours} ${hourString} ${durationString}`
+  }
+
+  return durationString.trim()
 }
 
 export function formatDate(datetime: string): string {
