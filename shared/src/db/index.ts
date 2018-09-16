@@ -1,4 +1,4 @@
-export { getEpisode, getEpisodes, getEpisodeForSlugs } from 'db/episodes'
-export { getPodcast } from 'db/podcasts'
-export { getSpeakers } from 'db/speakers'
-export { getStatements } from 'db/statements'
+export { getEpisode, getEpisodes, getEpisodeForSlugs } from './episodes'
+export { getPodcast } from './podcasts'
+export { getSpeakers } from './speakers'
+export { getStatements } from './statements'

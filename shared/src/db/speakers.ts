@@ -1,5 +1,5 @@
-import { default as dynamo } from 'db/dynamo'
-import { ISpeaker } from 'types/models'
+import { ISpeaker } from '../types/models'
+import { default as dynamo } from './dynamo'
 
 export async function getSpeakers(slugs: string[]): Promise<ISpeaker[]> {
   const speakers: ISpeaker[] = []

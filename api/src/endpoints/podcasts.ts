@@ -7,10 +7,10 @@ import {
 } from '@boombox/shared/src/db'
 import { IStatement, IStatementDBResult } from '@boombox/shared/src/types/models'
 import { NextFunction, Response, Router } from 'express'
-import { handleAsync, validatePageSize, validateQueryParams, validateStart } from 'middleware'
-import { returnItem, returnList } from 'middleware/response'
-import { IItemRequest, IListRequest } from 'types/requests'
 import * as validator from 'validator'
+import { handleAsync, validatePageSize, validateQueryParams, validateStart } from '../middleware'
+import { returnItem, returnList } from '../middleware/response'
+import { IItemRequest, IListRequest } from '../types/requests'
 
 export default function() {
   const router = Router()

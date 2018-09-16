@@ -1,6 +1,6 @@
-import { BadRequest } from 'errors'
 import { NextFunction, Request, Response } from 'express'
 import * as validator from 'validator'
+import { BadRequest } from '../errors'
 
 export default function(defaultPageSize = 50) {
   return (req: Request, res: Response, next: NextFunction) => {

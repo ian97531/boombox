@@ -1,5 +1,5 @@
-import { BadRequest } from 'errors'
 import { NextFunction, Request, Response } from 'express'
+import { BadRequest } from '../errors'
 
 export default function(allowedQueryParams: string[] = []) {
   return (req: Request, res: Response, next: NextFunction) => {

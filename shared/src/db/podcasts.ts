@@ -1,5 +1,5 @@
-import { default as dynamo } from 'db/dynamo'
-import { IPodcast } from 'types/models'
+import { IPodcast } from '../types/models'
+import { default as dynamo } from './dynamo'
 
 export async function getPodcast(slug: string): Promise<IPodcast> {
   const params: AWS.DynamoDB.DocumentClient.GetItemInput = {

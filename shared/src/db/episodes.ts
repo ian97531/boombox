@@ -1,7 +1,7 @@
-import { default as dynamo } from 'db/dynamo'
-import { getPodcast } from 'db/podcasts'
-import { IDBListResponse, IListQuery } from 'types/db'
-import { IEpisode } from 'types/models'
+import { IDBListResponse, IListQuery } from '../types/db'
+import { IEpisode } from '../types/models'
+import { default as dynamo } from './dynamo'
+import { getPodcast } from './podcasts'
 
 const ProjectionExpression = [
   '#duration',

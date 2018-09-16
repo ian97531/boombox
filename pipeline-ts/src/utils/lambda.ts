@@ -1,29 +1,34 @@
 import { Callback, Context } from 'aws-lambda'
 
+function setupLambda(event: any, context: Context) {
+  const buffer = 100
+  const timer = setTimeout(() => {
+    console.warn('This lambda will timeout in ' + buffer + ' milliseconds.')
+  }, context.getRemainingTimeInMillis() - buffer)
+
+  console.log('Received Event: ', event)
+
+  return timer
+}
+
+function tearDownLambda(timer: NodeJS.Timer) {
+  clearTimeout(timer)
+}
+
 export function asyncLambda(
   func: (event?: any, env?: { [id: string]: any }, callback?: Callback) => void
 ) {
   return (event: any, context: Context, callback: Callback) => {
-    // Set a log a heartbeat every 5 seconds to help us debug functions that exceed their timeout.
-    const interval = 5000
-    let intervals = 0
-    const timer = setInterval(() => {
-      intervals += 1
-      console.log('Execution Time: ' + (intervals * interval) / 1000 + ' seconds')
-    }, interval)
-
-    // Log the received event.
-    console.log('Received Event: ', event)
-    console.log('Context: ', context)
+    const timer = setupLambda(event, context)
 
     Promise.resolve(func(event, process.env, callback))
       .then(() => {
-        clearInterval(timer)
+        tearDownLambda(timer)
       })
       .catch(error => {
         console.error('Exception Thrown: ', error)
         callback(error)
-        clearInterval(timer)
+        tearDownLambda(timer)
       })
   }
 }
@@ -32,16 +37,7 @@ export function lambda(
   func: (event?: any, env?: { [id: string]: any }, callback?: Callback) => void
 ) {
   return (event: any, context: Context, callback: Callback) => {
-    // Set a log a heartbeat every 5 seconds to help us debug functions that exceed their timeout.
-    const interval = 5000
-    let intervals = 0
-    const timer = setInterval(() => {
-      intervals += 1
-      console.log('Execution Time: ' + (intervals * interval) / 1000 + ' seconds')
-    }, interval)
-
-    // Log the received event.
-    console.log('Received Event: ', event)
+    const timer = setupLambda(event, context)
 
     try {
       func(event, process.env, callback)
@@ -50,6 +46,6 @@ export function lambda(
       callback(error)
     }
 
-    clearInterval(timer)
+    tearDownLambda(timer)
   }
 }

@@ -1,6 +1,6 @@
-import { default as dynamo } from 'db/dynamo'
-import { IDBListResponse, IListQuery } from 'types/db'
-import { IStatementDBResult } from 'types/models'
+import { IDBListResponse, IListQuery } from '../types/db'
+import { IStatementDBResult } from '../types/models'
+import { default as dynamo } from './dynamo'
 
 export async function getStatements(
   podcastSlug: string,
