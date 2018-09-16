@@ -1,5 +1,11 @@
 {
-  "packages": ["shared", "pipeline", "api", "www"],
+  "packages": [
+    "shared",
+    "pipeline",
+    "pipeline-ts",
+    "api",
+    "www"
+  ],
   "version": "0.0.0",
   "npmClient": "yarn"
 }
