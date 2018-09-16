@@ -1,10 +1,16 @@
-import { IStatement, IStatementDBResult } from '@boombox/shared/types/models'
+import {
+  getEpisodeForSlugs,
+  getEpisodes,
+  getPodcast,
+  getSpeakers,
+  getStatements,
+} from '@boombox/shared/src/db'
+import { IStatement, IStatementDBResult } from '@boombox/shared/src/types/models'
 import { NextFunction, Response, Router } from 'express'
-import validator = require('validator')
-import { getEpisodeForSlugs, getEpisodes, getPodcast, getSpeakers, getStatements } from '../db'
-import { handleAsync, validatePageSize, validateQueryParams, validateStart } from '../middleware'
-import { returnItem, returnList } from '../middleware/response'
-import { IItemRequest, IListRequest } from '../types/requests'
+import { handleAsync, validatePageSize, validateQueryParams, validateStart } from 'middleware'
+import { returnItem, returnList } from 'middleware/response'
+import { IItemRequest, IListRequest } from 'types/requests'
+import * as validator from 'validator'
 
 export default function() {
   const router = Router()

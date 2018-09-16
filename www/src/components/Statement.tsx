@@ -1,7 +1,6 @@
-import { IStatement } from '@boombox/shared/types/models'
+import { IStatement } from '@boombox/shared/src/types/models'
 import * as React from 'react'
-
-import { formatTimeMarker } from '../utilities/Time'
+import { formatTimeMarker } from 'utilities/Time'
 
 import './Statement.css'
 

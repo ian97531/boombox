@@ -3,8 +3,14 @@
   "version": "1.0.0",
   "description": "Shared code, types, tools, and configs for boombox.",
   "repository": "https://github.com/gg-incorporated/boombox",
+  "homepage": "https://github.com/gg-incorporated/boombox/tree/master/shared#readme",
   "author": "Ian White and Andrew Hoyer",
-  "private": true,
+  "dependencies": {
+    "@types/aws-sdk": "^2.7.0",
+    "@types/node": "^10.9.4",
+    "aws-sdk": "^2.296.0",
+    "ts-node": "^7.0.1"
+  },
   "devDependencies": {
     "babel-core": "^6.26.3",
     "babel-runtime": "^6.26.0",

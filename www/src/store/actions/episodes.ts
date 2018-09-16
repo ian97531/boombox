@@ -1,5 +1,5 @@
-import { IEpisode } from '@boombox/shared/types/models'
-import { IItemResponse, IListResponse } from '@boombox/shared/types/responses'
+import { IEpisode } from '@boombox/shared/src/types/models'
+import { IItemResponse, IListResponse } from '@boombox/shared/src/types/responses'
 import { AxiosResponse } from 'axios'
 import { Action, ActionCreator, AnyAction, Dispatch } from 'redux'
 import { api } from 'utilities/axios'

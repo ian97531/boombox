@@ -1,6 +1,6 @@
-import { IStatementDBResult } from '@boombox/shared/types/models'
-import { IDBListResponse, IListQuery } from '../types/db'
-import { default as dynamo } from './dynamo'
+import { default as dynamo } from 'db/dynamo'
+import { IDBListResponse, IListQuery } from 'types/db'
+import { IStatementDBResult } from 'types/models'
 
 export async function getStatements(
   podcastSlug: string,

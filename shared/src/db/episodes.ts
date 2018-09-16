@@ -1,7 +1,7 @@
-import { IEpisode } from '@boombox/shared/types/models'
-import { IDBListResponse, IListQuery } from '../types/db'
-import { default as dynamo } from './dynamo'
-import { getPodcast } from './podcasts'
+import { default as dynamo } from 'db/dynamo'
+import { getPodcast } from 'db/podcasts'
+import { IDBListResponse, IListQuery } from 'types/db'
+import { IEpisode } from 'types/models'
 
 const ProjectionExpression = [
   '#duration',

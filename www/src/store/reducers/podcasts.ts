@@ -1,4 +1,4 @@
-import { IPodcast } from '@boombox/shared/types/models'
+import { IPodcast } from '@boombox/shared/src/types/models'
 import {
   IGetSinglePodcastErrorAction,
   IGetSinglePodcastPendingAction,

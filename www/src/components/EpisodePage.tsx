@@ -1,4 +1,4 @@
-import { IEpisode } from '@boombox/shared/types/models'
+import { IEpisode } from '@boombox/shared/src/types/models'
 import ConversationPanel from 'components/ConversationPanel'
 import EpisodeMetadataPanel from 'components/EpisodeMetadataPanel'
 import Player from 'components/player/Player'

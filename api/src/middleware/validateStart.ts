@@ -1,6 +1,6 @@
+import { BadRequest } from 'errors'
 import { NextFunction, Request, Response } from 'express'
-import validator = require('validator')
-import { BadRequest } from '../errors'
+import * as validator from 'validator'
 
 export default function(defaultStart = 0) {
   return (req: Request, res: Response, next: NextFunction) => {

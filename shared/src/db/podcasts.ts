@@ -1,5 +1,5 @@
-import { IPodcast } from '@boombox/shared/types/models'
-import { default as dynamo } from './dynamo'
+import { default as dynamo } from 'db/dynamo'
+import { IPodcast } from 'types/models'
 
 export async function getPodcast(slug: string): Promise<IPodcast> {
   const params: AWS.DynamoDB.DocumentClient.GetItemInput = {

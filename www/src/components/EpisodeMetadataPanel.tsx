@@ -1,6 +1,6 @@
-import { IEpisode } from '@boombox/shared/types/models'
+import { IEpisode } from '@boombox/shared/src/types/models'
 import * as React from 'react'
-import { formatDate, formatDuration, formatTime } from '../utilities/Time'
+import { formatDate, formatDuration, formatTime } from 'utilities/Time'
 
 import './EpisodeMetadataPanel.css'
 

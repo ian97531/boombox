@@ -8,17 +8,14 @@
     "domain": "serverless create_domain",
     "deploy": "serverless deploy"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://ian97531@github.com/ian97531/boombox.git"
-  },
+  "repository": "https://github.com/gg-incorporated/boombox",
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/ian97531/boombox/issues"
+    "url": "https://github.com/gg-incorporated/boombox/issues"
   },
-  "homepage": "https://github.com/ian97531/boombox#readme",
+  "homepage": "https://github.com/gg-incorporated/boombox/tree/master/pipeline#readme",
   "dependencies": {
     "npm": "^6.1.0"
   },
