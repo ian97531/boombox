@@ -1,13 +1,13 @@
 .Player {
   display: flex;
-  padding: var(--std-padding);
+  padding: var(--padding-double);
 }
 
 .Player__controls {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-right: var(--std-padding);
+  margin-right: var(--padding-double);
 }
 
 .Player__controls-button {
@@ -34,7 +34,7 @@
 }
 
 .Player__controls-button:not(:last-child) {
-  margin-right: var(--std-padding);
+  margin-right: var(--padding-double);
 }
 
 .Player__control-button-icon {

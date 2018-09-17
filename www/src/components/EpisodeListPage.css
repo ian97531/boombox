@@ -3,22 +3,22 @@
 }
 
 .EpisodeListPage__sidebar {
-  padding: var(--std-padding);
+  padding: var(--padding-double);
   width: 300px;
 }
 
 .EpisodeListPage__sidebar-img {
   width: 100%;
-  margin-bottom: var(--std-padding);
+  margin-bottom: var(--padding-double);
 }
 
 .EpisodeListPage__sidebar-heading {
-  margin-bottom: var(--std-padding);
+  margin-bottom: var(--padding-double);
 }
 
 .EpisodeListPage__content {
   flex: 1;
-  padding: var(--std-padding);
+  padding: var(--padding-double);
 }
 
 .EpisodeListPage__entry-list {
@@ -26,17 +26,17 @@
 }
 
 .EpisodeListPage__entry:not(:last-child) {
-  margin-bottom: calc(var(--std-padding) * 2);
+  margin-bottom: calc(var(--padding-double) * 2);
 }
 
 .EpisodeListPage__entry-heading {
   font-size: 1.5em;
-  padding-bottom: var(--std-padding);
+  padding-bottom: var(--padding-double);
 }
 
 .EpisodeListPage__entry-meta {
   font-size: 0.75em;
-  padding-bottom: var(--std-padding);
+  padding-bottom: var(--padding-double);
 }
 
 .EpisodeListPage__entry-summary {

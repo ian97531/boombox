@@ -10,9 +10,20 @@
  * Padding and Sizes:
  */
 :root {
-  --main-text-color: #e44939;
-  --highlight-background-color: #ecb6c9;
-  --std-padding: 15px;
+  --padding-base: 8px;
+  --padding-quarter: calc(var(--padding-base) * 0.25);
+  --padding-half: calc(var(--padding-base) * 0.5);
+  --padding-double: calc(var(--padding-base) * 2);
+  --padding-triple: calc(var(--padding-base) * 3);
+  --padding-quadruple: calc(var(--padding-base) * 4);
+}
+
+/**
+ * Font specific:
+ */
+:root {
+  --font-family-sans-serif: 'Raleway', sans-serif;
+  --font-family-serif: 'Merriweather', serif;
 }
 
 /**
@@ -47,5 +58,6 @@
  * Derived Variables:
  */
 :root {
+  --highlight-background-color: #ecb6c9;
   --main-text-color: var(--color-ruby);
 }

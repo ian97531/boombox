@@ -1,11 +1,11 @@
 .EpisodeMetadataPanel__heading {
-  padding-bottom: var(--std-padding);
+  padding-bottom: var(--padding-double);
 }
 
 .EpisodeMetadataPanel__heading:not(:first-child) {
-  padding-top: var(--std-padding);
+  padding-top: var(--padding-double);
 }
 
 .EpisodeMetadataPanel__subtext {
-  padding-bottom: var(--std-padding);
+  padding-bottom: var(--padding-double);
 }
