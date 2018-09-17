@@ -8,6 +8,7 @@
 
 html {
   height: 100%;
+  font-size: 62.5%;
 }
 
 body {
@@ -15,6 +16,7 @@ body {
   min-height: 100%;
   font-family: var(--font-family-sans-serif);
   font-weight: 300;
+  font-size: 1.8rem;
   color: var(--main-text-color);
 }
 

@@ -4,6 +4,7 @@ import { connect } from 'react-redux'
 import { Dispatch } from 'redux'
 import { getStatements } from 'store/actions/statements'
 import { IStatementsStore } from 'store/reducers/statements'
+import './ConversationPanel.css'
 
 interface IConversationPanelProps extends IStatementsStore {
   dispatch: Dispatch

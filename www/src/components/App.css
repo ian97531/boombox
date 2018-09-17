@@ -1,16 +1,15 @@
 .App {
   flex: 1;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto 1fr;
 }
 
 .App__header {
-  padding: var(--padding-double);
+  padding: var(--padding-double) var(--padding-double) 0;
 }
 
 .App__header-name {
-  font-weight: 900;
-  font-size: 30px;
+  font-size: 3rem;
   margin: 0 var(--padding-double) var(--padding-double) var(--padding-double);
 }
 
@@ -23,5 +22,5 @@
 
 .App__content {
   display: flex;
-  padding: var(--padding-double);
+  overflow: hidden;
 }
