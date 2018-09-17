@@ -42,6 +42,7 @@ class PlayerBar extends React.Component<IPlayerBarProps> {
           className="PlayerBar__progress PlayerBar__progress--active"
           style={{ width: currentScrubTimeWidth }}
         />
+        <div className="PlayerBar__progress PlayerBar__progress--inactive" />
       </div>
     )
   }

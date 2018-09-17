@@ -36,12 +36,12 @@ class EpisodePage extends React.Component<IEpisodePageProps> {
   }
 
   public render() {
-    let epidsodeConversationPanel: any = ''
-    let episodeMetadataPanel: any = ''
-    let player: any = ''
+    let episodeConversationPanel: React.ReactNode | null = null
+    let episodeMetadataPanel: React.ReactNode | null = null
+    let player: React.ReactNode | null = null
 
     if (this.props.episode) {
-      epidsodeConversationPanel = (
+      episodeConversationPanel = (
         <ConversationPanel
           requestedEpisodeSlug={this.props.episode.slug}
           requestedPodcastSlug={this.props.episode.podcastSlug}
@@ -55,8 +55,8 @@ class EpisodePage extends React.Component<IEpisodePageProps> {
       <div className="EpisodePage">
         <div className="EpisodePage__left-panel">{episodeMetadataPanel}</div>
         <div className="EpisodePage__right-panel">
+          <div className="EpisodePage__conversation">{episodeConversationPanel}</div>
           <div className="EpisodePage__player">{player}</div>
-          <div className="EpisodePage__conversation">{epidsodeConversationPanel}</div>
         </div>
       </div>
     )

@@ -1,33 +1,35 @@
 .Statement {
   display: block;
-  padding: var(--std-padding);
+  padding: var(--padding-double);
 }
 
-.Statment-selected {
+.Statement--selected {
   background-color: var(--highlight-background-color);
 }
 
 .Statement__speaker {
   display: flex;
+  align-items: flex-end;
   flex: 1;
-  padding-bottom: 3px;
+  margin-bottom: var(--padding-half);
 }
 
-.Statement__name {
+.Statement__speaker-name {
   font-weight: 900;
 }
 
-.Statement__start-time {
+.Statement__speaker-time {
   display: flex;
-  padding-left: 9px;
+  font-size: 0.7em;
+  padding-left: var(--padding-base);
 }
 
-.Statement__start-time-bottom {
-  font-size: 0.7em;
-  align-self: flex-end;
+.Statement__content-wrapper {
+  flex: 1;
+  line-height: 1.6;
+  font-family: var(--font-family-serif);
 }
 
 .Statement__content {
-  flex: 1;
-  grid-template-rows: auto 1fr auto;
+  display: inline-block;
 }

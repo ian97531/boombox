@@ -29,20 +29,17 @@ function secondsToTimeParts(time: number): ITimeParts {
   return { hours, minutes, seconds }
 }
 
-export function formatTimeMarker(seconds: number): string {
-  const timeParts = secondsToTimeParts(seconds)
+export function formatTimeMarker(time: number): string {
+  const { hours, minutes, seconds } = secondsToTimeParts(time)
+  const parts = [minutes, seconds]
 
-  const padCharacter = '0'
-  const padWidth = 2
+  if (hours) {
+    parts.unshift(hours)
+  }
 
-  const paddedHours =
-    timeParts.hours === 0
-      ? timeParts.hours.toString().padStart(padWidth, padCharacter)
-      : timeParts.hours.toString()
-  const paddedMinutes = timeParts.minutes.toString().padStart(padWidth, padCharacter)
-  const paddedSeconds = timeParts.seconds.toString().padStart(padWidth, padCharacter)
-
-  return `${paddedHours}:${paddedMinutes}:${paddedSeconds}`
+  return parts
+    .map((part, index) => (index === 0 ? part.toString() : part.toString().padStart(2, '0')))
+    .join(':')
 }
 
 export function formatDuration(seconds: number): string {

@@ -8,12 +8,15 @@
 
 html {
   height: 100%;
+  font-size: 62.5%;
 }
 
 body {
   display: flex;
   min-height: 100%;
-  font-family: 'Work Sans', sans-serif;
+  font-family: var(--font-family-sans-serif);
+  font-weight: 300;
+  font-size: 1.8rem;
   color: var(--main-text-color);
 }
 
