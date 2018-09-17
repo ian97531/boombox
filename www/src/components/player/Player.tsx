@@ -1,4 +1,5 @@
 import PlayerBar from 'components/player/PlayerBar'
+import Sprite from 'components/utilities/Sprite'
 import * as React from 'react'
 import { connect } from 'react-redux'
 import { Dispatch } from 'redux'
@@ -17,15 +18,30 @@ class Player extends React.Component<IPlayerProps> {
     AudioController.setSrc(this.props.audioUrl)
   }
   public render() {
-    const buttonText = this.props.status === AudioControllerStatus.Playing ? 'Pause' : 'Play'
+    const playPauseId = this.props.status === AudioControllerStatus.Playing ? 'pause' : 'play'
     return (
       <div className="Player">
         <div className="Player__controls">
           <button
+            className="Player__controls-button Player__controls-button--small"
+            disabled={this.props.status === AudioControllerStatus.Loading}
+            onClick={this.onBackButtonClick}
+          >
+            B
+          </button>
+          <button
+            className="Player__controls-button"
             disabled={this.props.status === AudioControllerStatus.Loading}
             onClick={this.onPlayButtonClick}
           >
-            {buttonText}
+            <Sprite id={playPauseId} className="Player__control-button-icon" />
+          </button>
+          <button
+            className="Player__controls-button Player__controls-button--small"
+            disabled={this.props.status === AudioControllerStatus.Loading}
+            onClick={this.onForwardButtonClick}
+          >
+            F
           </button>
         </div>
         <div className="Player__bar-wrapper">
@@ -41,6 +57,14 @@ class Player extends React.Component<IPlayerProps> {
     } else {
       this.props.dispatch(playerPlay())
     }
+  }
+
+  private onBackButtonClick = () => {
+    // Dispatch a move back a statement action.
+  }
+
+  private onForwardButtonClick = () => {
+    // Dispatch a move forward a statement action.
   }
 }
 

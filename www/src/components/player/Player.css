@@ -6,7 +6,40 @@
 .Player__controls {
   display: flex;
   justify-content: center;
-  width: 150px;
+  align-items: center;
+  margin-right: var(--std-padding);
+}
+
+.Player__controls-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  background: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 40px;
+  line-height: 1;
+  outline: none;
+  cursor: pointer;
+}
+
+.Player__controls-button--small {
+  height: 30px;
+  width: 30px;
+}
+
+.Player__controls-button:hover {
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+}
+
+.Player__controls-button:not(:last-child) {
+  margin-right: var(--std-padding);
+}
+
+.Player__control-button-icon {
+  width: 40%;
+  height: 40%;
 }
 
 .Player__bar-wrapper {
