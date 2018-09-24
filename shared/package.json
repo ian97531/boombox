@@ -6,6 +6,7 @@
   "homepage": "https://github.com/gg-incorporated/boombox/tree/master/shared#readme",
   "author": "Ian White and Andrew Hoyer",
   "private": true,
+  "license": "UNLICENSED",
   "dependencies": {
     "@types/aws-sdk": "^2.7.0",
     "@types/node": "^10.9.4",

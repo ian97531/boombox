@@ -11,6 +11,8 @@
   "bugs": {
     "url": "https://github.com/gg-incorporated/boombox/issues"
   },
+  "private": true,
+  "license": "UNLICENSED",
   "homepage": "https://github.com/gg-incorporated/boombox/tree/master/api#readme",
   "scripts": {
     "format": "prettier --write --config .prettierrc.yaml '**/*.ts'",
