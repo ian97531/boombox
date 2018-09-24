@@ -23,6 +23,7 @@
   display: flex;
   font-size: 0.7em;
   padding-left: var(--padding-base);
+  cursor: pointer;
 }
 
 .Statement__content-wrapper {
