@@ -1,4 +1,4 @@
-export const reservedWords: ReadonlyArray<string> = [
+export const RESERVED_WORDS: ReadonlyArray<string> = [
   'ABORT',
   'ABSOLUTE',
   'ACTION',
