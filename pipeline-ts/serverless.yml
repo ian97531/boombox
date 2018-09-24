@@ -16,7 +16,7 @@ custom:
   specifiedStage: ${env:AWS_STAGE, opt:stage}
   stage: ${self:custom.specifiedStage, 'test'}
 
-  episodeInsertLimit: '1'
+  episodeInsertLimit: '2'
 
   subdomains:
     prod: '${self:custom.component}.'
@@ -64,6 +64,9 @@ custom:
     speakers:
       name: ${self:custom.global.product}-${self:custom.stage}-${self:custom.global.dynamodb.speakers.suffix}
       arn: arn:aws:dynamodb:${self:provider.region}:${self:custom.global.awsAccountId}:table/${self:custom.dynamodb.speakers.name}
+    jobs:
+      name: ${self:custom.global.product}-${self:custom.stage}-${self:custom.global.dynamodb.jobs.suffix}
+      arn: arn:aws:dynamodb:${self:provider.region}:${self:custom.global.awsAccountId}:table/${self:custom.dynamodb.jobs.name}
 
   sns:
     topics:
@@ -164,6 +167,7 @@ provider:
     EPISODES_TABLE: ${self:custom.dynamodb.episodes.name}
     STATEMENTS_TABLE: ${self:custom.dynamodb.statements.name}
     SPEAKERS_TABLE: ${self:custom.dynamodb.speakers.name}
+    JOBS_TABLE: ${self:custom.dynamodb.jobs.name}
     INSERT_LIMIT: ${self:custom.episodeInsertLimit}
     ERROR_TOPIC: ${self:custom.sns.topics.errors.arn}
     STATUS_TOPIC: ${self:custom.sns.topics.status.arn}
@@ -212,6 +216,7 @@ provider:
         - ${self:custom.dynamodb.episodes.arn}
         - ${self:custom.dynamodb.speakers.arn}
         - ${self:custom.dynamodb.statements.arn}
+        - ${self:custom.dynamodb.jobs.arn}
 
     #
     # SNS Topic Publish Permissions
@@ -278,41 +283,41 @@ functions:
   #
   # Fetch, transcode and split the audio files
   #
-  podcasts-update-from-feed:
-    name: ${self:service}-${self:custom.stage}-checkPodcastFeed
+  a-checkPodcastFeed:
+    name: ${self:service}-${self:custom.stage}-a-checkPodcastFeed
     handler: src/functions/pipeline/a-checkPodcastFeed.handler
     timeout: 300
     environment:
-      COMPLETE_TOPIC: ${self:custom.sns.topics.downloadPending.arn}
-  podcasts-download:
-    name: ${self:service}-${self:custom.stage}-downloadPodcastEpisode
+      COMPLETION_TOPIC: ${self:custom.sns.topics.downloadPending.arn}
+  b-downloadPodcastEpisode:
+    name: ${self:service}-${self:custom.stage}-b-downloadPodcastEpisode
     handler: src/functions/pipeline/b-downloadPodcastEpisode.handler
     timeout: 300
     environment:
       OUTPUT_BUCKET: ${self:custom.buckets.audio.original}
-      COMPLETE_TOPIC: ${self:custom.sns.topics.transcodePending.arn}
+      COMPLETION_TOPIC: ${self:custom.sns.topics.transcodePending.arn}
     events:
       - sns: ${self:custom.sns.topics.downloadPending.name}
-  podcasts-transcode:
-    name: ${self:service}-${self:custom.stage}-transcodeEpisodeAudio
+  c-transcodeEpisodeAudio:
+    name: ${self:service}-${self:custom.stage}-c-transcodeEpisodeAudio
     handler: src/functions/pipeline/c-transcodeEpisodeAudio.handler
     timeout: 60
     environment:
       TRANSCODE_PIPELINE_ID: ${self:custom.transcoder.pipelines.transcode.id}
     events:
       - sns: ${self:custom.sns.topics.transcodePending.name}
-  podcasts-file-permissions:
-    name: ${self:service}-${self:custom.stage}-updateEpisodeAccessControls
+  d-updateEpisodeAccessControls:
+    name: ${self:service}-${self:custom.stage}-d-updateEpisodeAccessControls
     handler: src/functions/pipeline/d-updateEpisodeAccessControls.handler
     timeout: 60
     environment:
       ORIGINAL_BUCKET: ${self:custom.buckets.audio.original}
       TRANSCODED_BUCKET: ${self:custom.buckets.audio.transcoded}
-      COMPLETE_TOPIC: ${self:custom.sns.topics.permissionsComplete.arn}
+      COMPLETION_TOPIC: ${self:custom.sns.topics.permissionsComplete.arn}
     events:
       - sns: ${self:custom.sns.topics.transcodeComplete.name}
-  podcasts-split:
-    name: ${self:service}-${self:custom.stage}-splitEpisodeAudioIntoSegments
+  e-splitEpisodeAudioIntoSegments:
+    name: ${self:service}-${self:custom.stage}-e-splitEpisodeAudioIntoSegments
     handler: src/functions/pipeline/e-splitEpisodeAudioIntoSegments.handler
     timeout: 60
     environment:
@@ -323,8 +328,8 @@ functions:
   #
   # AWS Transcribe, normalize, and zip
   #
-  aws-transcribe:
-    name: ${self:service}-${self:custom.stage}-aws-transcribeAudioSegment
+  f-aws-a-transcribeAudioSegment:
+    name: ${self:service}-${self:custom.stage}-f-aws-a-transcribeAudioSegment
     handler: src/functions/pipeline/f-aws-transcribe/a-transcribeAudioSegment.handler
     timeout: 60
     environment:
@@ -333,35 +338,35 @@ functions:
       REGION: ${self:provider.region}
     events:
       - sns: ${self:custom.sns.topics.splitComplete.name}
-  aws-transcribe-complete:
-    name: ${self:service}-${self:custom.stage}-aws-transcribe-complete
+  f-aws-b-fetchTranscriptionResult:
+    name: ${self:service}-${self:custom.stage}-f-aws-b-fetchTranscriptionResult
     handler: src/functions/pipeline/f-aws-transcribe/b-fetchTranscriptionResult.handler
     timeout: 60
     environment:
-      COMPLETE_TOPIC: ${self:custom.sns.topics.normalizeAWSPending.arn}
+      COMPLETION_TOPIC: ${self:custom.sns.topics.normalizeAWSPending.arn}
     events:
       - s3:
           bucket: ${self:custom.buckets.transcriptions.aws.raw}
           event: s3:ObjectCreated:*
-  aws-normalize:
-    name: ${self:service}-${self:custom.stage}-aws-normalizeSegmentTranscription
+  f-aws-c-normalizeSegmentTranscription:
+    name: ${self:service}-${self:custom.stage}-f-aws-c-normalizeSegmentTranscription
     handler: src/functions/pipeline/f-aws-transcribe/c-normalizeSegmentTranscription.handler
     timeout: 60
     environment:
       INPUT_BUCKET: ${self:custom.buckets.transcriptions.aws.raw}
       OUTPUT_BUCKET: ${self:custom.buckets.transcriptions.aws.normalized}
-      COMPLETE_TOPIC: ${self:custom.sns.topics.normalizeAWSComplete.arn}
+      COMPLETION_TOPIC: ${self:custom.sns.topics.normalizeAWSComplete.arn}
     events:
       - sns: ${self:custom.sns.topics.normalizeAWSPending.name}
       - sns: ${self:custom.sns.topics.reprocessTranscriptionAWS.name}
-  aws-zip:
-    name: ${self:service}-${self:custom.stage}-aws-zipNormalizedSegments
+  g-aws-zipNormalizedSegments:
+    name: ${self:service}-${self:custom.stage}-g-aws-zipNormalizedSegments
     handler: src/functions/pipeline/g-zipNormalizedSegments.handler
     timeout: 300
     environment:
       INPUT_BUCKET: ${self:custom.buckets.transcriptions.aws.normalized}
       OUTPUT_BUCKET: ${self:custom.buckets.transcriptions.aws.zipped}
-      COMPLETE_TOPIC: ${self:custom.sns.topics.zipComplete.arn}
+      COMPLETION_TOPIC: ${self:custom.sns.topics.zipComplete.arn}
       TRANSCRIPTION_ATTRIBUTE: awsTranscription
     events:
       - sns: ${self:custom.sns.topics.normalizeAWSComplete.name}
@@ -369,8 +374,8 @@ functions:
   #
   # Watson Transcribe, download, normalize and zip
   #
-  watson-transcribe:
-    name: ${self:service}-${self:custom.stage}-watson-transcribeAudioSegment
+  f-watson-a-transcribeAudioSegment:
+    name: ${self:service}-${self:custom.stage}-f-watson-a-transcribeAudioSegment
     handler: src/functions/pipeline/f-watson-transcribe/a-transcribeAudioSegment.handler
     timeout: 300
     environment:
@@ -379,35 +384,35 @@ functions:
       WATSON_TRANSCRIBE_CREDENTIALS: ${self:custom.secrets.watson.transcribe.credentials.name}
     events:
       - sns: ${self:custom.sns.topics.splitComplete.name}
-  watson-download:
-    name: ${self:service}-${self:custom.stage}-watson-fetchTranscriptionResult
+  f-watson-b-fetchTranscriptionResult:
+    name: ${self:service}-${self:custom.stage}-f-watson-b-fetchTranscriptionResult
     handler: src/functions/pipeline/f-watson-transcribe/b-fetchTranscriptionResult.handler
     timeout: 30
     environment:
       OUTPUT_BUCKET: ${self:custom.buckets.transcriptions.watson.raw}
       WATSON_TRANSCRIBE_CREDENTIALS: ${self:custom.secrets.watson.transcribe.credentials.name}
-      COMPLETE_TOPIC: ${self:custom.sns.topics.downloadWatsonComplete.arn}
+      COMPLETION_TOPIC: ${self:custom.sns.topics.downloadWatsonComplete.arn}
     events:
       - http: 'POST ${self:custom.apiGateway.endpoints.watsonCallbacks.jobComplete}'
-  watson-normalize:
-    name: ${self:service}-${self:custom.stage}-watson-normalizeSegment
+  f-watson-c-normalizeSegmentTranscription:
+    name: ${self:service}-${self:custom.stage}-f-watson-c-normalizeSegmentTranscription
     handler: src/functions/pipeline/f-watson-transcribe/c-normalizeSegmentTranscription.handler
     timeout: 60
     environment:
       INPUT_BUCKET: ${self:custom.buckets.transcriptions.watson.raw}
       OUTPUT_BUCKET: ${self:custom.buckets.transcriptions.watson.normalized}
-      COMPLETE_TOPIC: ${self:custom.sns.topics.normalizeWatsonComplete.arn}
+      COMPLETION_TOPIC: ${self:custom.sns.topics.normalizeWatsonComplete.arn}
     events:
       - sns: ${self:custom.sns.topics.downloadWatsonComplete.name}
       - sns: ${self:custom.sns.topics.reprocessTranscriptionWatson.name}
-  watson-zip:
-    name: ${self:service}-${self:custom.stage}-watson-zipNormalizedSegments
+  g-watson-zipNormalizedSegments:
+    name: ${self:service}-${self:custom.stage}-g-watson-zipNormalizedSegments
     handler: src/functions/pipeline/g-zipNormalizedSegments.handler
     timeout: 300
     environment:
       INPUT_BUCKET: ${self:custom.buckets.transcriptions.watson.normalized}
       OUTPUT_BUCKET: ${self:custom.buckets.transcriptions.watson.zipped}
-      COMPLETE_TOPIC: ${self:custom.sns.topics.zipComplete.arn}
+      COMPLETION_TOPIC: ${self:custom.sns.topics.zipComplete.arn}
       TRANSCRIPTION_ATTRIBUTE: watsonTranscription
     events:
       - sns: ${self:custom.sns.topics.normalizeWatsonComplete.name}
@@ -416,19 +421,19 @@ functions:
   # Combine the normalized and zipped AWS and Watson transcriptions
   # and insert them into DynamoDB
   #
-  normalized-combine:
-    name: ${self:service}-${self:custom.stage}-combineNormalizedTranscriptions
+  h-combineNormalizedTranscriptions:
+    name: ${self:service}-${self:custom.stage}-h-combineNormalizedTranscriptions
     handler: src/functions/pipeline/h-combineNormalizedTranscriptions.handler
     timeout: 300
     environment:
       AWS_INPUT_BUCKET: ${self:custom.buckets.transcriptions.aws.zipped}
       WATSON_INPUT_BUCKET: ${self:custom.buckets.transcriptions.watson.zipped}
       OUTPUT_BUCKET: ${self:custom.buckets.transcriptions.combined}
-      COMPLETE_TOPIC: ${self:custom.sns.topics.combineComplete.arn}
+      COMPLETION_TOPIC: ${self:custom.sns.topics.combineComplete.arn}
     events:
       - sns: ${self:custom.sns.topics.zipComplete.name}
-  normalized-insert:
-    name: ${self:service}-${self:custom.stage}-insertTranscriptionIntoDynamoDB
+  i-insertTranscriptionIntoDynamoDB:
+    name: ${self:service}-${self:custom.stage}-i-insertTranscriptionIntoDynamoDB
     handler: src/functions/pipeline/i-insertTranscriptionIntoDynamoDB.handler
     timeout: 300
     environment:
