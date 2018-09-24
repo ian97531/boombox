@@ -1,14 +1,34 @@
-import { IPodcast } from '../types/models'
-import { default as dynamo } from './dynamo'
+import { IPodcast, IPodcastDBRecord } from '../types/models'
+import { getItem, putItem } from './dynamo'
+
+function convertToIPodcast(result: IPodcastDBRecord): IPodcast {
+  const podcast: IPodcast = {
+    ...result,
+    createdAt: new Date(result.createdAt),
+    episodes: JSON.parse(result.episodes),
+    lastCheckedAt: new Date(result.lastCheckedAt),
+    lastPublishedAt: new Date(result.lastPublishedAt),
+  }
+  return podcast
+}
+
+function convertToIPodcastDBRecord(podcast: IPodcast): IPodcastDBRecord {
+  const result: IPodcastDBRecord = {
+    ...podcast,
+    createdAt: podcast.createdAt.toISOString(),
+    episodes: JSON.stringify(podcast.episodes),
+    lastCheckedAt: podcast.lastCheckedAt.toISOString(),
+    lastPublishedAt: podcast.lastPublishedAt.toISOString(),
+  }
+  return result
+}
 
 export async function getPodcast(slug: string): Promise<IPodcast> {
-  const params: AWS.DynamoDB.DocumentClient.GetItemInput = {
-    Key: { slug },
-    TableName: process.env.PODCASTS_TABLE as string,
-  }
-  const response = (await dynamo.get(params).promise()) as AWS.DynamoDB.DocumentClient.GetItemOutput
-  const podcast = response.Item as any
-  podcast.episodes = JSON.parse(podcast.episodes)
+  const response = await getItem({ slug }, process.env.PODCASTS_TABLE as string)
+  return convertToIPodcast(response.Item as IPodcastDBRecord)
+}
 
-  return podcast as IPodcast
+export async function putPodcast(podcast: IPodcast): Promise<void> {
+  const Item = convertToIPodcastDBRecord(podcast)
+  await putItem(Item, process.env.PODCASTS_TABLE as string)
 }

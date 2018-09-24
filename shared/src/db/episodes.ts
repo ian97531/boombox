@@ -1,10 +1,9 @@
-import { IDBListResponse, IListQuery } from '../types/db'
-import { IEpisode } from '../types/models'
-import { default as dynamo } from './dynamo'
+import { IEpisode, IEpisodeDBRecord } from '../types/models'
+import { buildProjectionExpression, dynamo, getItem, putItem } from './dynamo'
 import { getPodcast } from './podcasts'
 
-const ProjectionExpression = [
-  '#duration',
+const EPISODE_PROJECTION = [
+  'duration',
   'imageURL',
   'mp3URL',
   'podcastSlug',
@@ -15,54 +14,61 @@ const ProjectionExpression = [
   'summary',
   'title',
   'totalStatements',
-].join(', ')
+]
 
-const ExpressionAttributeNames = { '#duration': 'duration' }
+function convertToIEpisode(result: IEpisodeDBRecord): IEpisode {
+  const episode: IEpisode = {
+    ...result,
+    publishedAt: new Date(result.publishedAt),
+  }
+  return episode
+}
+
+function convertToIEpisodeDBRecord(episode: IEpisode): IEpisodeDBRecord {
+  const result: IEpisodeDBRecord = {
+    ...episode,
+    publishedAt: episode.publishedAt.toISOString(),
+  }
+  return result
+}
 
 export async function getEpisode(podcastSlug: string, publishTimestamp: number): Promise<IEpisode> {
-  const params: AWS.DynamoDB.DocumentClient.GetItemInput = {
-    ExpressionAttributeNames,
-    Key: { podcastSlug, publishTimestamp },
-    ProjectionExpression,
-    TableName: process.env.EPISODES_TABLE as string,
-  }
-  const response = (await dynamo.get(params).promise()) as AWS.DynamoDB.DocumentClient.GetItemOutput
-
-  return response.Item as IEpisode
+  const key = { podcastSlug, publishTimestamp }
+  const table = process.env.EPISODES_TABLE as string
+  const response = await getItem(key, table, EPISODE_PROJECTION)
+  return convertToIEpisode(response.Item as IEpisodeDBRecord)
 }
 
 export async function getEpisodes(
   podcastSlug: string,
-  query: IListQuery
-): Promise<IDBListResponse<IEpisode>> {
+  publishTimestamp: number,
+  limit: number
+): Promise<IEpisode[]> {
   const params: AWS.DynamoDB.DocumentClient.QueryInput = {
-    ExpressionAttributeNames,
     ExpressionAttributeValues: {
       ':podcastSlug': podcastSlug,
-      ':start': query.start,
+      ':start': publishTimestamp,
     },
     KeyConditionExpression: 'podcastSlug = :podcastSlug and publishTimestamp >= :start',
-    Limit: query.pageSize + 1,
-    ProjectionExpression,
+    Limit: limit,
     TableName: process.env.EPISODES_TABLE as string,
   }
 
-  const data = (await dynamo.query(params).promise()) as AWS.DynamoDB.DocumentClient.QueryOutput
-  const items: IEpisode[] = data ? (data.Items as IEpisode[]) : []
-  console.log(data)
-  console.log(items)
-  const response: IDBListResponse<IEpisode> = {
-    items: [],
+  const projectionParams = buildProjectionExpression(EPISODE_PROJECTION)
+  if (projectionParams.ProjectionExpression.length) {
+    params.ProjectionExpression = projectionParams.ProjectionExpression.join(', ')
+    if (Object.keys(projectionParams.ExpressionAttributeNames).length) {
+      params.ExpressionAttributeNames = projectionParams.ExpressionAttributeNames
+    }
   }
 
-  if (items.length === query.pageSize + 1) {
-    response.items = items.slice(0, query.pageSize)
-    response.nextItem = items[items.length - 1].publishTimestamp
-  } else {
-    response.items = items
+  const data = (await dynamo.query(params).promise()) as AWS.DynamoDB.DocumentClient.QueryOutput
+  const episodes: IEpisode[] = []
+  for (const item of data.Items as IEpisodeDBRecord[]) {
+    episodes.push(convertToIEpisode(item))
   }
-  console.log(response)
-  return response
+
+  return episodes
 }
 
 export async function getEpisodeForSlugs(
@@ -73,4 +79,9 @@ export async function getEpisodeForSlugs(
   const publishTimestamp = podcast.episodes[episodeSlug]
 
   return await getEpisode(podcastSlug, publishTimestamp)
+}
+
+export async function putEpisode(episode: IEpisode) {
+  const Item = convertToIEpisodeDBRecord(episode)
+  await putItem(Item, process.env.EPISODES_TABLE as string)
 }

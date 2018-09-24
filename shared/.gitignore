@@ -7,5 +7,4 @@ jspm_packages
 
 # JavaScript Files
 *.js
-
-.build
+*.js.map

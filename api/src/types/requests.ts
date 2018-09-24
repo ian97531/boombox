@@ -8,8 +8,8 @@ export interface IListRequest extends Request {
 }
 
 export interface IListRequestQueryParams {
-  start?: number
-  pageSize?: number
+  start: number
+  pageSize: number
 }
 
 export interface IItemRequest extends Request {
