@@ -37,9 +37,12 @@ class PlayerBar extends React.Component<IPlayerBarProps> {
         onMouseMove={this.onMouseMove}
         onMouseLeave={this.onMouseLeave}
       >
-        <div className="PlayerBar__progress" style={{ width: currentTimeWidth }} />
         <div
-          className="PlayerBar__progress PlayerBar__progress--active"
+          className="PlayerBar__progress PlayerBar__progress--current"
+          style={{ width: currentTimeWidth }}
+        />
+        <div
+          className="PlayerBar__progress PlayerBar__progress--scrub"
           style={{ width: currentScrubTimeWidth }}
         />
         <div className="PlayerBar__progress PlayerBar__progress--inactive" />

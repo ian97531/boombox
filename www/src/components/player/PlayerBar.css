@@ -1,8 +1,27 @@
 .PlayerBar {
   position: relative;
-  height: 20px;
+  height: 1rem;
+  width: 100%;
+  height: 1rem;
+  background: var(--color-white);
+  transform: translateY(-50%);
+  cursor: pointer;
+  transition: transform 200ms ease-out;
+}
+
+.PlayerBar:hover {
+  transform: translateY(-50%) scaleY(2);
+}
+
+.PlayerBar::after {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
+  content: '';
+  background: var(--color-smoke);
+  opacity: 0.1;
 }
 
 .PlayerBar__progress {
@@ -15,12 +34,15 @@
   cursor: pointer;
 }
 
-.PlayerBar__progress--active {
-  background: var(--main-text-color);
+.PlayerBar__progress--current {
+  opacity: 0.6;
+}
+
+.PlayerBar__progress--scrub {
   opacity: 0;
   transition: opacity 150ms ease-in-out;
 }
 
-.PlayerBar:hover .PlayerBar__progress--active {
+.PlayerBar:hover .PlayerBar__progress--scrub {
   opacity: 1;
 }

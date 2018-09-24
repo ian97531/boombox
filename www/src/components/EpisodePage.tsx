@@ -1,8 +1,8 @@
 import { IEpisode } from '@boombox/shared/types/models'
 import ConversationPanel from 'components/ConversationPanel'
-import EpisodeMetadataPanel from 'components/EpisodeMetadataPanel'
 import Player from 'components/player/Player'
 import * as React from 'react'
+import * as ReactDOM from 'react-dom'
 import { connect } from 'react-redux'
 import { RouteComponentProps, withRouter } from 'react-router'
 import { Dispatch } from 'redux'
@@ -37,7 +37,6 @@ class EpisodePage extends React.Component<IEpisodePageProps> {
 
   public render() {
     let episodeConversationPanel: React.ReactNode | null = null
-    let episodeMetadataPanel: React.ReactNode | null = null
     let player: React.ReactNode | null = null
 
     if (this.props.episode) {
@@ -47,17 +46,19 @@ class EpisodePage extends React.Component<IEpisodePageProps> {
           requestedPodcastSlug={this.props.episode.podcastSlug}
         />
       )
-      episodeMetadataPanel = <EpisodeMetadataPanel episode={this.props.episode} />
-      player = <Player audioUrl={this.props.episode.mp3URL} />
+      // TODO(ndrwhr): This should be rendered in the App so that the user can keep listening
+      // to the current podcast while browsing around. To do this we will have to rework the store
+      // so that the currently episode information isn't tightly coupled with the router.
+      player = ReactDOM.createPortal(
+        <Player audioUrl={this.props.episode.mp3URL} />,
+        document.querySelector('.App__player') as Element
+      )
     }
 
     return (
       <div className="EpisodePage">
-        <div className="EpisodePage__left-panel">{episodeMetadataPanel}</div>
-        <div className="EpisodePage__right-panel">
-          <div className="EpisodePage__conversation">{episodeConversationPanel}</div>
-          <div className="EpisodePage__player">{player}</div>
-        </div>
+        {episodeConversationPanel}
+        {player}
       </div>
     )
   }

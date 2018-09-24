@@ -2,8 +2,11 @@
  * Colors:
  */
 :root {
+  --color-white: #fff;
   --color-ruby: #e44939;
-  --color-smoke: #cecece;
+
+  --color-smoke: #1d212c;
+  --color-smoke-a30: rgba(29, 33, 44, 0.3);
 }
 
 /**
@@ -22,8 +25,9 @@
  * Font specific:
  */
 :root {
-  --font-family-sans-serif: 'Raleway', sans-serif;
-  --font-family-serif: 'Merriweather', serif;
+  --font-family: 'Raleway', sans-serif;
+  --font-weight-regular: 400;
+  --font-weight--semi-bold: 600;
 }
 
 /**
@@ -48,16 +52,15 @@
  * Z-index Applications:
  */
 :root {
-  /**
-   * This is just an example:
-   */
-  --z-index-2--search-modal: var(--z-index-2);
+  --z-index-1--app-header: var(--z-index-1);
 }
 
 /**
- * Derived Variables:
+ * App Variables:
  */
 :root {
-  --highlight-background-color: #ecb6c9;
-  --main-text-color: #263238;
+  --app-header-height: 8rem;
+  --player-height: 8rem;
+
+  --ui-box-shadow: 0 0.1rem 0.1rem 0 var(--color-smoke-a30);
 }

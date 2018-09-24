@@ -1,26 +1,36 @@
 .App {
   flex: 1;
-  display: grid;
-  grid-template-rows: auto 1fr;
 }
 
 .App__header {
-  padding: var(--padding-double) var(--padding-double) 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: var(--app-header-height);
+  display: flex;
+  align-items: center;
+  color: var(--color-white);
+  background: var(--color-smoke);
+  padding: 0 var(--padding-quadruple);
+  box-shadow: var(--ui-box-shadow);
+  z-index: var(--z-index-1--app-header);
 }
 
 .App__header-name {
-  font-size: 3rem;
-  margin: 0 var(--padding-double) var(--padding-double) var(--padding-double);
-}
-
-.App__header::after {
-  display: block;
-  content: '';
-  border: 1px solid var(--main-text-color);
-  margin-top: var(--padding-double);
+  font-size: 2rem;
+  letter-spacing: 0.3em;
+  line-height: 1;
+  text-decoration: none;
 }
 
 .App__content {
-  display: flex;
-  overflow: hidden;
+  padding: var(--app-header-height) 0;
+}
+
+.App__player {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
 }
