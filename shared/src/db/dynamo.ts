@@ -1,5 +1,5 @@
 import * as AWS from 'aws-sdk'
-import * as reservedWords from './reservedWords'
+import { RESERVED_WORDS } from './reservedWords'
 
 AWS.config.update({
   region: 'us-east-1',
@@ -18,16 +18,22 @@ export async function putItem(
     JSON.stringify(Item, null, 2)
   )
   const params: AWS.DynamoDB.DocumentClient.PutItemInput = { Item, TableName }
-  const response = await dynamo.put(params).promise()
-  console.log('Completed putting item into dynamodb table "' + TableName + '".')
-  return response
+  try {
+    const response = await dynamo.put(params).promise()
+    console.log('Completed putting item into dynamodb table "' + TableName + '".')
+    return response
+  } catch (error) {
+    console.error('There was an error while putting an item with the following params: ', params)
+    console.error(error.message)
+    throw error
+  }
 }
 
 export function buildProjectionExpression(projection: string[] = []) {
-  const ProjectionExpression = []
-  const ExpressionAttributeNames = {}
-  for (const word in projection) {
-    if (word in reservedWords) {
+  const ProjectionExpression: string[] = []
+  const ExpressionAttributeNames: { [key: string]: string } = {}
+  for (const word of projection) {
+    if (RESERVED_WORDS.indexOf(word.toUpperCase()) !== -1) {
       const hashWord = '#' + word
       ExpressionAttributeNames[hashWord] = word
       ProjectionExpression.push(hashWord)
@@ -56,7 +62,13 @@ export async function getItem(
     }
   }
   // Query the Database
-  const response = (await dynamo.get(params).promise()) as AWS.DynamoDB.DocumentClient.GetItemOutput
-  console.log('Retrieved item: ', JSON.stringify(response.Item, null, 2))
-  return response
+  try {
+    const response = await dynamo.get(params).promise()
+    console.log('Retrieved item: ', JSON.stringify(response.Item, null, 2))
+    return response
+  } catch (error) {
+    console.error('There was an error while fetching an item with the following params: ', params)
+    console.error(error.message)
+    throw error
+  }
 }
