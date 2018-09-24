@@ -1,5 +1,5 @@
-import { IStatement } from '@boombox/shared/types/models'
-import { IListResponse } from '@boombox/shared/types/responses'
+import { IStatement } from '@boombox/shared/src/types/models'
+import { IListResponse } from '@boombox/shared/src/types/responses'
 import { AxiosResponse } from 'axios'
 import { Action, ActionCreator, AnyAction, Dispatch } from 'redux'
 import { api } from 'utilities/axios'

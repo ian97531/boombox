@@ -15,9 +15,7 @@ export default function(allowedQueryParams: string[] = []) {
       const are = plural ? ' are ' : ' is an '
       const parameters = plural ? ' parameters.' : ' parameter.'
       return next(
-        new BadRequest(
-          invalidQueryParams.join(', ') + are + 'invalid query' + parameters
-        )
+        new BadRequest(invalidQueryParams.join(', ') + are + 'invalid query' + parameters)
       )
     }
 

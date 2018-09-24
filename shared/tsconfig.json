@@ -5,10 +5,9 @@
     "paths": {
       "*": ["src/*"]
     },
-    "outDir": "build/dist",
-    "module": "esnext",
-    "target": "es5",
-    "lib": ["es6", "dom"]
+    "module": "commonjs",
+    "target": "es2017",
+    "lib": ["es2017", "dom"]
   },
   "exclude": [
     "node_modules",

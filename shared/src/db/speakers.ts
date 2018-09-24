@@ -1,5 +1,5 @@
-import { ISpeaker } from '@boombox/shared/types/models'
-import { default as dynamo } from './dynamo'
+import { ISpeaker } from '../types/models'
+import { dynamo } from './dynamo'
 
 export async function getSpeakers(slugs: string[]): Promise<ISpeaker[]> {
   const speakers: ISpeaker[] = []

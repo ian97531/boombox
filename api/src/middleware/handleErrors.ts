@@ -1,5 +1,5 @@
-import { IErrorResponse } from '@boombox/shared/types/responses'
-import AWS = require('aws-sdk')
+import { IErrorResponse } from '@boombox/shared/src/types/responses'
+import * as AWS from 'aws-sdk'
 import { NextFunction, Request, Response } from 'express'
 import { IError } from '../types/error'
 
