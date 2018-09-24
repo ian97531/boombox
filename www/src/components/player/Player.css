@@ -1,6 +1,9 @@
 .Player {
+  position: relative;
   display: flex;
-  padding: var(--padding-double);
+  padding: 0 var(--padding-double);
+  height: var(--player-height);
+  background: var(--color-white);
 }
 
 .Player__controls {
@@ -42,6 +45,20 @@
   height: 40%;
 }
 
-.Player__bar-wrapper {
+.Player__episode-info {
+  display: flex;
+  align-items: center;
   flex: 1;
+}
+
+.Player__timer-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.Player__bar-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
 }

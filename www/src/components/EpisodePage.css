@@ -1,20 +1,4 @@
 .EpisodePage {
   display: flex;
-  width: 100%;
-}
-
-.EpisodePage__left-panel {
-  position: relative;
-  width: 300px;
-}
-
-.EpisodePage__right-panel {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-}
-
-.EpisodePage__conversation {
-  position: relative;
-  flex: 1;
+  padding: var(--padding-double);
 }

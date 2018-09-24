@@ -1,4 +1,5 @@
 import PlayerBar from 'components/player/PlayerBar'
+import PlayerTimer from 'components/player/PlayerTimer'
 import Sprite from 'components/utilities/Sprite'
 import * as React from 'react'
 import { connect } from 'react-redux'
@@ -17,6 +18,7 @@ class Player extends React.Component<IPlayerProps> {
   public componentWillMount() {
     AudioController.setSrc(this.props.audioUrl)
   }
+
   public render() {
     const playPauseId = this.props.status === AudioControllerStatus.Playing ? 'pause' : 'play'
     return (
@@ -43,6 +45,10 @@ class Player extends React.Component<IPlayerProps> {
           >
             F
           </button>
+        </div>
+        <div className="Player__episode-info" />
+        <div className="Player__timer-wrapper">
+          <PlayerTimer />
         </div>
         <div className="Player__bar-wrapper">
           <PlayerBar />
