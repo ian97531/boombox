@@ -1,16 +1,20 @@
 import { getEpisode } from '@boombox/shared/src/db/episodes'
 import { getJob, putJob } from '@boombox/shared/src/db/jobs'
-import { IEpisode, IJob, IJobMessage, JOB_STATUS } from '@boombox/shared/src/types/models'
+import { IEpisode } from '@boombox/shared/src/types/models/episode'
+import { IJob, JOB_STATUS } from '@boombox/shared/src/types/models/job'
 import { Callback, Context, SNSEvent } from 'aws-lambda'
 import * as AWS from 'aws-sdk'
+import { ENV } from '../constants'
 
-const COMPLETION_TOPIC = 'COMPLETION_TOPIC'
+type NextAsyncFunction = (message: { job: string }) => Promise<void>
+export type NextFunction<T> = (message: T) => void
+
 const sns = new AWS.SNS()
 
 // A base handler that will execute async functions, will warn of impending timeouts, and will
 // handle errors correctly.
 export function asyncHandler(
-  func: (event?: any, env?: { [id: string]: any }, callback?: Callback) => Promise<void>
+  func: (event?: any, env?: NodeJS.ProcessEnv, callback?: Callback) => Promise<void>
 ) {
   return (event: any, context: Context, callback: Callback) => {
     const buffer = 100
@@ -35,103 +39,91 @@ export function asyncHandler(
 
 // A handler that makes it easy to transform the various incoming and outgoing events AWS events
 // to simplify the logic handlers.
-export const baseHandler = <Event, Input, Output>(
-  func: (
-    event: Input,
-    env: { [id: string]: any },
-    callback: Callback
-  ) => Promise<Output> | Promise<Output[]> | Promise<void>,
+export const baseHandler = (
+  func: (message?: any, env?: NodeJS.ProcessEnv, next?: NextAsyncFunction) => Promise<void>,
   options?: {
-    input?: (event?: Event, env?: { [id: string]: any }) => Promise<Input> | Promise<Input[]>
-    output?: (event?: Output, env?: { [id: string]: any }) => Promise<void>
+    input?: (event?: any, env?: NodeJS.ProcessEnv, next?: NextAsyncFunction) => Promise<void>
+    output?: (event?: any, env?: NodeJS.ProcessEnv) => Promise<void>
   }
 ) => {
-  return async (event: any, env: { [id: string]: any }, callback: Callback): Promise<void> => {
-    const outputItems: Output[] = []
-    if (options && options.input) {
-      const inputItems = await options.input(event, env)
-      if (Array.isArray(inputItems)) {
-        for (const item of inputItems) {
-          const funcOutput = await func(item, env, callback)
-          if (Array.isArray(funcOutput)) {
-            outputItems.push(...funcOutput)
-          } else if (funcOutput) {
-            outputItems.push(funcOutput)
-          }
-        }
-      } else {
-        const funcOutput = await func(inputItems, env, callback)
-        if (Array.isArray(funcOutput)) {
-          outputItems.push(...funcOutput)
-        } else if (funcOutput) {
-          outputItems.push(funcOutput)
-        }
-      }
-    } else {
-      const funcOutput = await func(event, env, callback)
-      if (Array.isArray(funcOutput)) {
-        outputItems.push(...funcOutput)
-      } else if (funcOutput) {
-        outputItems.push(funcOutput)
+  return async (event: any, env: NodeJS.ProcessEnv, callback: Callback): Promise<void> => {
+    const outputFunction = async (message?: any) => {
+      if (options && options.output) {
+        await options.output(message, env)
       }
     }
-    if (options && options.output) {
-      for (const item of outputItems) {
-        await options.output(item, env)
-      }
+
+    const mainFunction = async (message?: any) => {
+      await func(message, env, outputFunction)
+    }
+
+    if (options && options.input) {
+      await options.input(event, env, mainFunction)
+    } else {
+      await func(event, env, outputFunction)
     }
   }
 }
 
 // Unwraps and parses incoming SNSEvents.
-export const snsInput = async <T>(event: SNSEvent, env: { [id: string]: any }): Promise<T[]> => {
-  const messages = []
+export const snsInput = async (
+  event: SNSEvent,
+  env: NodeJS.ProcessEnv,
+  next: NextAsyncFunction
+): Promise<void> => {
   for (const record of event.Records) {
     const message = JSON.parse(record.Sns.Message)
     console.log('Received SNS Message: ', JSON.stringify(message, null, 2))
-    messages.push(message)
+    next(message)
   }
-  return messages
 }
 
 // Detects the presense of a COMPLETION_TOPIC environment variable, if found, the return value
 // of the handler will be published to that SNS TOPIC.
-export const snsOutput = async <T>(message: T, env: { [id: string]: any }): Promise<void> => {
-  if (!(COMPLETION_TOPIC in env)) {
-    throw Error('No COMPLETION_TOPIC was specified for this lambda.')
+export const snsOutput = async (message: any, env: NodeJS.ProcessEnv): Promise<void> => {
+  const completionTopic = env[ENV.COMPLETION_TOPIC]
+  if (completionTopic === undefined) {
+    throw Error('The COMPLETION_TOPIC environement variable is not defined.')
   }
 
   const params = {
     Message: JSON.stringify(message),
-    TopicArn: env[COMPLETION_TOPIC],
+    TopicArn: env.COMPLETION_TOPIC,
   }
   try {
     await sns.publish(params).promise()
-    console.log('Successfully sent completion SNS message to: ', env[COMPLETION_TOPIC])
+    console.log('Successfully sent completion SNS message to: ', env.COMPLETION_TOPIC)
   } catch (error) {
-    console.error('Failed to send completion SNS message to: ', env[COMPLETION_TOPIC])
+    console.error('Failed to send completion SNS message to: ', env.COMPLETION_TOPIC)
     console.error('The unsent message contained: ', JSON.stringify(message, null, 2))
   }
 }
 
 export const jobHanlder = (
-  func: (episode?: IEpisode, job?: IJob, env?: { [id: string]: any }, callback?: Callback) => void
+  func: (
+    episode?: IEpisode,
+    job?: IJob,
+    message?: any,
+    env?: NodeJS.ProcessEnv,
+    next?: NextFunction
+  ) => Promise<void>
 ) => {
-  return async (
-    message: IJobMessage,
-    env: { [id: string]: any },
-    callback: Callback
-  ): Promise<IJobMessage> => {
-    const job: IJob = await getJob(message.startTime)
+  return async (message: any, env: NodeJS.ProcessEnv, next: NextAsyncFunction): Promise<void> => {
+    const job: IJob = await getJob(message.job)
     const episode: IEpisode = await getEpisode(job.podcastSlug, job.publishTimestamp)
+    const lambdaName = env[ENV.AWS_LAMBDA_FUNCTION_NAME]
+    if (lambdaName === undefined) {
+      throw Error('The AWS_LAMBDA_FUNCTION_NAME environement variable is not defined.')
+    }
+
     console.log(
-      `Starting ${env.AWS_LAMBDA_FUNCTION_NAME} for job ${job.startTime} for episode ${
-        episode.podcastSlug
-      } ${episode.slug}.`
+      `Starting ${lambdaName} for job ${job.startTime} for episode ${episode.podcastSlug} ${
+        episode.slug
+      }.`
     )
 
     try {
-      job.lambdas[env.AWS_LAMBDA_FUNCTION_NAME] = {
+      job.lambdas[lambdaName] = {
         startTime: new Date().toISOString(),
         status: JOB_STATUS.PROCESSING,
       }
@@ -140,20 +132,25 @@ export const jobHanlder = (
       console.error(
         `Error updating job ${job.startTime} for episode ${episode.podcastSlug} ${
           episode.slug
-        } in lambda ${env.AWS_LAMBDA_FUNCTION_NAME}`
+        } in lambda ${lambdaName}`
       )
     }
 
+    const nextMessages: any = []
+    const nextWrapper = (nextMessage: any) => {
+      nextMessages.push(nextMessage)
+    }
+
     try {
-      await func(episode, job, env, callback)
+      await func(episode, job, message.message, env, nextWrapper)
     } catch (error) {
       console.error(
-        `Error completing ${env.AWS_LAMBDA_FUNCTION_NAME} for job ${job.startTime} for episode ${
+        `Error completing ${lambdaName} for job ${job.startTime} for episode ${
           episode.podcastSlug
         } ${episode.slug}.`
       )
-      job.lambdas[env.AWS_LAMBDA_FUNCTION_NAME] = {
-        ...job.lambdas[env.AWS_LAMBDA_FUNCTION_NAME],
+      job.lambdas[lambdaName] = {
+        ...job.lambdas[lambdaName],
         endTime: new Date().toISOString(),
         error: error.message,
         status: JOB_STATUS.ERROR,
@@ -163,8 +160,8 @@ export const jobHanlder = (
     }
 
     try {
-      job.lambdas[env.AWS_LAMBDA_FUNCTION_NAME] = {
-        ...job.lambdas[env.AWS_LAMBDA_FUNCTION_NAME],
+      job.lambdas[lambdaName] = {
+        ...job.lambdas[lambdaName],
         endTime: new Date().toISOString(),
         status: JOB_STATUS.COMPLETED,
       }
@@ -173,31 +170,38 @@ export const jobHanlder = (
       console.error(
         `Error updating job ${job.startTime} for episode ${episode.podcastSlug} ${
           episode.slug
-        } in lambda ${env.AWS_LAMBDA_FUNCTION_NAME}`
+        } in lambda ${lambdaName}`
       )
     }
 
     console.log(
-      `Completed ${env.AWS_LAMBDA_FUNCTION_NAME} for job ${job.startTime} for episode ${
-        episode.podcastSlug
-      } ${episode.slug}.`
+      `Completed ${lambdaName} for job ${job.startTime} for episode ${episode.podcastSlug} ${
+        episode.slug
+      }.`
     )
 
-    return { startTime: job.startTime.toISOString() }
+    for (const nextMessage of nextMessages) {
+      await next({
+        job: job.startTime.toISOString(),
+        message: nextMessage,
+      })
+    }
   }
 }
 
 export const createJobHandler = (
-  func: (env?: { [id: string]: any }, callback?: Callback) => Promise<IEpisode[]>
+  func: (env?: NodeJS.ProcessEnv, next?: NextFunction<IEpisode>) => Promise<void>
 ) => {
-  return async (
-    event: any,
-    env: { [id: string]: any },
-    callback: Callback
-  ): Promise<IJobMessage[]> => {
-    const messages = []
+  return async (event: any, env: NodeJS.ProcessEnv, next: NextAsyncFunction): Promise<void> => {
+    const episodes: IEpisode[] = []
+
+    const nextHandler = (message: IEpisode) => {
+      episodes.push(message)
+    }
+
     try {
-      const episodes = await func(env, callback)
+      await func(env, nextHandler)
+
       for (const episode of episodes) {
         const job: IJob = {
           info: {},
@@ -208,7 +212,9 @@ export const createJobHandler = (
           status: JOB_STATUS.PROCESSING,
         }
         await putJob(job)
-        messages.push({ startTime: job.startTime.toISOString() })
+
+        await next({ job: job.startTime.toISOString() })
+
         console.log(
           `Created job ${job.startTime.toISOString()} for episode ${episode.podcastSlug} ${
             episode.slug
@@ -219,18 +225,30 @@ export const createJobHandler = (
       console.error('Error starting job.')
       throw error
     }
-    return messages
   }
 }
 
 export const startJobLambda = (
-  func: (message?: any, env?: { [id: string]: any }, callback?: Callback) => Promise<IEpisode[]>
+  func: (env?: NodeJS.ProcessEnv, next?: NextFunction<IEpisode>) => Promise<void>
 ) => {
   return asyncHandler(baseHandler(createJobHandler(func), { output: snsOutput }))
 }
 
-export const jobLambda = (
-  func: (episode?: IEpisode, job?: IJob, env?: { [id: string]: any }, callback?: Callback) => void
+export const jobLambda = <T>(
+  func: (
+    episode?: IEpisode,
+    job?: IJob,
+    message?: any,
+    env?: NodeJS.ProcessEnv,
+    next?: NextFunction<T>
+  ) => Promise<void>,
+  options: {
+    input?: (event?: any, env?: NodeJS.ProcessEnv, next?: NextAsyncFunction) => Promise<void>
+    output?: (event?: any, env?: NodeJS.ProcessEnv) => Promise<void>
+  } = {
+    input: snsInput,
+    output: snsOutput,
+  }
 ) => {
-  return asyncHandler(baseHandler(jobHanlder(func), { input: snsInput, output: snsOutput }))
+  return asyncHandler(baseHandler(jobHanlder(func), options))
 }
