@@ -1,18 +1,11 @@
-// import AWS = require('aws-sdk')
 import { putEpisode } from '@boombox/shared/src/db/episodes'
 import { getPodcast, putPodcast } from '@boombox/shared/src/db/podcasts'
-import { IEpisode, IPodcast } from '@boombox/shared/src/types/models'
+import { IEpisode } from '@boombox/shared/src/types/models/episode'
+import { IPodcast } from '@boombox/shared/src/types/models/podcast'
 import * as Parser from 'rss-parser'
 import slugify from 'slugify'
-import { startJobLambda } from '../../utils/lambda'
-
-const FEED_URL = 'https://www.hellointernet.fm/podcast?format=rss'
-const INSERT_LIMIT = 'INSERT_LIMIT'
-const SLUGIFY_OPTIONS = {
-  lower: true,
-  remove: /[*+~.()#$/^&\[\]|\\?<>,=_'"!:@]/g,
-  replacement: '-',
-}
+import { ENV, FEED_URL, SLUGIFY_OPTIONS } from '../../constants'
+import { NextFunction, startJobLambda } from '../../utils/lambda'
 
 function createPodcastFromFeed(podcastSlug: string, feed: any): IPodcast {
   const currentTime = new Date()
@@ -58,10 +51,17 @@ function createEpisodeFromFeed(podcastSlug: string, item: any): IEpisode {
   }
 }
 
-const checkPodcastFeed = async (env: { [id: string]: any }): Promise<IEpisode[]> => {
+const checkPodcastFeed = async (
+  env: NodeJS.ProcessEnv,
+  next: NextFunction<IEpisode>
+): Promise<void> => {
   // Retrieve the podcast feed.
   const parser = new Parser()
   const feed = await parser.parseURL(FEED_URL)
+  const insertLimit = parseInt(env[ENV.INSERT_LIMIT] || '', 10)
+  if (Number.isNaN(insertLimit)) {
+    throw Error('The INSERT_LIMIT environement variable is not defined.')
+  }
 
   // Get all pages of the podcast's episodes
   let items = feed.items
@@ -69,7 +69,7 @@ const checkPodcastFeed = async (env: { [id: string]: any }): Promise<IEpisode[]>
   let response
   do {
     page += 1
-    const pageURL = FEED_URL + '&page=' + page
+    const pageURL = `${FEED_URL}&page=${page}`
     response = await parser.parseURL(pageURL)
     items = [...items, ...response.items]
   } while (response && response.items && response.items.length > 0)
@@ -88,21 +88,16 @@ const checkPodcastFeed = async (env: { [id: string]: any }): Promise<IEpisode[]>
 
   let episodeIndex = 0
   const insertedEpisodes: IEpisode[] = []
-  while (insertedEpisodes.length < env[INSERT_LIMIT] && episodeIndex < items.length) {
+  while (insertedEpisodes.length < insertLimit && episodeIndex < items.length) {
     const episode: IEpisode = createEpisodeFromFeed(podcastSlug, items[episodeIndex])
-
     if (!(episode.slug in podcast.episodes)) {
       await putEpisode(episode)
       podcast.episodes[episode.slug] = episode.publishTimestamp
-      insertedEpisodes.push(episode)
+      next(episode)
+      console.log(`Started processing ${episode.podcastSlug} ${episode.slug}.`)
     }
-
     episodeIndex += 1
   }
-
-  console.log(`Started processing ${insertedEpisodes.length} episode(s).`)
-
-  return insertedEpisodes
 }
 
 export const handler = startJobLambda(checkPodcastFeed)
