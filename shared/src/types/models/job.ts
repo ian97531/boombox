@@ -3,34 +3,30 @@ export enum JOB_STATUS {
   PROCESSING = 'PROCESSING',
   COMPLETED = 'COMPLETED',
   ERROR = 'ERROR',
+  RETRYING = 'RETRYING',
+}
+
+export interface IJobStatusUpdate {
+  endTime?: string
+  status: JOB_STATUS
+  error?: string
+  output?: any
+}
+
+export interface IJobStatus extends IJobStatusUpdate {
+  startTime: string
 }
 
 interface IJobBase {
   startTime: string | Date
   podcastSlug: string
+  episodeSlug: string
   publishTimestamp: number
   status: JOB_STATUS
   lambdas: {
-    [key: string]: {
-      startTime: string
-      endTime?: string
-      status: JOB_STATUS
-      error?: string
-    }
+    [key: string]: IJobStatus
   }
-  info: {
-    awsTranscribeJobs?: string[]
-    originalAudio?: {
-      bucket: string
-      filename: string
-    }
-    splitAudioFiles?: string[]
-    transcriptions?: string[]
-    transcodedAudio?: {
-      m4aFilename: string
-      oggFilename: string
-    }
-  }
+  info: any
 }
 export interface IJob extends IJobBase {
   startTime: Date

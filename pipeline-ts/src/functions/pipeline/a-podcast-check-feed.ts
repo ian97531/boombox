@@ -4,8 +4,10 @@ import { IEpisode } from '@boombox/shared/src/types/models/episode'
 import { IPodcast } from '@boombox/shared/src/types/models/podcast'
 import * as Parser from 'rss-parser'
 import slugify from 'slugify'
-import { ENV, FEED_URL, SLUGIFY_OPTIONS } from '../../constants'
-import { NextFunction, startJobLambda } from '../../utils/lambda'
+import { EPISODE_INSERT_LIMIT, FEED_URL, SLUGIFY_OPTIONS } from '../../constants'
+import { NextFunction } from '../../types/lambdas'
+import { startJobLambda } from '../../utils/job'
+import { logStatus } from '../../utils/status'
 
 function createPodcastFromFeed(podcastSlug: string, feed: any): IPodcast {
   const currentTime = new Date()
@@ -51,17 +53,10 @@ function createEpisodeFromFeed(podcastSlug: string, item: any): IEpisode {
   }
 }
 
-const checkPodcastFeed = async (
-  env: NodeJS.ProcessEnv,
-  next: NextFunction<IEpisode>
-): Promise<void> => {
+const podcastCheckFeed = async (next: NextFunction<IEpisode>): Promise<void> => {
   // Retrieve the podcast feed.
   const parser = new Parser()
   const feed = await parser.parseURL(FEED_URL)
-  const insertLimit = parseInt(env[ENV.INSERT_LIMIT] || '', 10)
-  if (Number.isNaN(insertLimit)) {
-    throw Error('The INSERT_LIMIT environement variable is not defined.')
-  }
 
   // Get all pages of the podcast's episodes
   let items = feed.items
@@ -76,7 +71,7 @@ const checkPodcastFeed = async (
 
   // Get or create the podcast record in dynamodb.
   const podcastSlug = slugify(feed.title, SLUGIFY_OPTIONS)
-  console.log(`Found ${items.length} episodes for podcast ${feed.title}`)
+  logStatus(`Found ${items.length} episodes for podcast ${feed.title}`)
 
   let podcast: IPodcast
   try {
@@ -88,16 +83,16 @@ const checkPodcastFeed = async (
 
   let episodeIndex = 0
   const insertedEpisodes: IEpisode[] = []
-  while (insertedEpisodes.length < insertLimit && episodeIndex < items.length) {
+  while (insertedEpisodes.length < EPISODE_INSERT_LIMIT && episodeIndex < items.length) {
     const episode: IEpisode = createEpisodeFromFeed(podcastSlug, items[episodeIndex])
     if (!(episode.slug in podcast.episodes)) {
       await putEpisode(episode)
       podcast.episodes[episode.slug] = episode.publishTimestamp
       next(episode)
-      console.log(`Started processing ${episode.podcastSlug} ${episode.slug}.`)
+      logStatus(`Started processing ${episode.podcastSlug} ${episode.slug}.`)
     }
     episodeIndex += 1
   }
 }
 
-export const handler = startJobLambda(checkPodcastFeed)
+export const handler = startJobLambda(podcastCheckFeed)

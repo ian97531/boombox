@@ -1,4 +1,4 @@
-import { ITranscriptWord } from '@boombox/shared/src/types/models/transcript'
+import { ITranscript } from '@boombox/shared/src/types/models/transcript'
 import { AWS_TRANSCRIPTION } from '../../constants'
 import { IAWSTranscriptionItem, IAWSTranscriptionResult } from '../../types/aws'
 import { Speakers } from './Speakers'
@@ -12,8 +12,8 @@ export class AWSTranscription {
     this.items = result.items
   }
 
-  public getNormalizedTranscription(): ITranscriptWord[] {
-    const normalizedTranscription: ITranscriptWord[] = []
+  public getNormalizedTranscription(): ITranscript {
+    const normalizedTranscription: ITranscript = []
 
     for (const item of this.items) {
       if (item.type === AWS_TRANSCRIPTION.PRONUNCIATION) {

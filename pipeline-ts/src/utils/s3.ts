@@ -1,9 +1,9 @@
 import { IEpisode } from '@boombox/shared/src/types/models/episode'
-import { DEFAULT_SECONDARY_SEPARATOR, DEFAULT_SEPARATOR, S3_DESIGNATIONS } from '../constants'
+import { DEFAULT_SECONDARY_SEPARATOR, DEFAULT_SEPARATOR, FILE_DESIGNATIONS } from '../constants'
 
 export const buildFilename = (
   episode: IEpisode,
-  designation: S3_DESIGNATIONS,
+  designation: FILE_DESIGNATIONS,
   options?: {
     startTime?: number
     duration?: number
@@ -71,4 +71,12 @@ export const getFileInfo = (
     publishTimestamp: parseInt(episodeParts[0], 10),
     startTime: fileparts.length === 3 ? parseInt(fileparts[1], 10) : undefined,
   }
+}
+
+export const checkFileExists = async (bucket: string, filename: string): Promise<boolean> => {
+  return true
+}
+
+export const getJsonFile = <T>(bucket: string, filename: string): T => {
+  return {}
 }

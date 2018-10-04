@@ -1,4 +1,4 @@
-import { IJob, IJobDBRecord } from '../types/models'
+import { IJob, IJobDBRecord } from '../types/models/job'
 import { getItem, putItem } from './dynamo'
 
 function convertToIJob(result: IJobDBRecord): IJob {
