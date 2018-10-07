@@ -1,5 +1,8 @@
 import { IEpisode } from '@boombox/shared/src/types/models/episode'
-import { DEFAULT_SECONDARY_SEPARATOR, DEFAULT_SEPARATOR, FILE_DESIGNATIONS } from '../constants'
+import * as AWS from 'aws-sdk'
+import { DEFAULT_SECONDARY_SEPARATOR, DEFAULT_SEPARATOR, FILE_DESIGNATIONS } from '../../constants'
+
+const s3 = new AWS.S3()
 
 export const buildFilename = (
   episode: IEpisode,
@@ -20,16 +23,18 @@ export const buildFilename = (
       : DEFAULT_SECONDARY_SEPARATOR
 
   const cleanDesignation = designation.replace(/[^a-z0-9]/gi, '')
+  const cleanPublishedAt = episode.publishedAt.toISOString().replace(/\./gi, '-')
 
-  let filename = `${episode.podcastSlug}${separator}${
-    episode.publishTimestamp
-  }${secondarySeparator}${episode.slug}${separator}${cleanDesignation}`
+  let filename = `${episode.podcastSlug}${separator}${cleanPublishedAt}${secondarySeparator}${
+    episode.slug
+  }${separator}${cleanDesignation}`
 
   if (options && options.startTime !== undefined) {
     filename = `${filename}${secondarySeparator}${options.startTime}`
 
     if (options.duration) {
-      filename = `${filename}${secondarySeparator}${options.duration}`
+      const duration = Math.round(options.duration)
+      filename = `${filename}${secondarySeparator}${duration}`
     } else {
       throw Error('buildFilename() requires a duration if a startTime is specified.')
     }
@@ -74,9 +79,59 @@ export const getFileInfo = (
 }
 
 export const checkFileExists = async (bucket: string, filename: string): Promise<boolean> => {
-  return true
+  let exists = false
+
+  const params: AWS.S3.HeadObjectRequest = {
+    Bucket: bucket,
+    Key: filename,
+  }
+
+  try {
+    await s3.headObject(params).promise()
+    exists = true
+  } catch (error) {
+    exists = false
+  }
+
+  return exists
 }
 
-export const getJsonFile = <T>(bucket: string, filename: string): T => {
-  return {}
+export const getFileStream = async (bucket: string, filename: string) => {
+  const params: AWS.S3.GetObjectRequest = {
+    Bucket: bucket,
+    Key: filename,
+  }
+  return s3.getObject(params).createReadStream()
+}
+
+export const getFile = async <T>(bucket: string, filename: string): Promise<T> => {
+  const params: AWS.S3.GetObjectRequest = {
+    Bucket: bucket,
+    Key: filename,
+  }
+  const response = await s3.getObject(params).promise()
+  if (!response.Body) {
+    throw Error('No body was returned in the s3 response.')
+  }
+  return response.Body as T
+}
+
+export const putFile = async <T>(bucket: string, filename: string, data: T): Promise<void> => {
+  const params: AWS.S3.PutObjectRequest = {
+    Body: data,
+    Bucket: bucket,
+    Key: filename,
+  }
+
+  await s3.putObject(params).promise()
+}
+
+export const getJsonFile = async <T>(bucket: string, filename: string): Promise<T> => {
+  const response = await getFile(bucket, filename)
+
+  return JSON.parse(response.toString())
+}
+
+export const putJsonFile = async <T>(bucket: string, filename: string, obj: T): Promise<void> => {
+  await putFile(bucket, filename, JSON.stringify(obj, null, 2))
 }

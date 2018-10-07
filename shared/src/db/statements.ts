@@ -1,5 +1,5 @@
-import { ISpeaker, IStatement, IStatementDBRecord } from '../types/models'
-import { buildProjectionExpression, dynamo } from './dynamo'
+import { ISpeaker, IStatement, IStatementDBRecord } from '../types/models/transcript'
+import { buildProjectionExpression, dynamo, putItem } from './dynamo'
 import { getEpisode } from './episodes'
 import { getSpeakers } from './speakers'
 
@@ -15,14 +15,14 @@ const convertToIStatement = (result: IStatementDBRecord, speakers: ISpeaker[]): 
 
 export async function getStatements(
   podcastSlug: string,
-  publishTimestamp: number,
+  publishedAt: Date,
   startTime: number,
   limit: number
 ): Promise<IStatement[]> {
-  const episode = await getEpisode(podcastSlug, publishTimestamp)
+  const episode = await getEpisode(podcastSlug, publishedAt)
   const speakers = await getSpeakers(episode.speakers)
 
-  const episodeKey = podcastSlug + '_' + publishTimestamp.toString()
+  const episodeKey = podcastSlug + '_' + publishedAt.toISOString()
   const params: AWS.DynamoDB.DocumentClient.QueryInput = {
     ExpressionAttributeValues: {
       ':episodeKey': episodeKey,
@@ -49,4 +49,10 @@ export async function getStatements(
   }
 
   return statements
+}
+
+export async function putIStatmentDBRecord(
+  statement: IStatementDBRecord
+): Promise<AWS.DynamoDB.DocumentClient.PutItemOutput> {
+  return await putItem(statement, process.env.STATEMENTS_TABLE as string)
 }

@@ -1,25 +1,25 @@
-import { ENV, MAX_SEGMENT_LENGTH, SEGMENT_OVERLAP_LENGTH } from '../../constants'
+import { MAX_SEGMENT_LENGTH, SEGMENT_OVERLAP_LENGTH } from '../../constants'
 import {
   IEpisodeSegmentPendingMessage,
   IEpisodeSegmentStartMessage,
   IJobInput,
 } from '../../types/jobs'
 import { NextFunction } from '../../types/lambdas'
+import { createSegmentJob } from '../../utils/aws/transcode'
+import { getTranscodePipeline } from '../../utils/environment'
 import { jobLambda } from '../../utils/job'
-import { logError } from '../../utils/status'
-import { createSegmentJob } from '../../utils/transcode'
+
+const round = (num: number, places: number = 0): number => {
+  return Number(num.toFixed(places))
+}
 
 const splitEpisodeAudioIntoSegments = async (
   input: IJobInput<IEpisodeSegmentStartMessage>,
   next: NextFunction<IEpisodeSegmentPendingMessage>
 ) => {
-  const pipelineId = process.env[ENV.TRANSCODE_PIPELINE_ID]
-  if (pipelineId === undefined) {
-    throw logError('The TRANSCODE_PIPELINE_ID environment variable was not set.')
-  }
-
+  const pipelineId = getTranscodePipeline()
   const numSegments = Math.ceil(input.episode.duration / MAX_SEGMENT_LENGTH)
-  const segmentDuration = Math.ceil(input.episode.duration / numSegments)
+  const segmentDuration = round(Math.ceil(input.episode.duration / numSegments), 3)
   const inputFilename = input.message.filename
   const segmentJobs: IEpisodeSegmentPendingMessage = []
 
@@ -28,7 +28,6 @@ const splitEpisodeAudioIntoSegments = async (
 
   while (index < numSegments - 1) {
     // Create a segment
-
     const transcodeJob = await createSegmentJob(
       pipelineId,
       inputFilename,
@@ -54,7 +53,7 @@ const splitEpisodeAudioIntoSegments = async (
   }
 
   // Create the last segment to the end of the episode.
-  const finalDuration = input.episode.duration - startTime
+  const finalDuration = round(input.episode.duration - startTime, 3)
   const finalJob = await createSegmentJob(
     pipelineId,
     inputFilename,
@@ -64,7 +63,7 @@ const splitEpisodeAudioIntoSegments = async (
   )
   segmentJobs.push(finalJob)
 
-  next(segmentJobs)
+  next(segmentJobs, 60)
 }
 
 export const handler = jobLambda(splitEpisodeAudioIntoSegments)

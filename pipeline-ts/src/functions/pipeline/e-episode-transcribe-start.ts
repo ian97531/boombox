@@ -1,4 +1,4 @@
-import { ENV, FILE_DESIGNATIONS } from '../../constants'
+import { FILE_DESIGNATIONS } from '../../constants'
 import {
   IAWSTranscribeStartMessage,
   IEpisodeTranscribePendingMessage,
@@ -8,57 +8,61 @@ import {
   IWatsonTranscribeStartMessage,
 } from '../../types/jobs'
 import { NextFunction } from '../../types/lambdas'
+import { sendSQSMessage } from '../../utils/aws/lambda'
+import { buildFilename, checkFileExists } from '../../utils/aws/s3'
+import { getAwsTranscribeQueue, getBucket, getWatsonTranscribeQueue } from '../../utils/environment'
 import { createJobMessage, jobLambda } from '../../utils/job'
-import { sendSQSMessage } from '../../utils/lambda'
-import { buildFilename, checkFileExists } from '../../utils/s3'
-import { logError } from '../../utils/status'
 
 const episodeTranscribeStart = async (
   input: IJobInput<IEpisodeTranscribeStartMessage>,
   next: NextFunction<IEpisodeTranscribePendingMessage>
 ) => {
-  const awsQueue = process.env[ENV.AWS_TRANSCRIBE_QUEUE]
-  const watsonQueue = process.env[ENV.WATSON_TRANSCRIBE_QUEUE]
-  const bucket = process.env[ENV.BUCKET]
-
-  if (awsQueue === undefined || watsonQueue === undefined) {
-    throw logError('AWS_TRANSCRIBE_QUEUE or WATSON_TRANSCRIBE_QUEUE is not defined.')
+  const awsQueue = getAwsTranscribeQueue()
+  const watsonQueue = getWatsonTranscribeQueue()
+  const bucket = getBucket()
+  const output = {
+    aws: {
+      transcriptionFile: buildFilename(
+        input.episode,
+        FILE_DESIGNATIONS.AWS_NORMALIZED_TRANSCRIPTION_FULL,
+        { suffix: 'json' }
+      ),
+    },
+    final: {
+      transcriptionFile: buildFilename(
+        input.episode,
+        FILE_DESIGNATIONS.COMBINED_TRANSCRIPTION_FULL,
+        { suffix: 'json' }
+      ),
+    },
+    watson: {
+      transcriptionFile: buildFilename(
+        input.episode,
+        FILE_DESIGNATIONS.WATSON_NORMALIZED_TRANSCRIPTION_FULL,
+        { suffix: 'json' }
+      ),
+    },
   }
 
-  if (bucket === undefined) {
-    throw logError('The BUCKET environment variable is not defined.')
-  }
-
-  const transcripts = {
-    awsTranscript: buildFilename(
-      input.episode,
-      FILE_DESIGNATIONS.AWS_NORMALIZED_TRANSCRIPTION_FULL
-    ),
-    watsonTranscript: buildFilename(
-      input.episode,
-      FILE_DESIGNATIONS.WATSON_NORMALIZED_TRANSCRIPTION_FULL
-    ),
-  }
-
-  if (!(await checkFileExists(bucket, transcripts.awsTranscript))) {
+  if (!(await checkFileExists(bucket, output.aws.transcriptionFile))) {
     const awsMessage: IJobMessage<IAWSTranscribeStartMessage> = createJobMessage(input.job, {
       segments: input.message,
-      transcript: transcripts.awsTranscript,
+      transcriptionFile: output.aws.transcriptionFile,
     })
 
     await sendSQSMessage(awsMessage, awsQueue)
   }
 
-  if (!(await checkFileExists(bucket, transcripts.watsonTranscript))) {
+  if (!(await checkFileExists(bucket, output.watson.transcriptionFile))) {
     const watsonMessage: IJobMessage<IWatsonTranscribeStartMessage> = createJobMessage(input.job, {
       segments: input.message,
-      transcript: transcripts.watsonTranscript,
+      transcriptionFile: output.watson.transcriptionFile,
     })
 
     await sendSQSMessage(watsonMessage, watsonQueue)
   }
 
-  next(transcripts)
+  next(output, 120)
 }
 
 export const handler = jobLambda(episodeTranscribeStart)

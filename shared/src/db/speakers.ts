@@ -1,4 +1,4 @@
-import { ISpeaker } from '../types/models'
+import { ISpeaker } from '../types/models/transcript'
 import { dynamo } from './dynamo'
 
 export async function getSpeakers(slugs: string[]): Promise<ISpeaker[]> {

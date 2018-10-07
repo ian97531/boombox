@@ -4,8 +4,9 @@ import {
   IJobInput,
 } from '../../types/jobs'
 import { NextFunction, RetryFunction } from '../../types/lambdas'
+import { checkSegmentFileExists } from '../../utils/aws/transcode'
 import { jobLambda } from '../../utils/job'
-import { checkSegmentExists } from '../../utils/transcode'
+import { logStatus } from '../../utils/status'
 
 const episodeSegmentPending = async (
   input: IJobInput<IEpisodeSegmentPendingMessage>,
@@ -21,28 +22,21 @@ const episodeSegmentPending = async (
       filename: segmentJob.filename,
       startTime: segmentJob.startTime,
     }
-    if (segmentJob.jobId !== undefined) {
-      const segmentComplete = await checkSegmentExists(
-        input.episode,
-        segment.startTime,
-        segment.duration
-      )
-      if (segmentComplete) {
-        readyForTranscription.push(segment)
-      }
-    } else {
+
+    const segmentComplete = await checkSegmentFileExists(segment)
+    if (segmentComplete) {
       readyForTranscription.push(segment)
     }
   }
 
   if (jobsStarted === readyForTranscription.length) {
+    logStatus(`All ${jobsStarted} segment transcode jobs are completed.`)
     next(readyForTranscription)
   } else {
-    retry(
-      `Not all transcode jobs have completed for episode ${input.episode.podcastSlug} ${
-        input.episode.slug
-      }.`
+    logStatus(
+      `${readyForTranscription.length} of ${jobsStarted} segment transcode jobs are completed.`
     )
+    retry(60)
   }
 }
 

@@ -1,4 +1,4 @@
-import { IEpisode, IEpisodeDBRecord } from '../types/models'
+import { IEpisode, IEpisodeDBRecord } from '../types/models/episode'
 import { buildProjectionExpression, dynamo, getItem, putItem } from './dynamo'
 import { getPodcast } from './podcasts'
 
@@ -8,7 +8,6 @@ const EPISODE_PROJECTION = [
   'mp3URL',
   'podcastSlug',
   'publishedAt',
-  'publishTimestamp',
   'slug',
   'speakers',
   'summary',
@@ -32,8 +31,9 @@ function convertToIEpisodeDBRecord(episode: IEpisode): IEpisodeDBRecord {
   return result
 }
 
-export async function getEpisode(podcastSlug: string, publishTimestamp: number): Promise<IEpisode> {
-  const key = { podcastSlug, publishTimestamp }
+export async function getEpisode(podcastSlug: string, publishedAt: Date): Promise<IEpisode> {
+  const publishedAtKey = publishedAt.toISOString()
+  const key = { podcastSlug, publishedAt: publishedAtKey }
   const table = process.env.EPISODES_TABLE as string
   const response = await getItem(key, table, EPISODE_PROJECTION)
   return convertToIEpisode(response.Item as IEpisodeDBRecord)
@@ -41,15 +41,16 @@ export async function getEpisode(podcastSlug: string, publishTimestamp: number):
 
 export async function getEpisodes(
   podcastSlug: string,
-  publishTimestamp: number,
+  publishedAt: Date,
   limit: number
 ): Promise<IEpisode[]> {
+  const publishedAtKey = publishedAt.toISOString()
   const params: AWS.DynamoDB.DocumentClient.QueryInput = {
     ExpressionAttributeValues: {
       ':podcastSlug': podcastSlug,
-      ':start': publishTimestamp,
+      ':start': publishedAtKey,
     },
-    KeyConditionExpression: 'podcastSlug = :podcastSlug and publishTimestamp >= :start',
+    KeyConditionExpression: 'podcastSlug = :podcastSlug and publishedAt >= :start',
     Limit: limit,
     TableName: process.env.EPISODES_TABLE as string,
   }
@@ -76,12 +77,14 @@ export async function getEpisodeForSlugs(
   episodeSlug: string
 ): Promise<IEpisode> {
   const podcast = await getPodcast(podcastSlug)
-  const publishTimestamp = podcast.episodes[episodeSlug]
+  const publishedAt = new Date(podcast.episodes[episodeSlug])
 
-  return await getEpisode(podcastSlug, publishTimestamp)
+  return await getEpisode(podcastSlug, publishedAt)
 }
 
-export async function putEpisode(episode: IEpisode) {
+export async function putEpisode(
+  episode: IEpisode
+): Promise<AWS.DynamoDB.DocumentClient.PutItemOutput> {
   const Item = convertToIEpisodeDBRecord(episode)
-  await putItem(Item, process.env.EPISODES_TABLE as string)
+  return await putItem(Item, process.env.EPISODES_TABLE as string)
 }

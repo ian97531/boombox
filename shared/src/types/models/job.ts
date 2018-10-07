@@ -21,7 +21,7 @@ interface IJobBase {
   startTime: string | Date
   podcastSlug: string
   episodeSlug: string
-  publishTimestamp: number
+  publishedAt: string | Date
   status: JOB_STATUS
   lambdas: {
     [key: string]: IJobStatus
@@ -29,9 +29,11 @@ interface IJobBase {
   info: any
 }
 export interface IJob extends IJobBase {
+  publishedAt: Date
   startTime: Date
 }
 
 export interface IJobDBRecord extends IJobBase {
+  publishedAt: string
   startTime: string
 }

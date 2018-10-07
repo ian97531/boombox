@@ -15,25 +15,21 @@ export interface IEpisodeSegment {
 }
 
 export interface IEpisodeTranscriptionSegment extends IEpisodeSegment {
-  transcript: string
-}
-
-export interface IEpisodeSegmentJob extends IEpisodeSegment {
-  jobId?: string
-  jobArn?: string
+  transcriptionJob: string
+  transcriptionFile: string
 }
 
 export interface IEpisodeTranscription {
   segments: IEpisodeTranscriptionSegment[]
-  transcript: string
+  transcriptionFile: string
 }
 
 export interface IEpisodeTranscriptionRequest {
   segments: IEpisodeSegment[]
-  transcript: string
+  transcriptionFile: string
 }
 
-export type IEpisodeSegmentPendingMessage = IEpisodeSegmentJob[]
+export type IEpisodeSegmentPendingMessage = IEpisodeSegment[]
 
 export type IEpisodeTranscribeStartMessage = IEpisodeSegment[]
 
@@ -50,12 +46,20 @@ export type IWatsonTranscribePendingMessage = IEpisodeTranscription
 export type IWatsonNormalizeMessage = IEpisodeTranscription
 
 export interface IEpisodeTranscribePendingMessage {
-  awsTranscript: string
-  watsonTranscript: string
+  aws: {
+    transcriptionFile: string
+  }
+  watson: {
+    transcriptionFile: string
+  }
+  final: {
+    transcriptionFile: string
+  }
 }
 
 export interface IEpisodeInsertMessage {
-  transcript: string
+  transcriptionFile: string
+  insertQueueFile: string
 }
 
 export interface IJobInput<Input> {

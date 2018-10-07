@@ -1,9 +1,10 @@
 import { IEpisode } from '@boombox/shared/src/types/models/episode'
 import * as AWS from 'aws-sdk'
-import { FILE_DESIGNATIONS, MP3_PRESET } from '../constants'
-import { IEpisodeSegmentJob } from '../types/jobs'
-import { buildFilename } from '../utils/s3'
-import { logError, logStatus } from '../utils/status'
+import { FILE_DESIGNATIONS, MP3_PRESET } from '../../constants'
+import { IEpisodeSegment } from '../../types/jobs'
+import { getBucket } from '../../utils/environment'
+import { logStatus } from '../status'
+import { buildFilename, checkFileExists } from './s3'
 
 const elasticTranscoder = new AWS.ElasticTranscoder()
 
@@ -13,51 +14,43 @@ const getSegmentFilename = (episode: IEpisode, startTime: number, duration: numb
   return buildFilename(episode, designation, { duration, startTime, suffix })
 }
 
+export const checkSegmentFileExists = async (segmentJob: IEpisodeSegment): Promise<boolean> => {
+  const bucket = getBucket()
+  return await checkFileExists(bucket, segmentJob.filename)
+}
+
 export const createSegmentJob = async (
   pipelineId: string,
   inputFilename: string,
   episode: IEpisode,
   startTime: number,
   duration: number
-): Promise<IEpisodeSegmentJob> => {
-  const outputFilename = getSegmentFilename(episode, startTime, duration)
+): Promise<IEpisodeSegment> => {
+  const filename = getSegmentFilename(episode, startTime, duration)
 
-  let jobId
-  let jobArn
-
-  if (!(await checkSegmentExists(episode, startTime, duration))) {
+  if (!(await checkSegmentFileExists({ duration, filename, startTime }))) {
     const Input = {
       Key: inputFilename,
       TimeSpan: { Duration: duration.toString(), StartTime: startTime.toString() },
     }
-    const Output = { Key: outputFilename, PresetId: MP3_PRESET }
+    const Output = { Key: filename, PresetId: MP3_PRESET }
     const params = { Input, Output, PipelineId: pipelineId }
 
     let response
 
     response = await elasticTranscoder.createJob(params).promise()
 
-    if (response && response.Job && response.Job.Id && response.Job.Arn) {
-      jobId = response.Job.Id
-      jobArn = response.Job.Arn
+    if (response.Job && response.Job.Id) {
       logStatus(
         `Started a transcription job to split ${inputFilename} at a start time ` +
           `of ${startTime} seconds for a duration of ${duration} seconds.`
       )
     } else {
-      throw logError('No job created by ElasticTranscoder.createSegmentJob for params', {
-        obj: params,
-      })
+      throw Error(
+        'No job created by ElasticTranscoder.createSegmentJob for params' +
+          JSON.stringify(params, null, 2)
+      )
     }
   }
-
-  return { duration, filename: outputFilename, jobArn, jobId, startTime }
-}
-
-export const checkSegmentExists = async (
-  episode: IEpisode,
-  startTime: number,
-  duration: number
-): Promise<boolean> => {
-  return true
+  return { duration, filename, startTime }
 }

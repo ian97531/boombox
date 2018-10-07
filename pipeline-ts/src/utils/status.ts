@@ -1,14 +1,16 @@
-export const logError = (message: string, options?: { error?: Error; obj?: any }): Error => {
+export const logError = (message: string, options?: { error?: Error; obj?: any }) => {
+  console.error(message)
   let errorString = message
-  if (options && options.obj) {
-    errorString = `${errorString}: ${JSON.stringify(options.obj, null, 2)}`
+  if (options && options.obj !== undefined) {
+    const objString = JSON.stringify(options.obj, null, 2)
+    console.error(objString)
+    errorString = `${errorString}: ${objString}`
   }
-  console.error(errorString)
-
-  return options && options.error ? options.error : Error(errorString)
 }
 
 export const logStatus = (message: string, obj?: any) => {
   console.log(message)
-  console.log(JSON.stringify(obj, null, 2))
+  if (obj !== undefined) {
+    console.log(JSON.stringify(obj, null, 2))
+  }
 }

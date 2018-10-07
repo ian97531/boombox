@@ -1,10 +1,9 @@
 interface IEpisodeBase {
   podcastSlug: string
-  publishTimestamp: number
+  publishedAt: Date | string
   duration: number
   imageURL: string
   mp3URL: string
-  publishedAt: Date | string
   slug: string
   speakers: string[]
   summary: string

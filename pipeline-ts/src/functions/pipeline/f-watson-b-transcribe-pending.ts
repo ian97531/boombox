@@ -1,47 +1,31 @@
-import { IEpisode } from '@boombox/shared/src/types/models/episode'
-import { IJob } from '@boombox/shared/src/types/models/job'
-import * as AWS from 'aws-sdk'
-import { ENV } from '../../../constants'
-import { jobLambda, s3Input } from '../../../utils/lambda'
-import { buildFilename, getFileInfo } from '../../../utils/s3'
+import {
+  IJobInput,
+  IWatsonNormalizeMessage,
+  IWatsonTranscribePendingMessage,
+} from '../../types/jobs'
+import { NextFunction, RetryFunction } from '../../types/lambdas'
+import { jobLambda } from '../../utils/job'
+import { checkTranscriptionJobComplete, saveTranscriptionToS3 } from '../../utils/watson/transcribe'
 
-const s3 = new AWS.S3()
-
-const fetchTranscriptionResult = async (
-  episode: IEpisode,
-  job: IJob,
-  message: any,
-  env: { [id: string]: any }
+const watsonTranscribePending = async (
+  input: IJobInput<IWatsonTranscribePendingMessage>,
+  next: NextFunction<IWatsonNormalizeMessage>,
+  retry: RetryFunction
 ) => {
-  const inputFilename = message.event.s3.object.key
-  const inputBucket = message.event.s3.bucket.name
-  const filenameParts = getFileInfo(inputFilename, { separator: '__' })
-  const outputFilename = buildFilename(episode, job, {
-    startTime: filenameParts.startTime,
-    suffix: 'json',
-  })
-  await s3.copyObject({
-    Bucket: env[ENV.OUTPUT_BUCKET],
-    CopySource: `${inputBucket}/${inputFilename}`,
-    Key: outputFilename,
-  })
-
-  if (inputBucket === env[ENV.OUTPUT_BUCKET]) {
-    await s3.deleteObject({
-      Bucket: inputBucket,
-      Key: inputFilename,
-    })
+  const numTranscriptions = input.message.segments.length
+  let completeTranscriptions = 0
+  for (const segment of input.message.segments) {
+    if (await checkTranscriptionJobComplete(segment)) {
+      await saveTranscriptionToS3(segment)
+      completeTranscriptions += 1
+    }
   }
 
-  if (job.info.transcriptions) {
-    return {
-      transcriptions: [...job.info.transcriptions, outputFilename],
-    }
+  if (completeTranscriptions === numTranscriptions) {
+    next(input.message)
   } else {
-    return { transcriptions: [outputFilename] }
+    retry(60)
   }
 }
 
-export const handler = jobLambda(fetchTranscriptionResult, {
-  input: s3Input({ separator: '__' }),
-})
+export const handler = jobLambda(watsonTranscribePending)

@@ -1,4 +1,4 @@
-import { IPodcast, IPodcastDBRecord } from '../types/models'
+import { IPodcast, IPodcastDBRecord } from '../types/models/podcast'
 import { getItem, putItem } from './dynamo'
 
 function convertToIPodcast(result: IPodcastDBRecord): IPodcast {
@@ -28,7 +28,9 @@ export async function getPodcast(slug: string): Promise<IPodcast> {
   return convertToIPodcast(response.Item as IPodcastDBRecord)
 }
 
-export async function putPodcast(podcast: IPodcast): Promise<void> {
+export async function putPodcast(
+  podcast: IPodcast
+): Promise<AWS.DynamoDB.DocumentClient.PutItemOutput> {
   const Item = convertToIPodcastDBRecord(podcast)
-  await putItem(Item, process.env.PODCASTS_TABLE as string)
+  return await putItem(Item, process.env.PODCASTS_TABLE as string)
 }

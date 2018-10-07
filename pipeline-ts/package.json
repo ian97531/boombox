@@ -34,7 +34,8 @@
     "source-map-support": "^0.5.8",
     "stream": "^0.0.2",
     "undefined": "https://github.com/alabeduarte/feedparser-promised.git",
-    "validator": "^10.6.0"
+    "validator": "^10.6.0",
+    "watson-developer-cloud": "^3.11.1"
   },
   "devDependencies": {
     "lint-staged": "^7.2.2",

@@ -4,6 +4,7 @@ import { getItem, putItem } from './dynamo'
 function convertToIJob(result: IJobDBRecord): IJob {
   const job: IJob = {
     ...result,
+    publishedAt: new Date(result.publishedAt),
     startTime: new Date(result.startTime),
   }
   return job
@@ -12,6 +13,7 @@ function convertToIJob(result: IJobDBRecord): IJob {
 function convertToIJobDBRecord(job: IJob): IJobDBRecord {
   const result: IJobDBRecord = {
     ...job,
+    publishedAt: job.publishedAt.toISOString(),
     startTime: job.startTime.toISOString(),
   }
   return result
@@ -22,7 +24,7 @@ export async function getJob(startTime: string): Promise<IJob> {
   return convertToIJob(response.Item as IJobDBRecord)
 }
 
-export async function putJob(job: IJob): Promise<void> {
+export async function putJob(job: IJob): Promise<AWS.DynamoDB.DocumentClient.PutItemOutput> {
   const Item = convertToIJobDBRecord(job)
-  await putItem(Item, process.env.JOBS_TABLE as string)
+  return await putItem(Item, process.env.JOBS_TABLE as string)
 }

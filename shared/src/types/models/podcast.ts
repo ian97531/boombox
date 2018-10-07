@@ -2,7 +2,7 @@ interface IPodcastBase {
   slug: string
   author: string
   createdAt: Date | string
-  episodes: { [id: string]: number } | string
+  episodes: { [id: string]: string } | string
   feedURL: string
   imageURL: string
   language: string
@@ -16,7 +16,7 @@ interface IPodcastBase {
 
 export interface IPodcast extends IPodcastBase {
   createdAt: Date
-  episodes: { [id: string]: number }
+  episodes: { [id: string]: string }
   lastCheckedAt: Date
   lastPublishedAt: Date
 }

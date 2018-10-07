@@ -44,7 +44,6 @@ function createEpisodeFromFeed(podcastSlug: string, item: any): IEpisode {
     imageURL: item.itunes.image,
     mp3URL: item.enclosure.url,
     podcastSlug,
-    publishTimestamp: publishedAt.getTime(),
     publishedAt,
     slug: slugify(item.title, SLUGIFY_OPTIONS),
     speakers: [],
@@ -82,14 +81,15 @@ const podcastCheckFeed = async (next: NextFunction<IEpisode>): Promise<void> => 
   }
 
   let episodeIndex = 0
-  const insertedEpisodes: IEpisode[] = []
-  while (insertedEpisodes.length < EPISODE_INSERT_LIMIT && episodeIndex < items.length) {
+  let insertedEpisodes = 0
+  while (insertedEpisodes < EPISODE_INSERT_LIMIT && episodeIndex < items.length) {
     const episode: IEpisode = createEpisodeFromFeed(podcastSlug, items[episodeIndex])
     if (!(episode.slug in podcast.episodes)) {
       await putEpisode(episode)
-      podcast.episodes[episode.slug] = episode.publishTimestamp
+      podcast.episodes[episode.slug] = episode.publishedAt.toISOString()
       next(episode)
       logStatus(`Started processing ${episode.podcastSlug} ${episode.slug}.`)
+      insertedEpisodes += 1
     }
     episodeIndex += 1
   }
