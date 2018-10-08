@@ -1,10 +1,11 @@
-export const logError = (message: string, options?: { error?: Error; obj?: any }) => {
+export const logError = (message: string, error?: Error) => {
   console.error(message)
-  let errorString = message
-  if (options && options.obj !== undefined) {
-    const objString = JSON.stringify(options.obj, null, 2)
-    console.error(objString)
-    errorString = `${errorString}: ${objString}`
+  if (error) {
+    console.error(`Error Name: ${error.name}`)
+    console.error(`Error Message: ${error.message}`)
+    if (error.stack) {
+      console.error(`Error Stack: ${error.stack}`)
+    }
   }
 }
 

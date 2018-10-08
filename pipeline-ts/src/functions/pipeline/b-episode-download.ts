@@ -1,14 +1,13 @@
 import { putEpisode } from '@boombox/shared/src/db/episodes'
+import { IJobRequest } from '@boombox/shared/src/types/models/job'
 import * as AWS from 'aws-sdk'
 import Axios from 'axios'
 import * as mp3Duration from 'mp3-duration'
-import { FILE_DESIGNATIONS } from '../../constants'
-import { IEpisodeDownloadMessage, IEpisodeSegmentStartMessage, IJobInput } from '../../types/jobs'
-import { NextFunction } from '../../types/lambdas'
-import { buildFilename } from '../../utils/aws/s3'
+import { IEpisodeDownloadMessage, IEpisodeSegmentStartMessage } from '../../types/jobMessages'
+import { ILambdaRequest } from '../../types/lambda'
+import { buildFilename, FILE_DESIGNATIONS } from '../../utils/aws/s3'
 import { getBucket } from '../../utils/environment'
-import { jobLambda } from '../../utils/job'
-import { logStatus } from '../../utils/status'
+import { jobHandler } from '../../utils/jobHandler'
 
 const axios = Axios.create()
 const s3 = new AWS.S3()
@@ -26,28 +25,28 @@ const findDuration = async (data: Buffer) => {
 }
 
 const episodeDownload = async (
-  input: IJobInput<IEpisodeDownloadMessage>,
-  next: NextFunction<IEpisodeSegmentStartMessage>
+  lambda: ILambdaRequest<IEpisodeDownloadMessage, IEpisodeSegmentStartMessage>,
+  job: IJobRequest
 ) => {
   const bucket = getBucket()
-  const filename = buildFilename(input.episode, FILE_DESIGNATIONS.ORIGINAL_AUDIO, { suffix: 'mp3' })
-  logStatus(`Downloading ${input.episode.mp3URL} to ${bucket}/${filename}.`)
+  const filename = buildFilename(job.episode, FILE_DESIGNATIONS.ORIGINAL_AUDIO, { suffix: 'mp3' })
+  await job.log(`Downloading ${job.episode.mp3URL} to ${bucket}/${filename}.`)
 
   const response = await axios({
     method: 'get',
     responseType: 'arraybuffer',
-    url: input.episode.mp3URL,
+    url: job.episode.mp3URL,
   })
   const params = { Bucket: bucket, Key: filename, Body: response.data }
   await s3.upload(params).promise()
-  logStatus(`Completed downloading ${input.episode.mp3URL} to ${bucket}/${filename}.`)
-  logStatus('Finding episode duration...')
+  await job.log(`Completed downloading ${job.episode.mp3URL} to ${bucket}/${filename}.`)
+  await job.log('Finding episode duration...')
   const duration = await findDuration(response.data)
-  input.episode.duration = duration
-  logStatus(`Episode duration is ${duration} seconds.`)
-  putEpisode(input.episode)
+  job.episode.duration = duration
+  await job.log(`Episode duration is ${duration} seconds.`)
+  putEpisode(job.episode)
 
-  next({ bucket, filename })
+  lambda.nextFunction({ bucket, filename })
 }
 
-export const handler = jobLambda(episodeDownload)
+export const handler = jobHandler(episodeDownload)

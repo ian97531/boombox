@@ -1,8 +1,22 @@
 import { IEpisode } from '@boombox/shared/src/types/models/episode'
 import * as AWS from 'aws-sdk'
-import { DEFAULT_SECONDARY_SEPARATOR, DEFAULT_SEPARATOR, FILE_DESIGNATIONS } from '../../constants'
 
 const s3 = new AWS.S3()
+
+export const DEFAULT_SEPARATOR = '/'
+export const DEFAULT_SECONDARY_SEPARATOR = '_'
+export enum FILE_DESIGNATIONS {
+  ORIGINAL_AUDIO = 'original-audio',
+  AUDIO_SEGMENT = 'audio-segment',
+  AWS_RAW_TRANSCRIPTION_SEGMENT = 'aws-raw-transcription-segment',
+  AWS_NORMALIZED_TRANSCRIPTION_SEGMENT = 'aws-normalized-transcription-segment',
+  AWS_NORMALIZED_TRANSCRIPTION_FULL = 'aws-normalized-transcription-full',
+  WATSON_RAW_TRANSCRIPTION_SEGMENT = 'watson-raw-transcription-segment',
+  WATSON_NORMALIZED_TRANSCRIPTION_SEGMENT = 'watson-normalized-transcription-segment',
+  WATSON_NORMALIZED_TRANSCRIPTION_FULL = 'watson-normalized-transcription-full',
+  COMBINED_TRANSCRIPTION_FULL = 'combined-transcription-full',
+  COMBINED_TRANSCRIPTION_INSERT_QUEUE = 'combined-transcription-insert-queue',
+}
 
 export const buildFilename = (
   episode: IEpisode,

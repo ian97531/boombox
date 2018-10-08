@@ -1,14 +1,16 @@
 import { IEpisode } from '@boombox/shared/src/types/models/episode'
 import * as AWS from 'aws-sdk'
 import Axios from 'axios'
-import { AWS_TRANSCRIBE_SUCCESS_STATUS, FILE_DESIGNATIONS } from '../../constants'
 import { IAWSTranscription, IAWSTranscriptionResult } from '../../types/aws'
-import { IEpisodeSegment, IEpisodeTranscriptionSegment } from '../../types/jobs'
+import { IEpisodeSegment, IEpisodeTranscriptionSegment } from '../../types/jobMessages'
 import { getBucket } from '../../utils/environment'
-import { buildFilename, checkFileExists, getJsonFile, putJsonFile } from './s3'
+import { buildFilename, checkFileExists, FILE_DESIGNATIONS, getJsonFile, putJsonFile } from './s3'
 
 const transcribe = new AWS.TranscribeService()
 const axios = Axios.create()
+
+export const AWS_TRANSCRIBE_SUCCESS_STATUS = 'COMPLETED'
+export const AWS_TRANSCRIBE_ERROR_STATUS = 'FAILED'
 
 export const createTranscriptionJob = async (
   episode: IEpisode,
@@ -28,8 +30,8 @@ export const createTranscriptionJob = async (
 
   const transcriptionSegment: IEpisodeTranscriptionSegment = {
     ...segment,
+    jobName,
     transcriptionFile: filename,
-    transcriptionJob: jobName,
   }
 
   if (checkTranscriptionJobExists(transcriptionSegment)) {
@@ -51,8 +53,8 @@ export const createTranscriptionJob = async (
 
   return {
     ...segment,
+    jobName,
     transcriptionFile: filename,
-    transcriptionJob: jobName,
   }
 }
 
@@ -95,14 +97,14 @@ export const checkTranscriptionJobComplete = async (
     complete = true
   } else {
     const params = {
-      TranscriptionJobName: segment.transcriptionJob,
+      TranscriptionJobName: segment.jobName,
     }
     const response = await transcribe.getTranscriptionJob(params).promise()
     if (response.TranscriptionJob && response.TranscriptionJob.TranscriptionJobStatus) {
       const status = response.TranscriptionJob.TranscriptionJobStatus
       complete = AWS_TRANSCRIBE_SUCCESS_STATUS.indexOf(status) !== -1
     } else {
-      throw Error('No transcription job found called: ' + segment.transcriptionJob)
+      throw Error('No transcription job found called: ' + segment.jobName)
     }
   }
 
@@ -122,7 +124,7 @@ export const getTranscription = async (
     )) as IAWSTranscriptionResult
   } else {
     const params = {
-      TranscriptionJobName: segment.transcriptionJob,
+      TranscriptionJobName: segment.jobName,
     }
     const response = await transcribe.getTranscriptionJob(params).promise()
 
@@ -143,14 +145,10 @@ export const getTranscription = async (
 
           transcription = (transcriptResponse.data as IAWSTranscription).results
         } else {
-          throw Error(
-            `Could not find the transcription for a complete job: ${segment.transcriptionJob}`
-          )
+          throw Error(`Could not find the transcription for a complete job: ${segment.jobName}`)
         }
       } else {
-        throw Error(
-          `Could not get the transcription for an incomplete job: ${segment.transcriptionJob}`
-        )
+        throw Error(`Could not get the transcription for an incomplete job: ${segment.jobName}`)
       }
     } else {
       throw Error('No transcription job returned by getTranscriptionJob.')

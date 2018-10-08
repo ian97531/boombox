@@ -1,16 +1,17 @@
-import { IAWSNormalizeMessage, IAWSTranscribePendingMessage, IJobInput } from '../../types/jobs'
-import { NextFunction, RetryFunction } from '../../types/lambdas'
+import { IJobRequest } from '@boombox/shared/src/types/models/job'
+import { IAWSNormalizeMessage, IAWSTranscribePendingMessage } from '../../types/jobMessages'
+import { ILambdaRequest } from '../../types/lambda'
 import { checkTranscriptionJobComplete, saveTranscriptionToS3 } from '../../utils/aws/transcribe'
-import { jobLambda } from '../../utils/job'
+import { jobHandler } from '../../utils/jobHandler'
 
 const awsTranscribePending = async (
-  input: IJobInput<IAWSTranscribePendingMessage>,
-  next: NextFunction<IAWSNormalizeMessage>,
-  retry: RetryFunction
+  lambda: ILambdaRequest<IAWSTranscribePendingMessage, IAWSNormalizeMessage>,
+  job: IJobRequest
 ) => {
-  const numTranscriptions = input.message.segments.length
+  const transcriptionJob = lambda.input
+  const numTranscriptions = transcriptionJob.segments.length
   let completeTranscriptions = 0
-  for (const segment of input.message.segments) {
+  for (const segment of transcriptionJob.segments) {
     if (await checkTranscriptionJobComplete(segment)) {
       await saveTranscriptionToS3(segment)
       completeTranscriptions += 1
@@ -18,10 +19,10 @@ const awsTranscribePending = async (
   }
 
   if (completeTranscriptions === numTranscriptions) {
-    next(input.message)
+    lambda.nextFunction(transcriptionJob)
   } else {
-    retry(60)
+    lambda.retryFunction(60)
   }
 }
 
-export const handler = jobLambda(awsTranscribePending)
+export const handler = jobHandler(awsTranscribePending)

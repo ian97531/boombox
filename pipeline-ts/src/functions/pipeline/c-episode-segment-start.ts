@@ -1,26 +1,22 @@
+import { IJobRequest } from '@boombox/shared/src/types/models/job'
 import { MAX_SEGMENT_LENGTH, SEGMENT_OVERLAP_LENGTH } from '../../constants'
-import {
-  IEpisodeSegmentPendingMessage,
-  IEpisodeSegmentStartMessage,
-  IJobInput,
-} from '../../types/jobs'
-import { NextFunction } from '../../types/lambdas'
+import { IEpisodeSegmentPendingMessage, IEpisodeSegmentStartMessage } from '../../types/jobMessages'
+import { ENV, ILambdaRequest } from '../../types/lambda'
 import { createSegmentJob } from '../../utils/aws/transcode'
-import { getTranscodePipeline } from '../../utils/environment'
-import { jobLambda } from '../../utils/job'
+import { jobHandler } from '../../utils/jobHandler'
 
 const round = (num: number, places: number = 0): number => {
   return Number(num.toFixed(places))
 }
 
 const splitEpisodeAudioIntoSegments = async (
-  input: IJobInput<IEpisodeSegmentStartMessage>,
-  next: NextFunction<IEpisodeSegmentPendingMessage>
+  lambda: ILambdaRequest<IEpisodeSegmentStartMessage, IEpisodeSegmentPendingMessage>,
+  job: IJobRequest
 ) => {
-  const pipelineId = getTranscodePipeline()
-  const numSegments = Math.ceil(input.episode.duration / MAX_SEGMENT_LENGTH)
-  const segmentDuration = round(Math.ceil(input.episode.duration / numSegments), 3)
-  const inputFilename = input.message.filename
+  const pipelineId = lambda.getEnvVariable(ENV.TRANSCODE_PIPELINE_ID) as string
+  const numSegments = Math.ceil(job.episode.duration / MAX_SEGMENT_LENGTH)
+  const segmentDuration = round(Math.ceil(job.episode.duration / numSegments), 3)
+  const inputFilename = lambda.input.filename
   const segmentJobs: IEpisodeSegmentPendingMessage = []
 
   let startTime = 0
@@ -31,7 +27,7 @@ const splitEpisodeAudioIntoSegments = async (
     const transcodeJob = await createSegmentJob(
       pipelineId,
       inputFilename,
-      input.episode,
+      job.episode,
       startTime,
       segmentDuration
     )
@@ -42,7 +38,7 @@ const splitEpisodeAudioIntoSegments = async (
     const overlapJob = await createSegmentJob(
       pipelineId,
       inputFilename,
-      input.episode,
+      job.episode,
       overlapStartTime,
       SEGMENT_OVERLAP_LENGTH
     )
@@ -53,17 +49,17 @@ const splitEpisodeAudioIntoSegments = async (
   }
 
   // Create the last segment to the end of the episode.
-  const finalDuration = round(input.episode.duration - startTime, 3)
+  const finalDuration = round(job.episode.duration - startTime, 3)
   const finalJob = await createSegmentJob(
     pipelineId,
     inputFilename,
-    input.episode,
+    job.episode,
     startTime,
     finalDuration
   )
   segmentJobs.push(finalJob)
 
-  next(segmentJobs, 60)
+  lambda.nextFunction(segmentJobs, 60)
 }
 
-export const handler = jobLambda(splitEpisodeAudioIntoSegments)
+export const handler = jobHandler(splitEpisodeAudioIntoSegments)

@@ -1,3 +1,5 @@
+import { IEpisode } from './episode'
+
 export enum JOB_STATUS {
   UNSTARTED = 'UNSTARTED',
   PROCESSING = 'PROCESSING',
@@ -23,6 +25,9 @@ interface IJobBase {
   episodeSlug: string
   publishedAt: string | Date
   status: JOB_STATUS
+  logGroupName: string
+  logStreamName: string
+  sequenceToken?: string
   lambdas: {
     [key: string]: IJobStatus
   }
@@ -36,4 +41,15 @@ export interface IJob extends IJobBase {
 export interface IJobDBRecord extends IJobBase {
   publishedAt: string
   startTime: string
+}
+
+export interface IJobMessage<T> {
+  job: string
+  message: T
+}
+
+export interface IJobRequest {
+  episode: IEpisode
+  log: (message: string, obj?: any) => Promise<void>
+  createSubJob: <T>(queue: string, message: T) => Promise<void>
 }

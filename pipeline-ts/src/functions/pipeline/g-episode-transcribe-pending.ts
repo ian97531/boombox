@@ -1,24 +1,25 @@
+import { IJobRequest } from '@boombox/shared/src/types/models/job'
 import { ITranscript } from '@boombox/shared/src/types/models/transcript'
-import { FILE_DESIGNATIONS } from '../../constants'
+import { IEpisodeInsertMessage, IEpisodeTranscribePendingMessage } from '../../types/jobMessages'
+import { ENV, ILambdaRequest } from '../../types/lambda'
 import {
-  IEpisodeInsertMessage,
-  IEpisodeTranscribePendingMessage,
-  IJobInput,
-} from '../../types/jobs'
-import { NextFunction, RetryFunction } from '../../types/lambdas'
-import { buildFilename, checkFileExists, getJsonFile, putJsonFile } from '../../utils/aws/s3'
-import { getBucket } from '../../utils/environment'
-import { jobLambda } from '../../utils/job'
+  buildFilename,
+  checkFileExists,
+  FILE_DESIGNATIONS,
+  getJsonFile,
+  putJsonFile,
+} from '../../utils/aws/s3'
+import { jobHandler } from '../../utils/jobHandler'
 import { replaceSpeakers } from '../../utils/normalized/replaceSpeakers'
 
 const episodeTranscribePending = async (
-  input: IJobInput<IEpisodeTranscribePendingMessage>,
-  next: NextFunction<IEpisodeInsertMessage>,
-  retry: RetryFunction
+  lambda: ILambdaRequest<IEpisodeTranscribePendingMessage, IEpisodeInsertMessage>,
+  job: IJobRequest
 ) => {
-  const bucket = getBucket()
-  const awsFile = input.message.aws.transcriptionFile
-  const watsonFile = input.message.watson.transcriptionFile
+  const completeTranscriptions = lambda.input
+  const bucket = lambda.getEnvVariable(ENV.BUCKET) as string
+  const awsFile = completeTranscriptions.aws.transcriptionFile
+  const watsonFile = completeTranscriptions.watson.transcriptionFile
   const awsComplete = await checkFileExists(bucket, awsFile)
   const watsonComplete = await checkFileExists(bucket, watsonFile)
 
@@ -27,19 +28,19 @@ const episodeTranscribePending = async (
     const watsonTranscription = (await getJsonFile(bucket, watsonFile)) as ITranscript
     const finalTranscription = replaceSpeakers(awsTranscription, watsonTranscription)
     const insertQueueFile = buildFilename(
-      input.episode,
+      job.episode,
       FILE_DESIGNATIONS.COMBINED_TRANSCRIPTION_INSERT_QUEUE,
       { suffix: 'json' }
     )
-    await putJsonFile(bucket, input.message.final.transcriptionFile, finalTranscription)
+    await putJsonFile(bucket, completeTranscriptions.final.transcriptionFile, finalTranscription)
     await putJsonFile(bucket, insertQueueFile, finalTranscription)
-    next({
+    lambda.nextFunction({
       insertQueueFile,
-      transcriptionFile: input.message.final.transcriptionFile,
+      transcriptionFile: completeTranscriptions.final.transcriptionFile,
     })
   } else {
-    retry(60)
+    lambda.retryFunction(60)
   }
 }
 
-export const handler = jobLambda(episodeTranscribePending)
+export const handler = jobHandler(episodeTranscribePending)

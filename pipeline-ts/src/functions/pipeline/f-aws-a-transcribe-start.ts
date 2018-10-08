@@ -1,31 +1,31 @@
+import { IJobRequest } from '@boombox/shared/src/types/models/job'
 import {
   IAWSTranscribePendingMessage,
   IAWSTranscribeStartMessage,
   IEpisodeTranscription,
-  IJobInput,
-} from '../../types/jobs'
-import { NextFunction } from '../../types/lambdas'
+} from '../../types/jobMessages'
+import { ILambdaRequest } from '../../types/lambda'
 import { createTranscriptionJob } from '../../utils/aws/transcribe'
-import { jobLambda } from '../../utils/job'
-import { logStatus } from '../../utils/status'
+import { jobHandler } from '../../utils/jobHandler'
 
 const awsTranscribeStart = async (
-  input: IJobInput<IAWSTranscribeStartMessage>,
-  next: NextFunction<IAWSTranscribePendingMessage>
+  lambda: ILambdaRequest<IAWSTranscribeStartMessage, IAWSTranscribePendingMessage>,
+  job: IJobRequest
 ) => {
-  const transcriptions: IEpisodeTranscription = {
+  const transcriptionRequest = lambda.input
+  const transcriptionJob: IEpisodeTranscription = {
     segments: [],
-    transcriptionFile: input.message.transcriptionFile,
+    transcriptionFile: transcriptionRequest.transcriptionFile,
   }
 
-  for (const segment of input.message.segments) {
-    const job = await createTranscriptionJob(input.episode, segment)
-    transcriptions.segments.push(job)
+  for (const segment of transcriptionRequest.segments) {
+    const segmentTranscriptionJob = await createTranscriptionJob(job.episode, segment)
+    transcriptionJob.segments.push(segmentTranscriptionJob)
 
-    logStatus(`Transcription job started for ${job.transcriptionJob}.`)
+    await job.log(`Transcription job started for ${segmentTranscriptionJob.jobName}.`)
   }
 
-  next(transcriptions, 60)
+  lambda.nextFunction(transcriptionJob, 60)
 }
 
-export const handler = jobLambda(awsTranscribeStart)
+export const handler = jobHandler(awsTranscribeStart)

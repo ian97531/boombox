@@ -1,43 +1,38 @@
-import { FILE_DESIGNATIONS } from '../../constants'
+import { IJobRequest } from '@boombox/shared/src/types/models/job'
 import {
   IAWSTranscribeStartMessage,
   IEpisodeTranscribePendingMessage,
   IEpisodeTranscribeStartMessage,
-  IJobInput,
-  IJobMessage,
   IWatsonTranscribeStartMessage,
-} from '../../types/jobs'
-import { NextFunction } from '../../types/lambdas'
-import { sendSQSMessage } from '../../utils/aws/lambda'
-import { buildFilename, checkFileExists } from '../../utils/aws/s3'
-import { getAwsTranscribeQueue, getBucket, getWatsonTranscribeQueue } from '../../utils/environment'
-import { createJobMessage, jobLambda } from '../../utils/job'
+} from '../../types/jobMessages'
+import { ENV, ILambdaRequest } from '../../types/lambda'
+import { buildFilename, checkFileExists, FILE_DESIGNATIONS } from '../../utils/aws/s3'
+import { jobHandler } from '../../utils/jobHandler'
 
 const episodeTranscribeStart = async (
-  input: IJobInput<IEpisodeTranscribeStartMessage>,
-  next: NextFunction<IEpisodeTranscribePendingMessage>
+  lambda: ILambdaRequest<IEpisodeTranscribeStartMessage, IEpisodeTranscribePendingMessage>,
+  job: IJobRequest
 ) => {
-  const awsQueue = getAwsTranscribeQueue()
-  const watsonQueue = getWatsonTranscribeQueue()
-  const bucket = getBucket()
+  const awsQueue = lambda.getEnvVariable(ENV.AWS_TRANSCRIBE_QUEUE) as string
+  const watsonQueue = lambda.getEnvVariable(ENV.WATSON_TRANSCRIBE_QUEUE) as string
+  const bucket = lambda.getEnvVariable(ENV.BUCKET) as string
+  const segments = lambda.input
   const output = {
     aws: {
       transcriptionFile: buildFilename(
-        input.episode,
+        job.episode,
         FILE_DESIGNATIONS.AWS_NORMALIZED_TRANSCRIPTION_FULL,
         { suffix: 'json' }
       ),
     },
     final: {
-      transcriptionFile: buildFilename(
-        input.episode,
-        FILE_DESIGNATIONS.COMBINED_TRANSCRIPTION_FULL,
-        { suffix: 'json' }
-      ),
+      transcriptionFile: buildFilename(job.episode, FILE_DESIGNATIONS.COMBINED_TRANSCRIPTION_FULL, {
+        suffix: 'json',
+      }),
     },
     watson: {
       transcriptionFile: buildFilename(
-        input.episode,
+        job.episode,
         FILE_DESIGNATIONS.WATSON_NORMALIZED_TRANSCRIPTION_FULL,
         { suffix: 'json' }
       ),
@@ -45,24 +40,20 @@ const episodeTranscribeStart = async (
   }
 
   if (!(await checkFileExists(bucket, output.aws.transcriptionFile))) {
-    const awsMessage: IJobMessage<IAWSTranscribeStartMessage> = createJobMessage(input.job, {
-      segments: input.message,
+    await job.createSubJob<IAWSTranscribeStartMessage>(awsQueue, {
+      segments,
       transcriptionFile: output.aws.transcriptionFile,
     })
-
-    await sendSQSMessage(awsMessage, awsQueue)
   }
 
   if (!(await checkFileExists(bucket, output.watson.transcriptionFile))) {
-    const watsonMessage: IJobMessage<IWatsonTranscribeStartMessage> = createJobMessage(input.job, {
-      segments: input.message,
+    await job.createSubJob<IWatsonTranscribeStartMessage>(watsonQueue, {
+      segments,
       transcriptionFile: output.watson.transcriptionFile,
     })
-
-    await sendSQSMessage(watsonMessage, watsonQueue)
   }
 
-  next(output, 120)
+  lambda.nextFunction(output, 120)
 }
 
-export const handler = jobLambda(episodeTranscribeStart)
+export const handler = jobHandler(episodeTranscribeStart)

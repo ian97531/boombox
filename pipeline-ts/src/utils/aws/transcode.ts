@@ -1,12 +1,15 @@
 import { IEpisode } from '@boombox/shared/src/types/models/episode'
 import * as AWS from 'aws-sdk'
-import { FILE_DESIGNATIONS, MP3_PRESET } from '../../constants'
-import { IEpisodeSegment } from '../../types/jobs'
+import { IEpisodeSegment } from '../../types/jobMessages'
 import { getBucket } from '../../utils/environment'
 import { logStatus } from '../status'
-import { buildFilename, checkFileExists } from './s3'
+import { buildFilename, checkFileExists, FILE_DESIGNATIONS } from './s3'
 
 const elasticTranscoder = new AWS.ElasticTranscoder()
+
+export const M4A_PRESET = '1351620000001-100120' // M4A AAC 160 44k
+export const MP3_PRESET = '1351620000001-300030' // MP3 160 44k
+export const OGG_PRESET = '1531717800275-2wz911' // OGG Vorbis 160 44k
 
 const getSegmentFilename = (episode: IEpisode, startTime: number, duration: number) => {
   const designation = FILE_DESIGNATIONS.AUDIO_SEGMENT

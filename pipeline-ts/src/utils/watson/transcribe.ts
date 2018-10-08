@@ -7,14 +7,17 @@ import {
   RecognitionJob,
   SpeechRecognitionResults,
 } from 'watson-developer-cloud/speech-to-text/v1-generated'
-import {
-  FILE_DESIGNATIONS,
-  WATSON_TRANSCRIBE_ERROR_STATUS,
-  WATSON_TRANSCRIBE_SUCCESS_STATUS,
-} from '../../constants'
-import { IEpisodeSegment, IEpisodeTranscriptionSegment } from '../../types/jobs'
+import { WATSON_TRANSCRIBE_ERROR_STATUS, WATSON_TRANSCRIBE_SUCCESS_STATUS } from '../../constants'
+import { IEpisodeSegment, IEpisodeTranscriptionSegment } from '../../types/jobMessages'
 import { IWatsonCredentials } from '../../types/watson'
-import { buildFilename, checkFileExists, getFileStream, getJsonFile, putJsonFile } from '../aws/s3'
+import {
+  buildFilename,
+  checkFileExists,
+  FILE_DESIGNATIONS,
+  getFileStream,
+  getJsonFile,
+  putJsonFile,
+} from '../aws/s3'
 import { getBucket, getWatsonCredentialsKey } from '../environment'
 
 const secretManager = new AWS.SecretsManager()
@@ -87,8 +90,8 @@ export const createTranscriptionJob = async (
 
   return {
     ...segment,
+    jobName: response.id,
     transcriptionFile: filename,
-    transcriptionJob: response.id,
   }
 }
 
@@ -104,7 +107,7 @@ export const checkTranscriptionJobExists = async (
     try {
       const credentials = await getWatsonCredentials()
       const params: CheckJobParams = {
-        id: segment.transcriptionJob,
+        id: segment.jobName,
       }
       await checkJobAsync(params, credentials)
       exists = true
@@ -128,12 +131,12 @@ export const checkTranscriptionJobComplete = async (
     try {
       const credentials = await getWatsonCredentials()
       const params: CheckJobParams = {
-        id: segment.transcriptionJob,
+        id: segment.jobName,
       }
       const response = await checkJobAsync(params, credentials)
       complete = response.status === WATSON_TRANSCRIBE_SUCCESS_STATUS
     } catch (error) {
-      throw Error('Unable to find Watson transcription job: ' + segment.transcriptionJob)
+      throw Error('Unable to find Watson transcription job: ' + segment.jobName)
     }
   }
 
@@ -152,7 +155,7 @@ export const getTranscription = async (
     try {
       const credentials = await getWatsonCredentials()
       const params: CheckJobParams = {
-        id: segment.transcriptionJob,
+        id: segment.jobName,
       }
       const response = await checkJobAsync(params, credentials)
       if (response.status === WATSON_TRANSCRIBE_SUCCESS_STATUS && response.results) {
@@ -163,7 +166,7 @@ export const getTranscription = async (
         throw Error('The requested transcription job is still processing.')
       }
     } catch (error) {
-      throw Error('Unable to find Watson transcription job: ' + segment.transcriptionJob)
+      throw Error('Unable to find Watson transcription job: ' + segment.jobName)
     }
   }
 

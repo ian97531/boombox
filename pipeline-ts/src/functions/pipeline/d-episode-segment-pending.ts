@@ -1,43 +1,35 @@
+import { IJobRequest } from '@boombox/shared/src/types/models/job'
 import {
   IEpisodeSegmentPendingMessage,
   IEpisodeTranscribeStartMessage,
-  IJobInput,
-} from '../../types/jobs'
-import { NextFunction, RetryFunction } from '../../types/lambdas'
+} from '../../types/jobMessages'
+import { ILambdaRequest } from '../../types/lambda'
 import { checkSegmentFileExists } from '../../utils/aws/transcode'
-import { jobLambda } from '../../utils/job'
-import { logStatus } from '../../utils/status'
+import { jobHandler } from '../../utils/jobHandler'
 
 const episodeSegmentPending = async (
-  input: IJobInput<IEpisodeSegmentPendingMessage>,
-  next: NextFunction<IEpisodeTranscribeStartMessage>,
-  retry: RetryFunction
+  lambda: ILambdaRequest<IEpisodeSegmentPendingMessage, IEpisodeTranscribeStartMessage>,
+  job: IJobRequest
 ) => {
-  const jobsStarted = input.message.length
-  const readyForTranscription: IEpisodeTranscribeStartMessage = []
+  const segments = lambda.input
+  const completeSegments: IEpisodeTranscribeStartMessage = []
 
-  for (const segmentJob of input.message) {
-    const segment = {
-      duration: segmentJob.duration,
-      filename: segmentJob.filename,
-      startTime: segmentJob.startTime,
-    }
-
+  for (const segment of segments) {
     const segmentComplete = await checkSegmentFileExists(segment)
     if (segmentComplete) {
-      readyForTranscription.push(segment)
+      completeSegments.push(segment)
     }
   }
 
-  if (jobsStarted === readyForTranscription.length) {
-    logStatus(`All ${jobsStarted} segment transcode jobs are completed.`)
-    next(readyForTranscription)
+  if (segments.length === completeSegments.length) {
+    await job.log(`All ${segments.length} segments are ready to be transcribed.`)
+    lambda.nextFunction(completeSegments)
   } else {
-    logStatus(
-      `${readyForTranscription.length} of ${jobsStarted} segment transcode jobs are completed.`
+    await job.log(
+      `${completeSegments.length} of ${segments.length} segments are ready to be transcribed.`
     )
-    retry(60)
+    lambda.retryFunction(60)
   }
 }
 
-export const handler = jobLambda(episodeSegmentPending)
+export const handler = jobHandler(episodeSegmentPending)

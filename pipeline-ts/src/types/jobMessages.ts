@@ -1,6 +1,3 @@
-import { IEpisode } from '@boombox/shared/src/types/models/episode'
-import { IJob } from '@boombox/shared/src/types/models/job'
-
 export type IEpisodeDownloadMessage = undefined
 
 export interface IEpisodeSegmentStartMessage {
@@ -15,7 +12,7 @@ export interface IEpisodeSegment {
 }
 
 export interface IEpisodeTranscriptionSegment extends IEpisodeSegment {
-  transcriptionJob: string
+  jobName: string
   transcriptionFile: string
 }
 
@@ -60,15 +57,4 @@ export interface IEpisodeTranscribePendingMessage {
 export interface IEpisodeInsertMessage {
   transcriptionFile: string
   insertQueueFile: string
-}
-
-export interface IJobInput<Input> {
-  episode: IEpisode
-  job: IJob
-  message: Input
-}
-
-export interface IJobMessage<T> {
-  job: string
-  message: T
 }

@@ -1,13 +1,14 @@
 import { putEpisode } from '@boombox/shared/src/db/episodes'
 import { getPodcast, putPodcast } from '@boombox/shared/src/db/podcasts'
 import { IEpisode } from '@boombox/shared/src/types/models/episode'
+import { IJobMessage } from '@boombox/shared/src/types/models/job'
 import { IPodcast } from '@boombox/shared/src/types/models/podcast'
 import * as Parser from 'rss-parser'
 import slugify from 'slugify'
 import { EPISODE_INSERT_LIMIT, FEED_URL, SLUGIFY_OPTIONS } from '../../constants'
-import { NextFunction } from '../../types/lambdas'
-import { startJobLambda } from '../../utils/job'
-import { logStatus } from '../../utils/status'
+import { ILambdaRequest } from '../../types/lambda'
+import { lambdaHandler } from '../../utils/aws/lambdaHandler'
+import { createJobControllerForEpisode } from '../../utils/JobController'
 
 function createPodcastFromFeed(podcastSlug: string, feed: any): IPodcast {
   const currentTime = new Date()
@@ -52,7 +53,9 @@ function createEpisodeFromFeed(podcastSlug: string, item: any): IEpisode {
   }
 }
 
-const podcastCheckFeed = async (next: NextFunction<IEpisode>): Promise<void> => {
+const podcastCheckFeed = async (
+  lambda: ILambdaRequest<any, IJobMessage<undefined>>
+): Promise<void> => {
   // Retrieve the podcast feed.
   const parser = new Parser()
   const feed = await parser.parseURL(FEED_URL)
@@ -70,7 +73,7 @@ const podcastCheckFeed = async (next: NextFunction<IEpisode>): Promise<void> => 
 
   // Get or create the podcast record in dynamodb.
   const podcastSlug = slugify(feed.title, SLUGIFY_OPTIONS)
-  logStatus(`Found ${items.length} episodes for podcast ${feed.title}`)
+  lambda.log(`Found ${items.length} episodes for podcast ${feed.title}`)
 
   let podcast: IPodcast
   try {
@@ -87,12 +90,15 @@ const podcastCheckFeed = async (next: NextFunction<IEpisode>): Promise<void> => 
     if (!(episode.slug in podcast.episodes)) {
       await putEpisode(episode)
       podcast.episodes[episode.slug] = episode.publishedAt.toISOString()
-      next(episode)
-      logStatus(`Started processing ${episode.podcastSlug} ${episode.slug}.`)
+      await putPodcast(podcast)
+      const jobController = await createJobControllerForEpisode(episode, lambda)
+      const message = jobController.createJobMessage(undefined)
+      lambda.nextFunction(message)
+      await jobController.log('Started processing job.')
       insertedEpisodes += 1
     }
     episodeIndex += 1
   }
 }
 
-export const handler = startJobLambda(podcastCheckFeed)
+export const handler = lambdaHandler(podcastCheckFeed)
