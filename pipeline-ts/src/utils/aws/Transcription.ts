@@ -1,10 +1,16 @@
 import { ITranscript } from '@boombox/shared/src/types/models/transcript'
-import { AWS_TRANSCRIPTION } from '../../constants'
 import {
   IAWSTranscriptionItem,
   IAWSTranscriptionResult,
   IAWSTranscriptionSpeakerLabelSegment,
 } from '../../types/aws'
+
+enum AWS_TRANSCRIPTION {
+  PRONUNCIATION = 'pronunciation',
+  PUNCTUATION = 'punctuation',
+  SPEAKER_0 = 'spk_0',
+  SPEAKER_1 = 'spk_1',
+}
 
 export class AWSTranscription {
   private speakers: IAWSTranscriptionSpeakerLabelSegment[]

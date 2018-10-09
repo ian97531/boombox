@@ -15,7 +15,7 @@ export const getLogger = (
   const logger: ILogger = {
     sequenceToken,
     async sendLog(message: string): Promise<void> {
-      const logEventsParams = {
+      const logEventsParams: AWS.CloudWatchLogs.PutLogEventsRequest = {
         logEvents: [
           {
             message,
@@ -24,10 +24,11 @@ export const getLogger = (
         ],
         logGroupName,
         logStreamName,
-        sequenceToken: this.sequenceToken,
+      }
+      if (this.sequenceToken) {
+        logEventsParams.sequenceToken = this.sequenceToken
       }
       const response = await cloudwatch.putLogEvents(logEventsParams).promise()
-
       if (response.nextSequenceToken) {
         this.sequenceToken = response.nextSequenceToken
       }

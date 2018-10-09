@@ -1,14 +1,15 @@
-import { putEpisode } from '@boombox/shared/src/db/episodes'
 import { getPodcast, putPodcast } from '@boombox/shared/src/db/podcasts'
-import { IEpisode } from '@boombox/shared/src/types/models/episode'
-import { IJobMessage } from '@boombox/shared/src/types/models/job'
 import { IPodcast } from '@boombox/shared/src/types/models/podcast'
 import * as Parser from 'rss-parser'
 import slugify from 'slugify'
-import { EPISODE_INSERT_LIMIT, FEED_URL, SLUGIFY_OPTIONS } from '../../constants'
-import { ILambdaRequest } from '../../types/lambda'
-import { lambdaHandler } from '../../utils/aws/lambdaHandler'
-import { createJobControllerForEpisode } from '../../utils/JobController'
+import { SLUGIFY_OPTIONS } from '../../constants'
+import { ENV, EpisodeJob } from '../../utils/episode'
+import { Job } from '../../utils/job'
+import { Lambda, lambdaCaller, lambdaHandler } from '../../utils/lambda'
+import { episodeDownload } from './b-episode-download'
+
+const FEED_URL = 'https://www.hellointernet.fm/podcast?format=rss'
+const EPISODE_JOB_LIMIT = 1
 
 function createPodcastFromFeed(podcastSlug: string, feed: any): IPodcast {
   const currentTime = new Date()
@@ -31,34 +32,11 @@ function createPodcastFromFeed(podcastSlug: string, feed: any): IPodcast {
   }
 }
 
-function createEpisodeFromFeed(podcastSlug: string, item: any): IEpisode {
-  const timeParts = item.itunes.duration.split(':')
-  const hours = parseInt(timeParts[0], 10)
-  const minutes = parseInt(timeParts[1], 10)
-  const seconds = parseInt(timeParts[2], 10)
-
-  const publishedAt = new Date()
-  publishedAt.setTime(Date.parse(item.pubDate))
-
-  return {
-    duration: hours * 3600 + minutes * 60 + seconds,
-    imageURL: item.itunes.image,
-    mp3URL: item.enclosure.url,
-    podcastSlug,
-    publishedAt,
-    slug: slugify(item.title, SLUGIFY_OPTIONS),
-    speakers: [],
-    summary: item.content,
-    title: item.title,
-  }
-}
-
-const podcastCheckFeed = async (
-  lambda: ILambdaRequest<any, IJobMessage<undefined>>
-): Promise<void> => {
+const podcastCheckFeedHandler = async (lambda: Lambda): Promise<void> => {
   // Retrieve the podcast feed.
   const parser = new Parser()
   const feed = await parser.parseURL(FEED_URL)
+  const bucket = Lambda.getEnvVariable(ENV.BUCKET) as string
 
   // Get all pages of the podcast's episodes
   let items = feed.items
@@ -84,21 +62,20 @@ const podcastCheckFeed = async (
   }
 
   let episodeIndex = 0
-  let insertedEpisodes = 0
-  while (insertedEpisodes < EPISODE_INSERT_LIMIT && episodeIndex < items.length) {
-    const episode: IEpisode = createEpisodeFromFeed(podcastSlug, items[episodeIndex])
+  let episodeJobs = 0
+  while (episodeJobs < EPISODE_JOB_LIMIT && episodeIndex < items.length) {
+    const episode = EpisodeJob.createFromFeed(bucket, podcastSlug, items[episodeIndex])
     if (!(episode.slug in podcast.episodes)) {
-      await putEpisode(episode)
       podcast.episodes[episode.slug] = episode.publishedAt.toISOString()
       await putPodcast(podcast)
-      const jobController = await createJobControllerForEpisode(episode, lambda)
-      const message = jobController.createJobMessage(undefined)
-      lambda.nextFunction(message)
-      await jobController.log('Started processing job.')
-      insertedEpisodes += 1
+      const logName = `${episode.podcastSlug} ${episode.slug}`
+      const job = await Job.create(lambda, logName)
+      episodeDownload(lambda, job, episode)
+      episodeJobs += 1
     }
     episodeIndex += 1
   }
 }
 
-export const handler = lambdaHandler(podcastCheckFeed)
+export const podcastCheckFeed = lambdaCaller(ENV.PODCAST_CHECK_FEED_QUEUE)
+export const handler = lambdaHandler(podcastCheckFeedHandler)

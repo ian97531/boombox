@@ -25,84 +25,38 @@ custom:
       sqs:
         arn: arn:aws:sqs:${self:provider.region}:${self:custom.global.awsAccountId}:${self:custom.steps.podcastCheckFeed.stageName}
         url: https://sqs.${self:provider.region}.amazonaws.com/${self:custom.global.awsAccountId}/${self:custom.steps.podcastCheckFeed.stageName}
-      next: episodeDownload
     episodeDownload:
       name: b-episode-download
       stageName: ${self:service}-${self:custom.stage}-${self:custom.steps.episodeDownload.name}
       sqs:
         arn: arn:aws:sqs:${self:provider.region}:${self:custom.global.awsAccountId}:${self:custom.steps.episodeDownload.stageName}
         url: https://sqs.${self:provider.region}.amazonaws.com/${self:custom.global.awsAccountId}/${self:custom.steps.episodeDownload.stageName}
-      next: episodeSegmentStart
     episodeSegmentStart:
       name: c-episode-segment-start
       stageName: ${self:service}-${self:custom.stage}-${self:custom.steps.episodeSegmentStart.name}
       sqs:
         arn: arn:aws:sqs:${self:provider.region}:${self:custom.global.awsAccountId}:${self:custom.steps.episodeSegmentStart.stageName}
         url: https://sqs.${self:provider.region}.amazonaws.com/${self:custom.global.awsAccountId}/${self:custom.steps.episodeSegmentStart.stageName}
-      next: episodeSegmentPending
-    episodeSegmentPending:
-      name: d-episode-segment-pending
-      stageName: ${self:service}-${self:custom.stage}-${self:custom.steps.episodeSegmentPending.name}
+    episodeSegmentComplete:
+      name: d-episode-segment-complete
+      stageName: ${self:service}-${self:custom.stage}-${self:custom.steps.episodeSegmentComplete.name}
       sqs:
-        arn: arn:aws:sqs:${self:provider.region}:${self:custom.global.awsAccountId}:${self:custom.steps.episodeSegmentPending.stageName}
-        url: https://sqs.${self:provider.region}.amazonaws.com/${self:custom.global.awsAccountId}/${self:custom.steps.episodeSegmentPending.stageName}
-      next: episodeTranscribeStart
+        arn: arn:aws:sqs:${self:provider.region}:${self:custom.global.awsAccountId}:${self:custom.steps.episodeSegmentComplete.stageName}
+        url: https://sqs.${self:provider.region}.amazonaws.com/${self:custom.global.awsAccountId}/${self:custom.steps.episodeSegmentComplete.stageName}
     episodeTranscribeStart:
       name: e-episode-transcribe-start
       stageName: ${self:service}-${self:custom.stage}-${self:custom.steps.episodeTranscribeStart.name}
       sqs:
         arn: arn:aws:sqs:${self:provider.region}:${self:custom.global.awsAccountId}:${self:custom.steps.episodeTranscribeStart.stageName}
         url: https://sqs.${self:provider.region}.amazonaws.com/${self:custom.global.awsAccountId}/${self:custom.steps.episodeTranscribeStart.stageName}
-      next: episodeTranscribePending
-    awsTranscribeStart:
-      name: f-aws-a-transcribe-start
-      stageName: ${self:service}-${self:custom.stage}-${self:custom.steps.awsTranscribeStart.name}
+    episodeTranscribeComplete:
+      name: f-episode-transcribe-complete
+      stageName: ${self:service}-${self:custom.stage}-${self:custom.steps.episodeTranscribeComplete.name}
       sqs:
-        arn: arn:aws:sqs:${self:provider.region}:${self:custom.global.awsAccountId}:${self:custom.steps.awsTranscribeStart.stageName}
-        url: https://sqs.${self:provider.region}.amazonaws.com/${self:custom.global.awsAccountId}/${self:custom.steps.awsTranscribeStart.stageName}
-      next: awsTranscribePending
-    awsTranscribePending:
-      name: f-aws-b-transcribe-pending
-      stageName: ${self:service}-${self:custom.stage}-${self:custom.steps.awsTranscribePending.name}
-      sqs:
-        arn: arn:aws:sqs:${self:provider.region}:${self:custom.global.awsAccountId}:${self:custom.steps.awsTranscribePending.stageName}
-        url: https://sqs.${self:provider.region}.amazonaws.com/${self:custom.global.awsAccountId}/${self:custom.steps.awsTranscribePending.stageName}
-      next: awsNormalize
-    awsNormalize:
-      name: f-aws-c-normalize
-      stageName: ${self:service}-${self:custom.stage}-${self:custom.steps.awsNormalize.name}
-      sqs:
-        arn: arn:aws:sqs:${self:provider.region}:${self:custom.global.awsAccountId}:${self:custom.steps.awsNormalize.stageName}
-        url: https://sqs.${self:provider.region}.amazonaws.com/${self:custom.global.awsAccountId}/${self:custom.steps.awsNormalize.stageName}
-    watsonTranscribeStart:
-      name: f-watson-a-transcribe-start
-      stageName: ${self:service}-${self:custom.stage}-${self:custom.steps.watsonTranscribeStart.name}
-      sqs:
-        arn: arn:aws:sqs:${self:provider.region}:${self:custom.global.awsAccountId}:${self:custom.steps.watsonTranscribeStart.stageName}
-        url: https://sqs.${self:provider.region}.amazonaws.com/${self:custom.global.awsAccountId}/${self:custom.steps.watsonTranscribeStart.stageName}
-      next: watsonTranscribePending
-    watsonTranscribePending:
-      name: f-watson-b-transcribe-pending
-      stageName: ${self:service}-${self:custom.stage}-${self:custom.steps.watsonTranscribePending.name}
-      sqs:
-        arn: arn:aws:sqs:${self:provider.region}:${self:custom.global.awsAccountId}:${self:custom.steps.watsonTranscribePending.stageName}
-        url: https://sqs.${self:provider.region}.amazonaws.com/${self:custom.global.awsAccountId}/${self:custom.steps.watsonTranscribePending.stageName}
-      next: watsonNormalize
-    watsonNormalize:
-      name: f-watson-c-normalize
-      stageName: ${self:service}-${self:custom.stage}-${self:custom.steps.watsonNormalize.name}
-      sqs:
-        arn: arn:aws:sqs:${self:provider.region}:${self:custom.global.awsAccountId}:${self:custom.steps.watsonNormalize.stageName}
-        url: https://sqs.${self:provider.region}.amazonaws.com/${self:custom.global.awsAccountId}/${self:custom.steps.watsonNormalize.stageName}
-    episodeTranscribePending:
-      name: g-episode-transcribe-pending
-      stageName: ${self:service}-${self:custom.stage}-${self:custom.steps.episodeTranscribePending.name}
-      sqs:
-        arn: arn:aws:sqs:${self:provider.region}:${self:custom.global.awsAccountId}:${self:custom.steps.episodeTranscribePending.stageName}
-        url: https://sqs.${self:provider.region}.amazonaws.com/${self:custom.global.awsAccountId}/${self:custom.steps.episodeTranscribePending.stageName}
-      next: episodeInsert
+        arn: arn:aws:sqs:${self:provider.region}:${self:custom.global.awsAccountId}:${self:custom.steps.episodeTranscribeComplete.stageName}
+        url: https://sqs.${self:provider.region}.amazonaws.com/${self:custom.global.awsAccountId}/${self:custom.steps.episodeTranscribeComplete.stageName}
     episodeInsert:
-      name: h-episode-insert
+      name: g-episode-insert
       stageName: ${self:service}-${self:custom.stage}-${self:custom.steps.episodeInsert.name}
       sqs:
         arn: arn:aws:sqs:${self:provider.region}:${self:custom.global.awsAccountId}:${self:custom.steps.episodeInsert.stageName}
@@ -177,9 +131,14 @@ provider:
     STATUS_TOPIC: ${self:custom.sns.topics.status.arn}
     BUCKET: ${self:custom.bucket}
     TRANSCODE_PIPELINE_ID: ${self:custom.transcoder.pipeline.id}
-    AWS_TRANSCRIBE_QUEUE: ${self:custom.steps.awsTranscribeStart.sqs.url}
     WATSON_TRANSCRIBE_CREDENTIALS: ${self:custom.secrets.watson.transcribe.credentials.name}
-    WATSON_TRANSCRIBE_QUEUE: ${self:custom.steps.watsonTranscribeStart.sqs.url}
+    PODCAST_CHECK_FEED_QUEUE: ${self:custom.steps.podcastCheckFeed.sqs.url}
+    EPISODE_DOWNLOAD_QUEUE: ${self:custom.steps.episodeDownload.sqs.url}
+    EPISODE_SEGMENT_START_QUEUE: ${self:custom.steps.episodeSegmentStart.sqs.url}
+    EPISODE_SEGMENT_COMPLETE_QUEUE: ${self:custom.steps.episodeSegmentComplete.sqs.url}
+    EPISODE_TRANSCRIBE_START_QUEUE: ${self:custom.steps.episodeTranscribeStart.sqs.url}
+    EPISODE_TRANSCRIBE_COMPLETE_QUEUE: ${self:custom.steps.episodeTranscribeComplete.sqs.url}
+    EPISODE_INSERT_QUEUE: ${self:custom.steps.episodeInsert.sqs.url}
   iamRoleStatements:
     #
     # S3 Bucket Permissions
@@ -233,15 +192,9 @@ provider:
         - ${self:custom.steps.podcastCheckFeed.sqs.arn}
         - ${self:custom.steps.episodeDownload.sqs.arn}
         - ${self:custom.steps.episodeSegmentStart.sqs.arn}
-        - ${self:custom.steps.episodeSegmentPending.sqs.arn}
+        - ${self:custom.steps.episodeSegmentComplete.sqs.arn}
         - ${self:custom.steps.episodeTranscribeStart.sqs.arn}
-        - ${self:custom.steps.awsTranscribeStart.sqs.arn}
-        - ${self:custom.steps.awsTranscribePending.sqs.arn}
-        - ${self:custom.steps.awsNormalize.sqs.arn}
-        - ${self:custom.steps.watsonTranscribeStart.sqs.arn}
-        - ${self:custom.steps.watsonTranscribePending.sqs.arn}
-        - ${self:custom.steps.watsonNormalize.sqs.arn}
-        - ${self:custom.steps.episodeTranscribePending.sqs.arn}
+        - ${self:custom.steps.episodeTranscribeComplete.sqs.arn}
         - ${self:custom.steps.episodeInsert.sqs.arn}
 
     #
@@ -270,6 +223,7 @@ provider:
     #
     - Effect: Allow
       Action:
+        - transcribe:GetTranscriptionJob
         - transcribe:StartTranscriptionJob
       Resource: '*'
 
@@ -298,9 +252,6 @@ functions:
     name: ${self:custom.steps.podcastCheckFeed.stageName}
     handler: src/functions/pipeline/${self:custom.steps.podcastCheckFeed.name}.handler
     timeout: ${self:custom.timeout}
-    environment:
-      NEXT_QUEUE: ${self:custom.steps.${self:custom.steps.podcastCheckFeed.next}.sqs.url}
-      RETRY_QUEUE: ${self:custom.steps.podcastCheckFeed.sqs.url}
     events:
       - sqs:
           arn: ${self:custom.steps.podcastCheckFeed.sqs.arn}
@@ -310,9 +261,6 @@ functions:
     name: ${self:custom.steps.episodeDownload.stageName}
     handler: src/functions/pipeline/${self:custom.steps.episodeDownload.name}.handler
     timeout: ${self:custom.timeout}
-    environment:
-      NEXT_QUEUE: ${self:custom.steps.${self:custom.steps.episodeDownload.next}.sqs.url}
-      RETRY_QUEUE: ${self:custom.steps.episodeDownload.sqs.url}
     events:
       - sqs:
           arn: ${self:custom.steps.episodeDownload.sqs.arn}
@@ -322,136 +270,42 @@ functions:
     name: ${self:custom.steps.episodeSegmentStart.stageName}
     handler: src/functions/pipeline/${self:custom.steps.episodeSegmentStart.name}.handler
     timeout: ${self:custom.timeout}
-    environment:
-      NEXT_QUEUE: ${self:custom.steps.${self:custom.steps.episodeSegmentStart.next}.sqs.url}
-      RETRY_QUEUE: ${self:custom.steps.episodeSegmentStart.sqs.url}
     events:
       - sqs:
           arn: ${self:custom.steps.episodeSegmentStart.sqs.arn}
           batchSize: 1
 
-  episodeSegmentPending:
-    name: ${self:custom.steps.episodeSegmentPending.stageName}
-    handler: src/functions/pipeline/${self:custom.steps.episodeSegmentPending.name}.handler
+  episodeSegmentComplete:
+    name: ${self:custom.steps.episodeSegmentComplete.stageName}
+    handler: src/functions/pipeline/${self:custom.steps.episodeSegmentComplete.name}.handler
     timeout: ${self:custom.timeout}
-    environment:
-      NEXT_QUEUE: ${self:custom.steps.${self:custom.steps.episodeSegmentPending.next}.sqs.url}
-      RETRY_QUEUE: ${self:custom.steps.episodeSegmentPending.sqs.url}
     events:
       - sqs:
-          arn: ${self:custom.steps.episodeSegmentPending.sqs.arn}
+          arn: ${self:custom.steps.episodeSegmentComplete.sqs.arn}
           batchSize: 1
 
   episodeTranscribeStart:
     name: ${self:custom.steps.episodeTranscribeStart.stageName}
     handler: src/functions/pipeline/${self:custom.steps.episodeTranscribeStart.name}.handler
     timeout: ${self:custom.timeout}
-    environment:
-      NEXT_QUEUE: ${self:custom.steps.${self:custom.steps.episodeTranscribeStart.next}.sqs.url}
-      RETRY_QUEUE: ${self:custom.steps.episodeTranscribeStart.sqs.url}
     events:
       - sqs:
           arn: ${self:custom.steps.episodeTranscribeStart.sqs.arn}
           batchSize: 1
 
-  #
-  # AWS Transcribe, normalize, and zip
-  #
-  awsTranscribeStart:
-    name: ${self:custom.steps.awsTranscribeStart.stageName}
-    handler: src/functions/pipeline/${self:custom.steps.awsTranscribeStart.name}.handler
+  episodeTranscribeComplete:
+    name: ${self:custom.steps.episodeTranscribeComplete.stageName}
+    handler: src/functions/pipeline/${self:custom.steps.episodeTranscribeComplete.name}.handler
     timeout: ${self:custom.timeout}
-    environment:
-      NEXT_QUEUE: ${self:custom.steps.${self:custom.steps.awsTranscribeStart.next}.sqs.url}
-      RETRY_QUEUE: ${self:custom.steps.awsTranscribeStart.sqs.url}
     events:
       - sqs:
-          arn: ${self:custom.steps.awsTranscribeStart.sqs.arn}
-          batchSize: 1
-
-  awsTranscribePending:
-    name: ${self:custom.steps.awsTranscribePending.stageName}
-    handler: src/functions/pipeline/${self:custom.steps.awsTranscribePending.name}.handler
-    timeout: ${self:custom.timeout}
-    environment:
-      NEXT_QUEUE: ${self:custom.steps.${self:custom.steps.awsTranscribePending.next}.sqs.url}
-      RETRY_QUEUE: ${self:custom.steps.awsTranscribePending.sqs.url}
-    events:
-      - sqs:
-          arn: ${self:custom.steps.awsTranscribePending.sqs.arn}
-          batchSize: 1
-
-  awsNormalize:
-    name: ${self:custom.steps.awsNormalize.stageName}
-    handler: src/functions/pipeline/${self:custom.steps.awsNormalize.name}.handler
-    timeout: ${self:custom.timeout}
-    environment:
-      RETRY_QUEUE: ${self:custom.steps.awsNormalize.sqs.url}
-    events:
-      - sqs:
-          arn: ${self:custom.steps.awsNormalize.sqs.arn}
-          batchSize: 1
-
-  #
-  # Watson Transcribe, download, normalize and zip
-  #
-  watsonTranscribeStart:
-    name: ${self:custom.steps.watsonTranscribeStart.stageName}
-    handler: src/functions/pipeline/${self:custom.steps.watsonTranscribeStart.name}.handler
-    timeout: ${self:custom.timeout}
-    environment:
-      NEXT_QUEUE: ${self:custom.steps.${self:custom.steps.watsonTranscribeStart.next}.sqs.url}
-      RETRY_QUEUE: ${self:custom.steps.watsonTranscribeStart.sqs.url}
-    events:
-      - sqs:
-          arn: ${self:custom.steps.watsonTranscribeStart.sqs.arn}
-          batchSize: 1
-
-  watsonTranscribePending:
-    name: ${self:custom.steps.watsonTranscribePending.stageName}
-    handler: src/functions/pipeline/${self:custom.steps.watsonTranscribePending.name}.handler
-    timeout: ${self:custom.timeout}
-    environment:
-      NEXT_QUEUE: ${self:custom.steps.${self:custom.steps.watsonTranscribePending.next}.sqs.url}
-      RETRY_QUEUE: ${self:custom.steps.watsonTranscribePending.sqs.url}
-    events:
-      - sqs:
-          arn: ${self:custom.steps.watsonTranscribePending.sqs.arn}
-          batchSize: 1
-
-  watsonNormalize:
-    name: ${self:custom.steps.watsonNormalize.stageName}
-    handler: src/functions/pipeline/${self:custom.steps.watsonNormalize.name}.handler
-    timeout: ${self:custom.timeout}
-    environment:
-      RETRY_QUEUE: ${self:custom.steps.watsonNormalize.sqs.url}
-    events:
-      - sqs:
-          arn: ${self:custom.steps.watsonNormalize.sqs.arn}
-          batchSize: 1
-
-  #
-  # Combine the normalized and zipped AWS and Watson transcriptions
-  # and insert them into DynamoDB
-  #
-  episodeTranscribePending:
-    name: ${self:custom.steps.episodeTranscribePending.stageName}
-    handler: src/functions/pipeline/${self:custom.steps.episodeTranscribePending.name}.handler
-    timeout: ${self:custom.timeout}
-    environment:
-      NEXT_QUEUE: ${self:custom.steps.${self:custom.steps.episodeTranscribePending.next}.sqs.url}
-      RETRY_QUEUE: ${self:custom.steps.episodeTranscribePending.sqs.url}
-    events:
-      - sqs:
-          arn: ${self:custom.steps.episodeTranscribePending.sqs.arn}
+          arn: ${self:custom.steps.episodeTranscribeComplete.sqs.arn}
           batchSize: 1
 
   episodeInsert:
     name: ${self:custom.steps.episodeInsert.stageName}
     handler: src/functions/pipeline/${self:custom.steps.episodeInsert.name}.handler
     timeout: ${self:custom.timeout}
-    environment:
-      RETRY_QUEUE: ${self:custom.steps.episodeInsert.sqs.url}
     events:
       - sqs:
           arn: ${self:custom.steps.episodeInsert.sqs.arn}
@@ -525,10 +379,10 @@ resources:
         QueueName: ${self:custom.steps.episodeSegmentStart.stageName}
         VisibilityTimeout: ${self:custom.timeout}
 
-    episodeSegmentPendingQueue:
+    episodeSegmentCompleteQueue:
       Type: 'AWS::SQS::Queue'
       Properties:
-        QueueName: ${self:custom.steps.episodeSegmentPending.stageName}
+        QueueName: ${self:custom.steps.episodeSegmentComplete.stageName}
         VisibilityTimeout: ${self:custom.timeout}
 
     episodeTranscribeStartQueue:
@@ -537,46 +391,10 @@ resources:
         QueueName: ${self:custom.steps.episodeTranscribeStart.stageName}
         VisibilityTimeout: ${self:custom.timeout}
 
-    awsTranscribeStartQueue:
+    episodeTranscribeCompleteQueue:
       Type: 'AWS::SQS::Queue'
       Properties:
-        QueueName: ${self:custom.steps.awsTranscribeStart.stageName}
-        VisibilityTimeout: ${self:custom.timeout}
-
-    awsTranscribePendingQueue:
-      Type: 'AWS::SQS::Queue'
-      Properties:
-        QueueName: ${self:custom.steps.awsTranscribePending.stageName}
-        VisibilityTimeout: ${self:custom.timeout}
-
-    awsNormalizeQueue:
-      Type: 'AWS::SQS::Queue'
-      Properties:
-        QueueName: ${self:custom.steps.awsNormalize.stageName}
-        VisibilityTimeout: ${self:custom.timeout}
-
-    watsonTranscribeStartQueue:
-      Type: 'AWS::SQS::Queue'
-      Properties:
-        QueueName: ${self:custom.steps.watsonTranscribeStart.stageName}
-        VisibilityTimeout: ${self:custom.timeout}
-
-    watsonTranscribePendingQueue:
-      Type: 'AWS::SQS::Queue'
-      Properties:
-        QueueName: ${self:custom.steps.watsonTranscribePending.stageName}
-        VisibilityTimeout: ${self:custom.timeout}
-
-    watsonNormalizeQueue:
-      Type: 'AWS::SQS::Queue'
-      Properties:
-        QueueName: ${self:custom.steps.watsonNormalize.stageName}
-        VisibilityTimeout: ${self:custom.timeout}
-
-    episodeTranscribePendingQueue:
-      Type: 'AWS::SQS::Queue'
-      Properties:
-        QueueName: ${self:custom.steps.episodeTranscribePending.stageName}
+        QueueName: ${self:custom.steps.episodeTranscribeComplete.stageName}
         VisibilityTimeout: ${self:custom.timeout}
 
     episodeInsertQueue:
@@ -589,4 +407,17 @@ resources:
       Type: AWS::Logs::LogGroup
       Properties:
         LogGroupName: ${self:custom.logGroups.jobs.name}
-        RetentionInDays: 3653
+
+    jobsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.dynamodb.jobs.name}
+        AttributeDefinitions:
+          - AttributeName: startTime
+            AttributeType: S
+        KeySchema:
+          - AttributeName: startTime
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: ${self:custom.global.dynamodb.jobs.rcu}
+          WriteCapacityUnits: ${self:custom.global.dynamodb.jobs.wcu}

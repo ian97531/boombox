@@ -1,13 +1,11 @@
-import { putEpisode } from '@boombox/shared/src/db/episodes'
-import { IJobRequest } from '@boombox/shared/src/types/models/job'
 import * as AWS from 'aws-sdk'
 import Axios from 'axios'
 import * as mp3Duration from 'mp3-duration'
-import { IEpisodeDownloadMessage, IEpisodeSegmentStartMessage } from '../../types/jobMessages'
-import { ILambdaRequest } from '../../types/lambda'
-import { buildFilename, FILE_DESIGNATIONS } from '../../utils/aws/s3'
-import { getBucket } from '../../utils/environment'
-import { jobHandler } from '../../utils/jobHandler'
+import { ENV, episodeCaller, episodeHandler, EpisodeJob } from '../../utils/episode'
+import { Job } from '../../utils/job'
+import { Lambda } from '../../utils/lambda'
+import { episodeSegmentStart } from './c-episode-segment-start'
+import { episodeTranscribeStart } from './e-episode-transcribe-start'
 
 const axios = Axios.create()
 const s3 = new AWS.S3()
@@ -24,29 +22,42 @@ const findDuration = async (data: Buffer) => {
   })
 }
 
-const episodeDownload = async (
-  lambda: ILambdaRequest<IEpisodeDownloadMessage, IEpisodeSegmentStartMessage>,
-  job: IJobRequest
-) => {
-  const bucket = getBucket()
-  const filename = buildFilename(job.episode, FILE_DESIGNATIONS.ORIGINAL_AUDIO, { suffix: 'mp3' })
-  await job.log(`Downloading ${job.episode.mp3URL} to ${bucket}/${filename}.`)
+const episodeDownloadHandler = async (lambda: Lambda, job: Job, episode: EpisodeJob) => {
+  await job.log(`Downloading ${episode.mp3URL}.`)
 
   const response = await axios({
     method: 'get',
     responseType: 'arraybuffer',
-    url: job.episode.mp3URL,
+    url: episode.mp3URL,
   })
-  const params = { Bucket: bucket, Key: filename, Body: response.data }
-  await s3.upload(params).promise()
-  await job.log(`Completed downloading ${job.episode.mp3URL} to ${bucket}/${filename}.`)
-  await job.log('Finding episode duration...')
-  const duration = await findDuration(response.data)
-  job.episode.duration = duration
-  await job.log(`Episode duration is ${duration} seconds.`)
-  putEpisode(job.episode)
 
-  lambda.nextFunction({ bucket, filename })
+  await job.log('Finding episode duration...')
+  const episodeDuration = await findDuration(response.data)
+  await job.log(`Episode duration is ${episodeDuration} seconds.`)
+
+  episode.createSegments(episodeDuration)
+
+  if (episode.audio) {
+    const params = { Bucket: episode.bucket, Key: episode.audio.filename, Body: response.data }
+    await s3.upload(params).promise()
+    await job.log(
+      `Completed writing ${episode.mp3URL} to ${episode.bucket}/${episode.audio.filename}.`
+    )
+
+    if (episode.segments.length === 1) {
+      job.log('Skipping transcoding because the entire audio fits into a single segment.')
+      episode.segments[0].audio.filename = episode.audio.filename
+      episodeTranscribeStart(lambda, job, episode)
+    } else {
+      episodeSegmentStart(lambda, job, episode)
+    }
+  } else {
+    throw Error(
+      'episode.audio was not properly configured by episode.createSegments.' +
+        JSON.stringify(episode, null, 2)
+    )
+  }
 }
 
-export const handler = jobHandler(episodeDownload)
+export const episodeDownload = episodeCaller(ENV.EPISODE_DOWNLOAD_QUEUE)
+export const handler = episodeHandler(episodeDownloadHandler)

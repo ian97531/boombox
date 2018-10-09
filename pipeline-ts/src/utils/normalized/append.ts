@@ -1,5 +1,4 @@
 import { ITranscript } from '@boombox/shared/src/types/models/transcript'
-import { logError } from '../status'
 import { computeDistanceBetweenWords, createTranscriptWord, matchWords } from './transcription'
 
 export const appendTranscriptions = (
@@ -16,7 +15,7 @@ export const appendTranscriptions = (
   }
 
   if (!leftIndexFound) {
-    throw logError('Unable to append transcriptions because their timecodes do not overlap.')
+    throw Error('Unable to append transcriptions because their timecodes do not overlap.')
   }
 
   let matchFound = false

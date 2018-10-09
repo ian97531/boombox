@@ -1,4 +1,4 @@
-import { IEpisode } from '@boombox/shared/src/types/models/episode'
+import { ITranscript } from '@boombox/shared/src/types/models/transcript'
 import * as AWS from 'aws-sdk'
 import * as Watson from 'watson-developer-cloud'
 import {
@@ -7,26 +7,27 @@ import {
   RecognitionJob,
   SpeechRecognitionResults,
 } from 'watson-developer-cloud/speech-to-text/v1-generated'
-import { WATSON_TRANSCRIBE_ERROR_STATUS, WATSON_TRANSCRIBE_SUCCESS_STATUS } from '../../constants'
-import { IEpisodeSegment, IEpisodeTranscriptionSegment } from '../../types/jobMessages'
 import { IWatsonCredentials } from '../../types/watson'
-import {
-  buildFilename,
-  checkFileExists,
-  FILE_DESIGNATIONS,
-  getFileStream,
-  getJsonFile,
-  putJsonFile,
-} from '../aws/s3'
-import { getBucket, getWatsonCredentialsKey } from '../environment'
+import { getFileStream, getJsonFile, putJsonFile } from '../aws/s3'
+import { WatsonTranscription } from './Transcription'
+
+const WATSON_TRANSCRIBE_SUCCESS_STATUS = 'completed'
+const WATSON_TRANSCRIBE_ERROR_STATUS = 'failed'
+const WATSON_TRANSCRIBE_WAITING_STATUS = 'waiting'
+const WATSON_TRANSCRIBE_PROCESSING_STATUS = 'processing'
+
+const WATSON_API_URL = 'https://stream.watsonplatform.net/speech-to-text/api/'
 
 const secretManager = new AWS.SecretsManager()
 let WATSON_CREDENTIALS: IWatsonCredentials
 
 const getWatsonCredentials = async (): Promise<IWatsonCredentials> => {
+  const CREDENTIAL_KEY = process.env.WATSON_TRANSCRIBE_CREDENTIALS as string
+  if (CREDENTIAL_KEY === undefined) {
+    throw Error('The WATSON_TRANSCRIBE_CREDENTIALS environment variable is undefined.')
+  }
   if (WATSON_CREDENTIALS === undefined) {
-    const SecretId = getWatsonCredentialsKey()
-    const response = await secretManager.getSecretValue({ SecretId }).promise()
+    const response = await secretManager.getSecretValue({ SecretId: CREDENTIAL_KEY }).promise()
     if (response && response.SecretString) {
       WATSON_CREDENTIALS = JSON.parse(response.SecretString) as IWatsonCredentials
     } else {
@@ -42,12 +43,18 @@ const createJobAsync = (
   credentials: IWatsonCredentials
 ): Promise<RecognitionJob> => {
   return new Promise((resolve, reject) => {
-    const transcribe = new Watson.SpeechToTextV1(credentials)
-    try {
-      transcribe.createJob(params, resolve)
-    } catch (error) {
-      reject(error)
+    const options = {
+      ...credentials,
+      url: WATSON_API_URL,
     }
+    const transcribe = new Watson.SpeechToTextV1(options)
+    transcribe.createJob(params, (err, data) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve(data)
+      }
+    })
   })
 }
 
@@ -56,27 +63,27 @@ const checkJobAsync = (
   credentials: IWatsonCredentials
 ): Promise<RecognitionJob> => {
   return new Promise((resolve, reject) => {
-    const transcribe = new Watson.SpeechToTextV1(credentials)
-    try {
-      transcribe.checkJob(params, resolve)
-    } catch (error) {
-      reject(error)
+    const options = {
+      ...credentials,
+      url: WATSON_API_URL,
     }
+    const transcribe = new Watson.SpeechToTextV1(options)
+    transcribe.checkJob(params, (err, data) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve(data)
+      }
+    })
   })
 }
 
 export const createTranscriptionJob = async (
-  episode: IEpisode,
-  segment: IEpisodeSegment
-): Promise<IEpisodeTranscriptionSegment> => {
-  const bucket = getBucket()
-  const filename = buildFilename(episode, FILE_DESIGNATIONS.WATSON_RAW_TRANSCRIPTION_SEGMENT, {
-    duration: segment.duration,
-    startTime: segment.startTime,
-    suffix: 'json',
-  })
+  inputBucket: string,
+  inputFilename: string
+): Promise<string> => {
   const credentials = await getWatsonCredentials()
-  const audio = await getFileStream(bucket, segment.filename)
+  const audio = await getFileStream(inputBucket, inputFilename)
   const params: CreateJobParams = {
     audio,
     content_type: 'audio/mp3',
@@ -87,96 +94,90 @@ export const createTranscriptionJob = async (
     word_confidence: true,
   }
   const response = await createJobAsync(params, credentials)
-
-  return {
-    ...segment,
-    jobName: response.id,
-    transcriptionFile: filename,
-  }
+  return response.id
 }
 
-export const checkTranscriptionJobExists = async (
-  segment: IEpisodeTranscriptionSegment
-): Promise<boolean> => {
-  const bucket = getBucket()
-
+export const checkTranscriptionJobExists = async (jobName: string): Promise<boolean> => {
   let exists = false
-  if (await checkFileExists(bucket, segment.transcriptionFile)) {
-    exists = true
-  } else {
-    try {
-      const credentials = await getWatsonCredentials()
-      const params: CheckJobParams = {
-        id: segment.jobName,
-      }
-      await checkJobAsync(params, credentials)
-      exists = true
-    } catch (error) {
-      exists = false
+
+  try {
+    const credentials = await getWatsonCredentials()
+    const params: CheckJobParams = {
+      id: jobName,
     }
+    await checkJobAsync(params, credentials)
+    exists = true
+  } catch (error) {
+    exists = false
   }
 
   return exists
 }
 
-export const checkTranscriptionJobComplete = async (
-  segment: IEpisodeTranscriptionSegment
-): Promise<boolean> => {
-  const bucket = getBucket()
-
+export const checkTranscriptionJobComplete = async (jobName: string): Promise<boolean> => {
   let complete = false
-  if (await checkFileExists(bucket, segment.transcriptionFile)) {
-    complete = true
-  } else {
-    try {
-      const credentials = await getWatsonCredentials()
-      const params: CheckJobParams = {
-        id: segment.jobName,
-      }
-      const response = await checkJobAsync(params, credentials)
-      complete = response.status === WATSON_TRANSCRIBE_SUCCESS_STATUS
-    } catch (error) {
-      throw Error('Unable to find Watson transcription job: ' + segment.jobName)
+
+  try {
+    const credentials = await getWatsonCredentials()
+    const params: CheckJobParams = {
+      id: jobName,
     }
+    const response = await checkJobAsync(params, credentials)
+    complete = response.status === WATSON_TRANSCRIBE_SUCCESS_STATUS
+  } catch (error) {
+    complete = false
   }
 
   return complete
 }
 
-export const getTranscription = async (
-  segment: IEpisodeTranscriptionSegment
-): Promise<SpeechRecognitionResults> => {
-  let transcription: SpeechRecognitionResults
-  const bucket = getBucket()
+export const checkTranscriptionJobProcessing = async (jobName: string): Promise<boolean> => {
+  let processing = false
 
-  if (await checkFileExists(bucket, segment.transcriptionFile)) {
-    transcription = getJsonFile(bucket, segment.transcriptionFile) as SpeechRecognitionResults
-  } else {
-    try {
-      const credentials = await getWatsonCredentials()
-      const params: CheckJobParams = {
-        id: segment.jobName,
-      }
-      const response = await checkJobAsync(params, credentials)
-      if (response.status === WATSON_TRANSCRIBE_SUCCESS_STATUS && response.results) {
-        transcription = response.results[0]
-      } else if (response.status === WATSON_TRANSCRIBE_ERROR_STATUS) {
-        throw Error('The requested transcription job failed.')
-      } else {
-        throw Error('The requested transcription job is still processing.')
-      }
-    } catch (error) {
-      throw Error('Unable to find Watson transcription job: ' + segment.jobName)
+  try {
+    const credentials = await getWatsonCredentials()
+    const params: CheckJobParams = {
+      id: jobName,
     }
+    const response = await checkJobAsync(params, credentials)
+    const isWaiting = response.status === WATSON_TRANSCRIBE_WAITING_STATUS
+    const isProcessing = response.status === WATSON_TRANSCRIBE_PROCESSING_STATUS
+    processing = isWaiting || isProcessing
+  } catch (error) {
+    processing = false
   }
 
-  return transcription
+  return processing
 }
 
-export const saveTranscriptionToS3 = async (segment: IEpisodeTranscriptionSegment) => {
-  const bucket = getBucket()
-  if (!(await checkFileExists(bucket, segment.transcriptionFile))) {
-    const transcription = await getTranscription(segment)
-    await putJsonFile(bucket, segment.transcriptionFile, transcription)
+export const getTranscription = async (bucket: string, filename: string): Promise<ITranscript> => {
+  const rawTranscription = (await getJsonFile(bucket, filename)) as SpeechRecognitionResults
+  const transcription = new WatsonTranscription(rawTranscription)
+  return transcription.getNormalizedTranscription()
+}
+
+export const saveTranscriptionToS3 = async (
+  jobName: string,
+  outputBucket: string,
+  outputFilename: string
+) => {
+  let transcription: SpeechRecognitionResults
+
+  try {
+    const credentials = await getWatsonCredentials()
+    const params: CheckJobParams = {
+      id: jobName,
+    }
+    const response = await checkJobAsync(params, credentials)
+    if (response.status === WATSON_TRANSCRIBE_SUCCESS_STATUS && response.results) {
+      transcription = response.results[0]
+    } else if (response.status === WATSON_TRANSCRIBE_ERROR_STATUS) {
+      throw Error('The requested transcription job failed.')
+    } else {
+      throw Error('The requested transcription job is still processing.')
+    }
+  } catch (error) {
+    throw Error('Unable to find Watson transcription job: ' + jobName)
   }
+  await putJsonFile(outputBucket, outputFilename, transcription)
 }

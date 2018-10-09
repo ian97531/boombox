@@ -1,65 +1,55 @@
-import { IJobRequest } from '@boombox/shared/src/types/models/job'
-import { MAX_SEGMENT_LENGTH, SEGMENT_OVERLAP_LENGTH } from '../../constants'
-import { IEpisodeSegmentPendingMessage, IEpisodeSegmentStartMessage } from '../../types/jobMessages'
-import { ENV, ILambdaRequest } from '../../types/lambda'
-import { createSegmentJob } from '../../utils/aws/transcode'
-import { jobHandler } from '../../utils/jobHandler'
+import { checkFileExists } from '../../utils/aws/s3'
+import { createJob } from '../../utils/aws/transcode'
+import { ENV, episodeCaller, episodeHandler, EpisodeJob, ISegment } from '../../utils/episode'
+import { Job } from '../../utils/job'
+import { Lambda } from '../../utils/lambda'
+import { episodeSegmentComplete } from './d-episode-segment-complete'
 
-const round = (num: number, places: number = 0): number => {
-  return Number(num.toFixed(places))
-}
-
-const splitEpisodeAudioIntoSegments = async (
-  lambda: ILambdaRequest<IEpisodeSegmentStartMessage, IEpisodeSegmentPendingMessage>,
-  job: IJobRequest
-) => {
-  const pipelineId = lambda.getEnvVariable(ENV.TRANSCODE_PIPELINE_ID) as string
-  const numSegments = Math.ceil(job.episode.duration / MAX_SEGMENT_LENGTH)
-  const segmentDuration = round(Math.ceil(job.episode.duration / numSegments), 3)
-  const inputFilename = lambda.input.filename
-  const segmentJobs: IEpisodeSegmentPendingMessage = []
-
-  let startTime = 0
-  let index = 0
-
-  while (index < numSegments - 1) {
-    // Create a segment
-    const transcodeJob = await createSegmentJob(
-      pipelineId,
-      inputFilename,
-      job.episode,
-      startTime,
-      segmentDuration
-    )
-    segmentJobs.push(transcodeJob)
-
-    // Create a small segment that overlaps the previous and next segments.
-    const overlapStartTime = startTime + segmentDuration - SEGMENT_OVERLAP_LENGTH / 2
-    const overlapJob = await createSegmentJob(
-      pipelineId,
-      inputFilename,
-      job.episode,
-      overlapStartTime,
-      SEGMENT_OVERLAP_LENGTH
-    )
-    segmentJobs.push(overlapJob)
-
-    startTime += segmentDuration
-    index += 1
+const startSegmentJob = async (
+  pipelineId: string,
+  job: Job,
+  episode: EpisodeJob,
+  segment: ISegment
+): Promise<boolean> => {
+  let jobStarted = false
+  if (episode.audio === undefined) {
+    throw Error('The provided episode does not have audio information set.')
   }
 
-  // Create the last segment to the end of the episode.
-  const finalDuration = round(job.episode.duration - startTime, 3)
-  const finalJob = await createSegmentJob(
-    pipelineId,
-    inputFilename,
-    job.episode,
-    startTime,
-    finalDuration
-  )
-  segmentJobs.push(finalJob)
-
-  lambda.nextFunction(segmentJobs, 60)
+  if (!(await checkFileExists(episode.bucket, segment.audio.filename))) {
+    await createJob(
+      pipelineId,
+      episode.audio.filename,
+      segment.audio.filename,
+      episode.bucket,
+      segment.audio.startTime,
+      segment.audio.duration
+    )
+    await job.log(
+      `Started a transcode job to split ${episode.audio.filename} at a start time ` +
+        `of ${segment.audio.startTime} seconds for a duration of ${segment.audio.duration} seconds.`
+    )
+    jobStarted = true
+  } else {
+    await job.log(
+      `Skipping transcode job to split ${episode.audio.filename} at a start time ` +
+        `of ${segment.audio.startTime} seconds for a duration of ${segment.audio.duration}  ` +
+        'seconds because that segment audio file already exists.'
+    )
+  }
+  return jobStarted
 }
 
-export const handler = jobHandler(splitEpisodeAudioIntoSegments)
+const episodeSegmentStartHandler = async (lambda: Lambda, job: Job, episode: EpisodeJob) => {
+  const pipelineId = Lambda.getEnvVariable(ENV.TRANSCODE_PIPELINE_ID) as string
+  let delay = 0
+  for (const segment of episode.segments) {
+    const jobStarted = await startSegmentJob(pipelineId, job, episode, segment)
+    delay = jobStarted ? 60 : 0
+  }
+
+  episodeSegmentComplete(lambda, job, episode, delay)
+}
+
+export const episodeSegmentStart = episodeCaller(ENV.EPISODE_SEGMENT_START_QUEUE)
+export const handler = episodeHandler(episodeSegmentStartHandler)

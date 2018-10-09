@@ -4,8 +4,14 @@ import {
   SpeechRecognitionResult,
   SpeechRecognitionResults,
 } from 'watson-developer-cloud/speech-to-text/v1-generated'
-import { WATSON_TRANSCRIPTION } from '../../constants'
 import { IWatsonWord } from '../../types/watson'
+
+export enum WATSON_TRANSCRIPTION {
+  CONTENT = 0,
+  CONFIDENCE = 1,
+  START_TIME = 1,
+  END_TIME = 2,
+}
 
 export class WatsonTranscription {
   private speakers: number[]

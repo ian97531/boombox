@@ -26,7 +26,6 @@ custom:
     episodes: ${self:custom.global.product}-${self:custom.stage}-${self:custom.global.dynamodb.episodes.suffix}
     statements: ${self:custom.global.product}-${self:custom.stage}-${self:custom.global.dynamodb.statements.suffix}
     speakers: ${self:custom.global.product}-${self:custom.stage}-${self:custom.global.dynamodb.speakers.suffix}
-    jobs: ${self:custom.global.product}-${self:custom.stage}-${self:custom.global.dynamodb.jobs.suffix}
 
 provider:
   name: aws
@@ -69,8 +68,6 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: ${self:custom.global.dynamodb.episodes.rcu}
           WriteCapacityUnits: ${self:custom.global.dynamodb.episodes.wcu}
-        StreamSpecification:
-          StreamViewType: NEW_IMAGE
     statementsTable:
       Type: AWS::DynamoDB::Table
       Properties:
@@ -101,16 +98,3 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: ${self:custom.global.dynamodb.speakers.rcu}
           WriteCapacityUnits: ${self:custom.global.dynamodb.speakers.wcu}
-    jobsTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:custom.dynamodb.jobs}
-        AttributeDefinitions:
-          - AttributeName: startTime
-            AttributeType: S
-        KeySchema:
-          - AttributeName: startTime
-            KeyType: HASH
-        ProvisionedThroughput:
-          ReadCapacityUnits: ${self:custom.global.dynamodb.jobs.rcu}
-          WriteCapacityUnits: ${self:custom.global.dynamodb.jobs.wcu}
