@@ -112,7 +112,18 @@
 				} else if (confidence >= 0 && confidence < 0.1) {
 					theClass = 'c0'
 				}
-				words.push('<span title="Confidence: ' + Math.round(confidence * 10000) / 100 + '%" class="' + theClass + '">' + word.content + '</span>')
+
+				wordStuff = word.content
+				if (word.speaker !== word.awsSpeaker || word.speaker !== word.watsonSpeaker) {
+					wordStuff = '<b>' + wordStuff + '</b>'
+				}
+
+				confidence = 'Speaker: ' + word.speaker
+				confidence += '\n AWS Speaker: ' + word.awsSpeaker
+				confidence += '\n Watson Speaker: ' + word.watsonSpeaker
+
+
+				words.push('<span title="' + confidence + '" class="' + theClass + '">' + wordStuff + '</span>')
 			});
 
 			outputEl.innerHTML = lines.join('');
@@ -143,7 +154,8 @@
 	</div>
 	<hr>
 	<div>
-		Hover over the word to see that word's transcription confidence score. The more red the highlighting of a word, the lower
+		Hover over the word to see that word's transcription confidence score. The more red the highlighting of a word, the
+		lower
 		the confidence score.
 	</div>
 	<div id="output"></div>

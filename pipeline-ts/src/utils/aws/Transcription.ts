@@ -17,10 +17,12 @@ export class AWSTranscription {
   private items: IAWSTranscriptionItem[]
   private item = 0
   private segment = 0
+  private startTime = 0
 
-  constructor(result: IAWSTranscriptionResult) {
+  constructor(result: IAWSTranscriptionResult, startTime: number = 0) {
     this.speakers = result.speaker_labels.segments
     this.items = result.items
+    this.startTime = startTime
   }
 
   public getNormalizedTranscription(): ITranscript {
@@ -32,9 +34,9 @@ export class AWSTranscription {
         normalizedTranscription.push({
           confidence: parseFloat(item.alternatives[0].confidence),
           content: item.alternatives[0].content,
-          endTime: parseFloat(item.end_time),
+          endTime: parseFloat(item.end_time) + this.startTime,
           speaker,
-          startTime: parseFloat(item.start_time),
+          startTime: parseFloat(item.start_time) + this.startTime,
         })
       }
     }

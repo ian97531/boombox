@@ -16,16 +16,18 @@ export enum WATSON_TRANSCRIPTION {
 export class WatsonTranscription {
   private speakers: number[]
   private items: SpeechRecognitionResult[]
-  private segmentIndex: 0
-  private wordIndex: 0
+  private segmentIndex = 0
+  private wordIndex = 0
+  private startTime = 0
 
-  constructor(result: SpeechRecognitionResults) {
+  constructor(result: SpeechRecognitionResults, startTime: number = 0) {
     if (result.results && result.speaker_labels) {
       this.speakers = this.normalizeSpeakers(result.speaker_labels)
       this.items = result.results
     } else {
       throw Error('Results or Speaker Labels are missing from the transcription results')
     }
+    this.startTime = startTime
   }
 
   public getNormalizedTranscription(): ITranscript {
@@ -36,7 +38,9 @@ export class WatsonTranscription {
       if (word) {
         normalizedTranscription.push({
           ...word,
+          endTime: word.endTime + this.startTime,
           speaker,
+          startTime: word.startTime + this.startTime,
         })
       }
     }

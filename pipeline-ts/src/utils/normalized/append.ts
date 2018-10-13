@@ -8,7 +8,7 @@ export const appendTranscriptions = (
 ): ITranscript => {
   let leftIndex = 0
   let leftIndexFound = false
-  while (leftIndexFound && leftIndex < left.length) {
+  while (!leftIndexFound && leftIndex < left.length) {
     const word = left[leftIndex]
     leftIndexFound = word.startTime >= right[0].startTime
     leftIndex += 1
@@ -25,7 +25,7 @@ export const appendTranscriptions = (
   while (!matchFound && leftIndex < left.length) {
     while (
       !matchFound &&
-      right.length < rightIndex + rightOffset &&
+      rightIndex + rightOffset < right.length &&
       computeDistanceBetweenWords(left[leftIndex], right[rightIndex + rightOffset]) < 5
     ) {
       matchFound = matchWords(left, right, leftIndex, rightIndex + rightOffset, withOverlap)

@@ -8,26 +8,30 @@ export const matchWords = (
   length: number
 ): boolean => {
   let offset = 0
-  let match = true
+  let match = false
   while (
-    match &&
-    left.length < leftIndex + offset &&
-    right.length < rightIndex + offset &&
+    leftIndex + offset < left.length &&
+    rightIndex + offset < right.length &&
     offset <= length
   ) {
     match =
       left[leftIndex + offset].content.toLowerCase() ===
       right[rightIndex + offset].content.toLowerCase()
     offset += 1
+
+    if (!match) {
+      break
+    }
   }
   return match
 }
 
 export const computeDistanceBetweenWords = (
   left: ITranscriptWord,
-  right: ITranscriptWord
+  right: ITranscriptWord,
+  rightStart: number = 0
 ): number => {
-  return Math.abs(left.startTime - right.startTime)
+  return Math.abs(left.startTime - (right.startTime + rightStart))
 }
 
 export const createTranscriptWord = (
@@ -48,17 +52,24 @@ export const createTranscriptWord = (
   }
 }
 
-export const createWordMap = (transcript: ITranscript, drift: number): ITranscriptWord[][] => {
+export const createWordMap = (transcript: ITranscript): ITranscriptWord[][] => {
   const output: ITranscriptWord[][] = []
 
   for (const word of transcript) {
-    const startSecond = Math.floor(word.startTime + drift)
+    let startSecond = Math.floor(word.startTime)
+    startSecond = startSecond ? startSecond - 1 : 0
+    const endSecond = Math.floor(word.endTime) + 1
+    const seconds = endSecond - startSecond
 
-    if (output[startSecond] === undefined) {
-      output[startSecond] = []
+    let index = 0
+    while (index <= seconds) {
+      const second = startSecond + index
+      if (output[second] === undefined) {
+        output[second] = []
+      }
+      output[second].push(word)
+      index += 1
     }
-
-    output[startSecond].push(word)
   }
 
   return output
@@ -87,5 +98,8 @@ export const computeOverlapBetweenWords = (
 
   const totalLength = leftLength + rightLength - overlap
   const percentOverlap = overlap / totalLength
-  return percentOverlap
+
+  const sameWord = left.content.toLowerCase() === right.content.toLowerCase()
+
+  return percentOverlap > 0 && sameWord ? 1 : percentOverlap
 }

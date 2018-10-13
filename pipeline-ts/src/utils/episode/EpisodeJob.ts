@@ -27,6 +27,14 @@ interface ITranscriptionJob {
   jobName?: string
 }
 
+export interface ISegment {
+  audio: IAudio
+  transcription: {
+    aws: ITranscriptionJob
+    watson: ITranscriptionJob
+  }
+}
+
 export interface ISerializedEpisodeJob {
   audio?: IAudio
   bucket: string
@@ -47,14 +55,6 @@ export interface ISerializedEpisodeJob {
     watson: string
   }
   totalStatements?: number
-}
-
-export interface ISegment {
-  audio: IAudio
-  transcription: {
-    aws: ITranscriptionJob
-    watson: ITranscriptionJob
-  }
 }
 
 export class EpisodeJob {
