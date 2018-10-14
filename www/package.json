@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "license": "UNLICENSED",
-  "homepage": "https://github.com/gg-incorporated/boombox/tree/master/www#readme",
   "dependencies": {
     "@boombox/shared": "1.0.0",
     "@types/query-string": "^6.1.0",

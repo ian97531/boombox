@@ -33,7 +33,7 @@ const getTranscriptionJob = async (
 
   while (!response && !timedOut) {
     try {
-      response = await getTranscriptionJob(params)
+      response = await transcribe.getTranscriptionJob(params).promise()
     } catch (error) {
       if (error.name === 'ThrottlingException') {
         console.log('getTranscriptionJob has been throttled.')

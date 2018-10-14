@@ -5,7 +5,6 @@ import {
   ITranscriptWord,
 } from '@boombox/shared/src/types/models/transcript'
 import { round } from '@boombox/shared/src/utils/numbers'
-import { sleep } from '@boombox/shared/src/utils/timing'
 import { checkFileExists, deleteFile, getJsonFile, putJsonFile } from '../../utils/aws/s3'
 import { ENV, episodeCaller, episodeHandler, EpisodeJob } from '../../utils/episode'
 import { Job } from '../../utils/job'
@@ -22,6 +21,7 @@ const episodeInsertHandler = async (lambda: Lambda, job: Job, episode: EpisodeJo
     await job.log(`Starting to insert ${insertQueue.length} items into dynamo as statements.`)
     let word = insertQueue.shift() as ITranscriptWord
     let timedOut = false
+    episode.totalStatements = 0
     while (insertQueue.length && !timedOut) {
       let endTime = word.endTime
       const startTime = round(word.startTime, 3)
@@ -44,17 +44,8 @@ const episodeInsertHandler = async (lambda: Lambda, job: Job, episode: EpisodeJo
         startTime,
         words,
       }
-      if (episode.totalStatements === undefined) {
-        episode.totalStatements = 0
-      }
+      await putIStatmentDBRecord(episode.getEpisode(), record)
       episode.totalStatements += 1
-
-      try {
-        await putIStatmentDBRecord(episode.getEpisode(), record)
-      } catch (error) {
-        await job.logError('Error inserting statement.', error)
-        await sleep(5000)
-      }
       if (episode.totalStatements % 25 === 0) {
         await job.log(`${episode.totalStatements} statements inserted.`)
       }
