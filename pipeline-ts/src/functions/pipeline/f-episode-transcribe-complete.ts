@@ -7,7 +7,7 @@ import {
 import { ENV, episodeCaller, episodeHandler, EpisodeJob } from '../../utils/episode'
 import { Job } from '../../utils/job'
 import { Lambda } from '../../utils/lambda'
-import { appendAllTranscriptions, replaceSpeakers } from '../../utils/normalized'
+import { appendAllTranscriptions, combineTranscriptions } from '../../utils/normalized'
 import {
   checkTranscriptionJobComplete as checkWatsonTranscriptionJobComplete,
   getTranscription as getWatsonTranscription,
@@ -70,7 +70,7 @@ const episodeTranscribeCompleteHandler = async (lambda: Lambda, job: Job, episod
     await putJsonFile(episode.bucket, episode.transcriptions.watson, watsonTranscription)
 
     await job.log('Enhancing the transcription.')
-    const finalTranscription = replaceSpeakers(awsTranscription, watsonTranscription)
+    const finalTranscription = combineTranscriptions(awsTranscription, watsonTranscription)
     await putJsonFile(episode.bucket, episode.transcriptions.final, finalTranscription)
     await putJsonFile(episode.bucket, episode.transcriptions.insertQueue, finalTranscription)
 

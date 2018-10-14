@@ -10,5 +10,9 @@
     "domain": "lerna run domain",
     "lint": "lerna run lint",
     "deploy": "lerna run deploy"
+  },
+  "dependencies": {
+    "ts-node": "^7.0.1",
+    "typescript": "^3.1.3"
   }
 }
