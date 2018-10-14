@@ -1,21 +1,17 @@
-import { putEpisode } from '@boombox/shared/src/db/episodes'
-import { putIStatmentDBRecord } from '@boombox/shared/src/db/statements'
+import { putEpisode, putIStatmentDBRecord } from '@boombox/shared/src/db'
 import {
   IStatementDBRecord,
   ITranscript,
   ITranscriptWord,
 } from '@boombox/shared/src/types/models/transcript'
+import { sleep } from '@boombox/shared/src/utils/timing'
 import { checkFileExists, deleteFile, getJsonFile, putJsonFile } from '../../utils/aws/s3'
 import { ENV, episodeCaller, episodeHandler, EpisodeJob } from '../../utils/episode'
 import { Job } from '../../utils/job'
 import { Lambda } from '../../utils/lambda'
-import { sleep } from '../../utils/timing'
 
 const episodeInsertHandler = async (lambda: Lambda, job: Job, episode: EpisodeJob) => {
-  const functionStartTime = Date.now()
-  const writeCapacityUnits = Lambda.getEnvVariable(ENV.STATEMENTS_TABLE_WCU) as number
   const insertQueueFilename = episode.transcriptions.insertQueue
-  let consumedWriteCapacity = 0
   let continueInserting = true
   let safeToWriteQueue = true
   let insertQueue: ITranscript
@@ -74,26 +70,9 @@ const episodeInsertHandler = async (lambda: Lambda, job: Job, episode: EpisodeJo
       episode.totalStatements += 1
 
       try {
-        const putReponse = await putIStatmentDBRecord(record)
-        if (putReponse.ConsumedCapacity && putReponse.ConsumedCapacity.CapacityUnits) {
-          consumedWriteCapacity += putReponse.ConsumedCapacity.CapacityUnits
-          const currentTime = Date.now()
-          const seconds = (currentTime - functionStartTime) / 1000
-          const availableWriteCapacity = seconds * writeCapacityUnits
-          if (consumedWriteCapacity > availableWriteCapacity) {
-            await job.log('Sleeping for 1000ms to allow the dynamo WCU to catch up.')
-            await sleep(1000)
-          }
-        }
+        await putIStatmentDBRecord(record)
       } catch (error) {
-        let errorMessage =
-          'Looks like we threw and exception because we exceeded our write capacity.\n'
-        errorMessage += `Error Name: ${error.name}\n`
-        errorMessage += `Error Message: ${error.message}\n`
-        if (error.stack) {
-          errorMessage += `Error Stack: ${error.stack}`
-        }
-        await job.log(errorMessage)
+        await job.logError('Error inserting statement.', error)
         await sleep(5000)
       }
     }

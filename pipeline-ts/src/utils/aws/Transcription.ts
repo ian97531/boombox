@@ -1,4 +1,5 @@
 import { ITranscript } from '@boombox/shared/src/types/models/transcript'
+import { round } from '@boombox/shared/src/utils/numbers'
 import {
   IAWSTranscriptionItem,
   IAWSTranscriptionResult,
@@ -32,11 +33,11 @@ export class AWSTranscription {
       if (item.type === AWS_TRANSCRIPTION.PRONUNCIATION) {
         const speaker = this.getNextSpeaker()
         normalizedTranscription.push({
-          confidence: parseFloat(item.alternatives[0].confidence),
+          confidence: round(parseFloat(item.alternatives[0].confidence), 3),
           content: item.alternatives[0].content,
-          endTime: parseFloat(item.end_time) + this.startTime,
+          endTime: round(parseFloat(item.end_time) + this.startTime, 3),
           speaker,
-          startTime: parseFloat(item.start_time) + this.startTime,
+          startTime: round(parseFloat(item.start_time) + this.startTime, 3),
         })
       }
     }

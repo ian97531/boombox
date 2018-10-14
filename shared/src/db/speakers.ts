@@ -1,5 +1,5 @@
 import { ISpeaker } from '../types/models/transcript'
-import { dynamo } from './dynamo'
+import { documentClient } from './dynamo'
 
 export async function getSpeakers(slugs: string[]): Promise<ISpeaker[]> {
   const speakers: ISpeaker[] = []
@@ -9,7 +9,7 @@ export async function getSpeakers(slugs: string[]): Promise<ISpeaker[]> {
       Key: { slug },
       TableName: process.env.SPEAKERS_TABLE as string,
     }
-    const response = (await dynamo
+    const response = (await documentClient
       .get(params)
       .promise()) as AWS.DynamoDB.DocumentClient.GetItemOutput
 

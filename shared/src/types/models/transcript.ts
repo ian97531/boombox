@@ -14,8 +14,6 @@ export interface IStatementWord {
 export interface ITranscriptWord extends IStatementWord {
   confidence: number
   speaker: number
-  awsSpeaker?: number
-  watsonSpeaker?: number
 }
 
 interface IStatementBase {

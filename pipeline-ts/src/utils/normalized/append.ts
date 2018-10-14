@@ -1,4 +1,5 @@
 import { ITranscript } from '@boombox/shared/src/types/models/transcript'
+import { round } from '@boombox/shared/src/utils/numbers'
 import { computeDistanceBetweenWords, createTranscriptWord, matchWords } from './transcription'
 
 export const appendTranscriptions = (
@@ -52,7 +53,7 @@ export const appendTranscriptions = (
   }
 
   // Round the drift to three decimal places.
-  const drift = Number((left[leftIndex].startTime - right[rightIndex].startTime).toFixed(3))
+  const drift = round(left[leftIndex].startTime - right[rightIndex].startTime, 3)
   const swapSpeakers = left[leftIndex].speaker !== right[rightIndex].speaker
 
   let index = 0

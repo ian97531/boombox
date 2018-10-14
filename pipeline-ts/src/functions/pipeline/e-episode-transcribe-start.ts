@@ -3,7 +3,6 @@ import { createTranscriptionJob as createAWSTranscriptionJob } from '../../utils
 import { ENV, episodeCaller, episodeHandler, EpisodeJob } from '../../utils/episode'
 import { Job } from '../../utils/job'
 import { Lambda } from '../../utils/lambda'
-import { sleep } from '../../utils/timing'
 import { createTranscriptionJob as createWatsonTranscriptionJob } from '../../utils/watson/transcribe'
 import { episodeTranscribeComplete } from './f-episode-transcribe-complete'
 
@@ -24,7 +23,6 @@ const transcribeSegmentsWithAws = async (job: Job, episode: EpisodeJob): Promise
         jobsStarted += 1
         await job.log(`Started an aws transcription job for ${segment.audio.filename}`)
       }
-      await sleep(2000)
     } else {
       await job.log(`Transcription file ${segment.transcription.aws.filename} already exists.`)
     }
@@ -41,7 +39,6 @@ const transcribeSegmentsWithWatson = async (job: Job, episode: EpisodeJob): Prom
       segment.transcription.watson.jobName = jobName
       jobsStarted += 1
       await job.log(`Started a watson transcription job for ${segment.audio.filename}`)
-      await sleep(2000)
     } else {
       await job.log(`Transcription file ${segment.transcription.watson.filename} already exists.`)
     }
@@ -50,23 +47,14 @@ const transcribeSegmentsWithWatson = async (job: Job, episode: EpisodeJob): Prom
 }
 
 const episodeTranscribeStartHandler = async (lambda: Lambda, job: Job, episode: EpisodeJob) => {
-  try {
-    const awsJobs = await transcribeSegmentsWithAws(job, episode)
-    await job.log(`Started ${awsJobs} of ${episode.segments.length} AWS transcription jobs`)
+  const awsJobs = await transcribeSegmentsWithAws(job, episode)
+  await job.log(`Started ${awsJobs} of ${episode.segments.length} AWS transcription jobs`)
 
-    const watsonJobs = await transcribeSegmentsWithWatson(job, episode)
-    await job.log(`Started ${watsonJobs} of ${episode.segments.length} Watson transcription jobs`)
+  const watsonJobs = await transcribeSegmentsWithWatson(job, episode)
+  await job.log(`Started ${watsonJobs} of ${episode.segments.length} Watson transcription jobs`)
 
-    const delay = awsJobs || watsonJobs ? 120 : 0
-    episodeTranscribeComplete(lambda, job, episode, delay)
-  } catch (error) {
-    if (error.name === 'ThrottlingException') {
-      await job.log('The AWS is throttling our transcription requests. Retrying in 2 minutes.')
-      episodeTranscribeStart(lambda, job, episode, 120)
-    } else {
-      throw error
-    }
-  }
+  const delay = awsJobs || watsonJobs ? 120 : 0
+  episodeTranscribeComplete(lambda, job, episode, delay)
 }
 
 export const episodeTranscribeStart = episodeCaller(ENV.EPISODE_TRANSCRIBE_START_QUEUE)

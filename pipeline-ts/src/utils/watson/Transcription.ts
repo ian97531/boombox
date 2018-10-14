@@ -6,12 +6,14 @@ import {
 } from 'watson-developer-cloud/speech-to-text/v1-generated'
 import { IWatsonWord } from '../../types/watson'
 
-export enum WATSON_TRANSCRIPTION {
+enum WATSON_TRANSCRIPTION {
   CONTENT = 0,
   CONFIDENCE = 1,
   START_TIME = 1,
   END_TIME = 2,
 }
+
+const INVALID_CONTENT = ['%HESITATION']
 
 export class WatsonTranscription {
   private speakers: number[]
@@ -69,28 +71,38 @@ export class WatsonTranscription {
 
   private getNextWord(): IWatsonWord | undefined {
     let output: IWatsonWord | undefined
-    if (this.segmentIndex < this.items.length) {
-      if (this.items[this.segmentIndex].alternatives[0]) {
-        const segment = this.items[this.segmentIndex].alternatives[0]
-        const word = segment.word_confidence
-        const timestamp = segment.timestamps
-        if (word && timestamp && this.wordIndex < word.length) {
-          output = {
-            confidence: parseFloat(word[this.wordIndex][WATSON_TRANSCRIPTION.CONFIDENCE]),
-            content: word[this.wordIndex][WATSON_TRANSCRIPTION.CONTENT],
-            endTime: parseFloat(timestamp[this.wordIndex][WATSON_TRANSCRIPTION.END_TIME]),
-            startTime: parseFloat(timestamp[this.wordIndex][WATSON_TRANSCRIPTION.START_TIME]),
+    let done = false
+    while (!output && !done) {
+      if (this.segmentIndex < this.items.length) {
+        if (this.items[this.segmentIndex].alternatives[0]) {
+          const segment = this.items[this.segmentIndex].alternatives[0]
+          const word = segment.word_confidence
+          const timestamp = segment.timestamps
+          if (word && timestamp && this.wordIndex < word.length) {
+            if (
+              INVALID_CONTENT.indexOf(word[this.wordIndex][WATSON_TRANSCRIPTION.CONTENT]) === -1
+            ) {
+              output = {
+                confidence: parseFloat(word[this.wordIndex][WATSON_TRANSCRIPTION.CONFIDENCE]),
+                content: word[this.wordIndex][WATSON_TRANSCRIPTION.CONTENT],
+                endTime: parseFloat(timestamp[this.wordIndex][WATSON_TRANSCRIPTION.END_TIME]),
+                startTime: parseFloat(timestamp[this.wordIndex][WATSON_TRANSCRIPTION.START_TIME]),
+              }
+            }
+            this.wordIndex += 1
+          } else {
+            this.segmentIndex += 1
+            this.wordIndex = 0
           }
-          this.wordIndex += 1
         } else {
           this.segmentIndex += 1
           this.wordIndex = 0
         }
       } else {
-        this.segmentIndex += 1
-        this.wordIndex = 0
+        done = true
       }
     }
+
     return output
   }
 }

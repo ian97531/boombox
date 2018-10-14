@@ -1,5 +1,5 @@
 import { IEpisode, IEpisodeDBRecord } from '../types/models/episode'
-import { buildProjectionExpression, dynamo, getItem, putItem } from './dynamo'
+import { buildProjectionExpression, documentClient, getItem, putItem } from './dynamo'
 import { getPodcast } from './podcasts'
 
 const EPISODE_PROJECTION = [
@@ -63,7 +63,9 @@ export async function getEpisodes(
     }
   }
 
-  const data = (await dynamo.query(params).promise()) as AWS.DynamoDB.DocumentClient.QueryOutput
+  const data = (await documentClient
+    .query(params)
+    .promise()) as AWS.DynamoDB.DocumentClient.QueryOutput
   const episodes: IEpisode[] = []
   for (const item of data.Items as IEpisodeDBRecord[]) {
     episodes.push(convertToIEpisode(item))

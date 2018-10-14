@@ -1,5 +1,5 @@
 import { ISpeaker, IStatement, IStatementDBRecord } from '../types/models/transcript'
-import { buildProjectionExpression, dynamo, putItem } from './dynamo'
+import { buildProjectionExpression, documentClient, putItem } from './dynamo'
 import { getEpisode } from './episodes'
 import { getSpeakers } from './speakers'
 
@@ -42,7 +42,9 @@ export async function getStatements(
     }
   }
 
-  const data = (await dynamo.query(params).promise()) as AWS.DynamoDB.DocumentClient.QueryOutput
+  const data = (await documentClient
+    .query(params)
+    .promise()) as AWS.DynamoDB.DocumentClient.QueryOutput
   const statements: IStatement[] = []
   for (const item of data.Items as IStatementDBRecord[]) {
     statements.push(convertToIStatement(item, speakers))

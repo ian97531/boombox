@@ -3,7 +3,7 @@ import { SpeechRecognitionResults } from 'watson-developer-cloud/speech-to-text/
 import { IAWSTranscriptionResult } from '../types/aws'
 import { AWSTranscription } from '../utils/aws/Transcription'
 import { ISegment } from '../utils/episode/EpisodeJob'
-import { appendAllTranscriptions, replaceSpeakers } from '../utils/normalized'
+import { appendAllTranscriptions, combineTranscriptions } from '../utils/normalized'
 import { WatsonTranscription } from '../utils/watson/Transcription'
 
 const segments = JSON.parse(
@@ -30,7 +30,7 @@ for (const segment of segments) {
 const awsTranscription = appendAllTranscriptions(awsSegments)
 const watsonTranscription = appendAllTranscriptions(watsonSegments)
 
-const finalTranscription = replaceSpeakers(awsTranscription, watsonTranscription)
+const finalTranscription = combineTranscriptions(awsTranscription, watsonTranscription)
 
 fs.writeFileSync(
   '/Users/iwhite/Desktop/final.json',
