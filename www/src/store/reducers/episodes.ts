@@ -1,4 +1,4 @@
-import { IEpisode } from '@boombox/shared/src/types/models'
+import { IEpisode } from '@boombox/shared/src/types/models/episode'
 import {
   EpisodesAction,
   IGetEpisodesErrorAction,

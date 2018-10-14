@@ -54,12 +54,12 @@ const findEpisodes = async (req: IListRequest, res: Response, next: NextFunction
   const podcast = await getPodcast(podcastSlug)
 
   const pageSize = req.query.pageSize
-  const startTime = req.query.start
+  const startTime = new Date(req.query.start)
 
   const episodes = await getEpisodes(podcastSlug, startTime, pageSize + 1)
 
   if (episodes.length === pageSize + 1) {
-    req.nextItem = episodes[pageSize].publishTimestamp
+    req.nextItem = episodes[pageSize].publishedAt.toISOString()
     req.items = episodes.slice(0, pageSize)
   } else {
     req.items = episodes
@@ -78,12 +78,7 @@ const findStatements = async (req: IListRequest, res: Response, next: NextFuncti
   const pageSize = req.query.pageSize
   const startTime = req.query.start
 
-  const statements = await getStatements(
-    podcastSlug,
-    episode.publishTimestamp,
-    startTime,
-    pageSize + 1
-  )
+  const statements = await getStatements(podcastSlug, episode.publishedAt, startTime, pageSize + 1)
 
   if (statements.length === pageSize + 1) {
     req.nextItem = statements[pageSize].endTime

@@ -1,3 +1,4 @@
+import { IEpisode } from '../types/models/episode'
 import { ISpeaker, IStatement, IStatementDBRecord } from '../types/models/transcript'
 import { buildProjectionExpression, documentClient, putItem } from './dynamo'
 import { getEpisode } from './episodes'
@@ -54,7 +55,13 @@ export async function getStatements(
 }
 
 export async function putIStatmentDBRecord(
+  episode: IEpisode,
   statement: IStatementDBRecord
 ): Promise<AWS.DynamoDB.DocumentClient.PutItemOutput> {
-  return await putItem(statement, process.env.STATEMENTS_TABLE as string)
+  const episodeKey = buildEpisodeKey(episode.podcastSlug, episode.publishedAt)
+  return await putItem({ ...statement, episodeKey }, process.env.STATEMENTS_TABLE as string)
+}
+
+const buildEpisodeKey = (podcastSlug: string, publishedAt: Date) => {
+  return `${podcastSlug}_${publishedAt.toISOString()}`
 }

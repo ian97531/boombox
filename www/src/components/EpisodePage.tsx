@@ -1,4 +1,4 @@
-import { IEpisode } from '@boombox/shared/src/types/models'
+import { IEpisode } from '@boombox/shared/src/types/models/episode'
 import ConversationPanel from 'components/ConversationPanel'
 import Player from 'components/player/Player'
 import * as React from 'react'

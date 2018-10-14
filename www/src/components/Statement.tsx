@@ -1,4 +1,4 @@
-import { IStatement } from '@boombox/shared/types/models'
+import { IStatement } from '@boombox/shared/src/types/models/transcript'
 import classNames from 'classnames'
 import * as React from 'react'
 import { connect } from 'react-redux'

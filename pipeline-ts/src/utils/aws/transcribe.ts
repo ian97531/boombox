@@ -153,10 +153,14 @@ export const checkTranscriptionJobProcessing = async (jobName: string): Promise<
   return processing
 }
 
-export const getTranscription = async (bucket: string, filename: string): Promise<ITranscript> => {
+export const getTranscription = async (
+  bucket: string,
+  filename: string,
+  startTime: number
+): Promise<ITranscript> => {
   console.log(`Fetching ${filename}...`)
   const rawAWSTranscription = (await getJsonFile(bucket, filename)) as IAWSTranscriptionResult
-  const transcription = new AWSTranscription(rawAWSTranscription)
+  const transcription = new AWSTranscription(rawAWSTranscription, startTime)
   return transcription.getNormalizedTranscription()
 }
 

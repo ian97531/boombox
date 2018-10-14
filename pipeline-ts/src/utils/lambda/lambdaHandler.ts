@@ -15,7 +15,7 @@ export const lambdaHandler = <Input>(
   timeoutBuffer: number = 100
 ) => {
   return async (event: SQSEvent, context: Context, callback: Callback): Promise<void> => {
-    const lambda: Lambda = new Lambda()
+    const lambda: Lambda = new Lambda(context)
     let timedOut = false
 
     lambda.log('lambdaHandler: Received Event: ', event)

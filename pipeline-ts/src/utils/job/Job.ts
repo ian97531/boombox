@@ -71,7 +71,7 @@ export class Job {
       await this.logger.sendLog(`${timestamp}: ${this.lambdaName}: ${message}`)
       this.job.sequenceToken = this.logger.sequenceToken
     }
-    this.lambda.log(`${this.lambdaName}: ${message}`)
+    this.lambda.log(message)
   }
 
   public async logError(message: string, error?: Error) {

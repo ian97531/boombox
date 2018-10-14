@@ -59,8 +59,12 @@ const episodeTranscribeCompleteHandler = async (lambda: Lambda, job: Job, episod
     for (const segment of episode.segments) {
       const awsFilename = segment.transcription.aws.filename
       const watsonFilename = segment.transcription.watson.filename
-      awsTranscriptions.push(await getAWSTranscription(episode.bucket, awsFilename))
-      watsonTranscriptions.push(await getWatsonTranscription(episode.bucket, watsonFilename))
+      awsTranscriptions.push(
+        await getAWSTranscription(episode.bucket, awsFilename, segment.audio.startTime)
+      )
+      watsonTranscriptions.push(
+        await getWatsonTranscription(episode.bucket, watsonFilename, segment.audio.startTime)
+      )
     }
 
     await job.log(`Zipping ${numTranscriptions} segments into a single transcription.`)
@@ -69,7 +73,7 @@ const episodeTranscribeCompleteHandler = async (lambda: Lambda, job: Job, episod
     await putJsonFile(episode.bucket, episode.transcriptions.aws, awsTranscription)
     await putJsonFile(episode.bucket, episode.transcriptions.watson, watsonTranscription)
 
-    await job.log('Enhancing the transcription.')
+    await job.log('Combining the AWS and Watson transcriptions.')
     const finalTranscription = combineTranscriptions(awsTranscription, watsonTranscription)
     await putJsonFile(episode.bucket, episode.transcriptions.final, finalTranscription)
     await putJsonFile(episode.bucket, episode.transcriptions.insertQueue, finalTranscription)

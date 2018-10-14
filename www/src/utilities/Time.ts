@@ -65,8 +65,7 @@ export function formatDuration(seconds: number): string {
   return durationString.trim()
 }
 
-export function formatDate(datetime: string): string {
-  const date = new Date(datetime)
+export function formatDate(date: Date): string {
   const options: ILocaleStringOptions = {
     day: 'numeric',
     month: 'long',
@@ -76,8 +75,7 @@ export function formatDate(datetime: string): string {
   return date.toLocaleString(navigator.language, options)
 }
 
-export function formatTime(datetime: string, seconds: boolean = false): string {
-  const date = new Date(datetime)
+export function formatTime(date: Date, seconds: boolean = false): string {
   const options: ILocaleStringOptions = { hour: 'numeric', minute: 'numeric' }
   if (seconds) {
     options.second = 'numeric'

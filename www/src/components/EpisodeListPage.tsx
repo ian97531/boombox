@@ -1,4 +1,5 @@
-import { IEpisode, IPodcast } from '@boombox/shared/src/types/models'
+import { IEpisode } from '@boombox/shared/src/types/models/episode'
+import { IPodcast } from '@boombox/shared/src/types/models/podcast'
 import * as React from 'react'
 import { connect } from 'react-redux'
 import { RouteComponentProps, withRouter } from 'react-router'

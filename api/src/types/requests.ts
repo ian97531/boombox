@@ -1,7 +1,7 @@
 import { Request } from 'express'
 
 export interface IListRequest extends Request {
-  nextItem?: number
+  nextItem?: string | number
   totalItems: number
   items: any[]
   query: IListRequestQueryParams

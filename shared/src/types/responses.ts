@@ -14,7 +14,7 @@ interface IErrorInfo extends IInfo {
 interface IListInfo extends IInfo {
   pageSize: number
   numItems: number
-  nextItem?: number
+  nextItem?: number | string
   totalItems: number
   start: number
 }

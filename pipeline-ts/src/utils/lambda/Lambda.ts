@@ -1,3 +1,4 @@
+import { Context } from 'aws-lambda'
 export type LambdaCallback = () => Promise<void>
 
 export class Lambda {
@@ -11,6 +12,13 @@ export class Lambda {
 
   public onCompleteHandlers: LambdaCallback[] = []
   public onTimeoutHandlers: LambdaCallback[] = []
+  public getRemainingTimeInMillis: () => number
+
+  constructor(context: Context) {
+    this.getRemainingTimeInMillis = (): number => {
+      return context.getRemainingTimeInMillis()
+    }
+  }
 
   public addOnCompleteHandler(func: LambdaCallback) {
     this.onCompleteHandlers.push(func)

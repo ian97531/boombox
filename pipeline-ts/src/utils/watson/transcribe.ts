@@ -150,9 +150,13 @@ export const checkTranscriptionJobProcessing = async (jobName: string): Promise<
   return processing
 }
 
-export const getTranscription = async (bucket: string, filename: string): Promise<ITranscript> => {
+export const getTranscription = async (
+  bucket: string,
+  filename: string,
+  startTime: number
+): Promise<ITranscript> => {
   const rawTranscription = (await getJsonFile(bucket, filename)) as SpeechRecognitionResults
-  const transcription = new WatsonTranscription(rawTranscription)
+  const transcription = new WatsonTranscription(rawTranscription, startTime)
   return transcription.getNormalizedTranscription()
 }
 
