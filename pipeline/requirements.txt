@@ -1,6 +1,0 @@
-boto3==1.7.60
-botocore==1.10.60
-requests
-feedparser
-pynamodb
-slugify
