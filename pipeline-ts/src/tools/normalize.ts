@@ -1,14 +1,89 @@
-import { IAWSTranscriptionResult } from '@boombox/shared/src/types/aws'
+import { ITranscript } from '@boombox/shared/src/types/models/transcript'
 import * as fs from 'fs'
-import { SpeechRecognitionResults } from 'watson-developer-cloud/speech-to-text/v1-generated'
-import { AWSTranscription } from '../utils/episode/awsTranscribe'
-import { ISegment } from '../utils/episode/EpisodeJob'
-import { WatsonTranscription } from '../utils/episode/watsonTranscribe'
-import { appendAllTranscriptions, combineTranscriptions } from '../utils/normalized'
+import { normalized } from '../utils/transcribe/normalized'
 
-const segments = JSON.parse(
-  '[{"audio":{"duration":2633,"filename":"./pipeline-ts/src/tools/json/audiosegment_0_2633.mp3","startTime":0},"transcription":{"aws":{"filename":"./pipeline-ts/src/tools/json/awsrawtranscriptionsegment_0_2633.json"},"watson":{"filename":"./pipeline-ts/src/tools/json/watsonrawtranscriptionsegment_0_2633.json","jobName":"371365f2-cdbe-11e8-890c-9f4e8ab94df6"}}},{"audio":{"duration":240,"filename":"./pipeline-ts/src/tools/json/audiosegment_2513_240.mp3","startTime":2513},"transcription":{"aws":{"filename":"./pipeline-ts/src/tools/json/awsrawtranscriptionsegment_2513_240.json"},"watson":{"filename":"./pipeline-ts/src/tools/json/watsonrawtranscriptionsegment_2513_240.json"}}},{"audio":{"duration":2632,"filename":"./pipeline-ts/src/tools/json/audiosegment_2633_2632.mp3","startTime":2633},"transcription":{"aws":{"filename":"./pipeline-ts/src/tools/json/awsrawtranscriptionsegment_2633_2632.json"},"watson":{"filename":"./pipeline-ts/src/tools/json/watsonrawtranscriptionsegment_2633_2632.json","jobName":"417fea74-cdbe-11e8-9522-2789d9c9143b"}}}]'
-) as ISegment[]
+const timings = [
+  {
+    duration: 2783,
+    startTime: 0,
+  },
+  {
+    duration: 240,
+    startTime: 2663,
+  },
+  {
+    duration: 2782,
+    startTime: 2783,
+  },
+]
+
+const segments = [
+  {
+    audio: {
+      duration: timings[0].duration,
+      filename: `./pipeline-ts/src/tools/json/audio-segment_${timings[0].startTime}_${
+        timings[0].duration
+      }.mp3`,
+      startTime: timings[0].startTime,
+    },
+    transcription: {
+      aws: {
+        filename: `./pipeline-ts/src/tools/json/aws-transcription-segment_${timings[0].startTime}_${
+          timings[0].duration
+        }.json`,
+      },
+      watson: {
+        filename: `./pipeline-ts/src/tools/json/watson-transcription-segment_${
+          timings[0].startTime
+        }_${timings[0].duration}.json`,
+        jobName: '371365f2-cdbe-11e8-890c-9f4e8ab94df6',
+      },
+    },
+  },
+  {
+    audio: {
+      duration: timings[1].duration,
+      filename: `./pipeline-ts/src/tools/json/audio-segment_${timings[1].startTime}_${
+        timings[1].duration
+      }.mp3`,
+      startTime: timings[1].startTime,
+    },
+    transcription: {
+      aws: {
+        filename: `./pipeline-ts/src/tools/json/aws-transcription-segment_${timings[1].startTime}_${
+          timings[1].duration
+        }.json`,
+      },
+      watson: {
+        filename: `./pipeline-ts/src/tools/json/watson-transcription-segment_${
+          timings[1].startTime
+        }_${timings[1].duration}.json`,
+      },
+    },
+  },
+  {
+    audio: {
+      duration: timings[2].duration,
+      filename: `./pipeline-ts/src/tools/json/audio-segment_${timings[2].startTime}_${
+        timings[2].duration
+      }.mp3`,
+      startTime: timings[2].startTime,
+    },
+    transcription: {
+      aws: {
+        filename: `./pipeline-ts/src/tools/json/aws-transcription-segment_${timings[2].startTime}_${
+          timings[2].duration
+        }.json`,
+      },
+      watson: {
+        filename: `./pipeline-ts/src/tools/json/watson-transcription-segment_${
+          timings[2].startTime
+        }_${timings[2].duration}.json`,
+        jobName: '417fea74-cdbe-11e8-9522-2789d9c9143b',
+      },
+    },
+  },
+]
 
 const awsSegments = []
 const watsonSegments = []
@@ -16,21 +91,19 @@ const watsonSegments = []
 for (const segment of segments) {
   const awsContent = JSON.parse(
     fs.readFileSync(segment.transcription.aws.filename, 'utf8')
-  ) as IAWSTranscriptionResult
-  const awsTranscriptionSegment = new AWSTranscription(awsContent, segment.audio.startTime)
-  awsSegments.push(awsTranscriptionSegment.getNormalizedTranscription())
+  ) as ITranscript
+  awsSegments.push(awsContent)
 
   const watsonContent = JSON.parse(
     fs.readFileSync(segment.transcription.watson.filename, 'utf8')
-  ) as SpeechRecognitionResults
-  const watsonTranscriptionSegment = new WatsonTranscription(watsonContent, segment.audio.startTime)
-  watsonSegments.push(watsonTranscriptionSegment.getNormalizedTranscription())
+  ) as ITranscript
+  watsonSegments.push(watsonContent)
 }
 
-const awsTranscription = appendAllTranscriptions(awsSegments)
-const watsonTranscription = appendAllTranscriptions(watsonSegments)
+const awsTranscription = normalized.appendAllTranscriptions(awsSegments)
+const watsonTranscription = normalized.appendAllTranscriptions(watsonSegments)
 
-const finalTranscription = combineTranscriptions(awsTranscription, watsonTranscription)
+const finalTranscription = normalized.combineTranscriptions(awsTranscription, watsonTranscription)
 
 fs.writeFileSync(
   '/Users/iwhite/Desktop/final.json',

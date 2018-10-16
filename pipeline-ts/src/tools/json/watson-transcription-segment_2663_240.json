@@ -1,0 +1,5091 @@
+[
+  {
+    "confidence": 0.136,
+    "content": "tomatoes",
+    "endTime": 2663.58,
+    "startTime": 2663.03,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.405,
+    "content": "you",
+    "endTime": 2664.05,
+    "startTime": 2663.88,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.806,
+    "content": "in",
+    "endTime": 2664.17,
+    "startTime": 2664.05,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.883,
+    "content": "some",
+    "endTime": 2664.41,
+    "startTime": 2664.17,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.759,
+    "content": "vehicle",
+    "endTime": 2664.93,
+    "startTime": 2664.41,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.62,
+    "content": "that",
+    "endTime": 2665.09,
+    "startTime": 2664.93,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.192,
+    "content": "you've",
+    "endTime": 2665.21,
+    "startTime": 2665.09,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.973,
+    "content": "not",
+    "endTime": 2665.43,
+    "startTime": 2665.21,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "that",
+    "endTime": 2665.63,
+    "startTime": 2665.43,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "comfortable",
+    "endTime": 2666.13,
+    "startTime": 2665.63,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "with",
+    "endTime": 2666.36,
+    "startTime": 2666.13,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.916,
+    "content": "with",
+    "endTime": 2666.49,
+    "startTime": 2666.36,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.383,
+    "content": "the",
+    "endTime": 2666.56,
+    "startTime": 2666.49,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.792,
+    "content": "driver",
+    "endTime": 2667.02,
+    "startTime": 2666.56,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.201,
+    "content": "Hey",
+    "endTime": 2667.13,
+    "startTime": 2667.02,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.726,
+    "content": "you",
+    "endTime": 2667.26,
+    "startTime": 2667.13,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.142,
+    "content": "diet",
+    "endTime": 2667.48,
+    "startTime": 2667.26,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.447,
+    "content": "and",
+    "endTime": 2667.6,
+    "startTime": 2667.48,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.514,
+    "content": "would",
+    "endTime": 2667.98,
+    "startTime": 2667.82,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.865,
+    "content": "do",
+    "endTime": 2668.53,
+    "startTime": 2668.09,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.528,
+    "content": "it",
+    "endTime": 2668.69,
+    "startTime": 2668.53,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.356,
+    "content": "right",
+    "endTime": 2669.15,
+    "startTime": 2668.69,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.68,
+    "content": "in",
+    "endTime": 2669.24,
+    "startTime": 2669.15,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.654,
+    "content": "there",
+    "endTime": 2669.56,
+    "startTime": 2669.24,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "trucks",
+    "endTime": 2670.48,
+    "startTime": 2670.01,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "and",
+    "endTime": 2670.71,
+    "startTime": 2670.48,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "buses",
+    "endTime": 2671.13,
+    "startTime": 2670.71,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.703,
+    "content": "and",
+    "endTime": 2671.28,
+    "startTime": 2671.13,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.459,
+    "content": "cast",
+    "endTime": 2671.67,
+    "startTime": 2671.28,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.99,
+    "content": "coming",
+    "endTime": 2671.93,
+    "startTime": 2671.67,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "the",
+    "endTime": 2672.02,
+    "startTime": 2671.93,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "other",
+    "endTime": 2672.22,
+    "startTime": 2672.02,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "way",
+    "endTime": 2672.42,
+    "startTime": 2672.22,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.819,
+    "content": "around",
+    "endTime": 2672.76,
+    "startTime": 2672.42,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.996,
+    "content": "blind",
+    "endTime": 2673.14,
+    "startTime": 2672.76,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.098,
+    "content": "corners",
+    "endTime": 2673.74,
+    "startTime": 2673.14,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.89,
+    "content": "and",
+    "endTime": 2674.38,
+    "startTime": 2674.21,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.903,
+    "content": "at",
+    "endTime": 2674.49,
+    "startTime": 2674.38,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "least",
+    "endTime": 2675.06,
+    "startTime": 2674.49,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "thirty",
+    "endTime": 2675.77,
+    "startTime": 2675.17,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "or",
+    "endTime": 2675.85,
+    "startTime": 2675.77,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "forty",
+    "endTime": 2676.2,
+    "startTime": 2675.85,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "times",
+    "endTime": 2676.69,
+    "startTime": 2676.2,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.87,
+    "content": "on",
+    "endTime": 2676.86,
+    "startTime": 2676.72,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.645,
+    "content": "H.",
+    "endTime": 2677.02,
+    "startTime": 2676.86,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.958,
+    "content": "drive",
+    "endTime": 2677.32,
+    "startTime": 2677.02,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.974,
+    "content": "you",
+    "endTime": 2677.4,
+    "startTime": 2677.32,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.881,
+    "content": "think",
+    "endTime": 2677.7,
+    "startTime": 2677.4,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.423,
+    "content": "we're",
+    "endTime": 2677.98,
+    "startTime": 2677.82,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.601,
+    "content": "about",
+    "endTime": 2678.19,
+    "startTime": 2677.98,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.829,
+    "content": "to",
+    "endTime": 2678.3,
+    "startTime": 2678.19,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.651,
+    "content": "tip",
+    "endTime": 2678.51,
+    "startTime": 2678.3,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.422,
+    "content": "over",
+    "endTime": 2678.87,
+    "startTime": 2678.51,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "and",
+    "endTime": 2679.18,
+    "startTime": 2678.87,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "go",
+    "endTime": 2679.45,
+    "startTime": 2679.24,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.973,
+    "content": "over",
+    "endTime": 2679.63,
+    "startTime": 2679.45,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "this",
+    "endTime": 2679.77,
+    "startTime": 2679.63,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "cliff",
+    "endTime": 2680.29,
+    "startTime": 2679.77,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.785,
+    "content": "is",
+    "endTime": 2680.92,
+    "startTime": 2680.63,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.997,
+    "content": "really",
+    "endTime": 2681.7,
+    "startTime": 2680.92,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "quite",
+    "endTime": 2682.62,
+    "startTime": 2682.22,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.995,
+    "content": "scary",
+    "endTime": 2683.28,
+    "startTime": 2682.62,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.333,
+    "content": "most",
+    "endTime": 2683.98,
+    "startTime": 2683.56,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "people",
+    "endTime": 2684.26,
+    "startTime": 2683.98,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "in",
+    "endTime": 2684.37,
+    "startTime": 2684.26,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "the",
+    "endTime": 2684.45,
+    "startTime": 2684.37,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "vehicle",
+    "endTime": 2685.1,
+    "startTime": 2684.45,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.589,
+    "content": "were",
+    "endTime": 2685.59,
+    "startTime": 2685.37,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.995,
+    "content": "terrified",
+    "endTime": 2686.41,
+    "startTime": 2685.59,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.964,
+    "content": "by",
+    "endTime": 2687.15,
+    "startTime": 2686.8,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.839,
+    "content": "like",
+    "endTime": 2687.34,
+    "startTime": 2687.19,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "a",
+    "endTime": 2687.42,
+    "startTime": 2687.34,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.934,
+    "content": "lot",
+    "endTime": 2687.57,
+    "startTime": 2687.42,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.33,
+    "content": "of",
+    "endTime": 2687.66,
+    "startTime": 2687.57,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "white",
+    "endTime": 2687.84,
+    "startTime": 2687.66,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.924,
+    "content": "knuckles",
+    "endTime": 2688.26,
+    "startTime": 2687.84,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.979,
+    "content": "yeah",
+    "endTime": 2688.73,
+    "startTime": 2688.26,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "I",
+    "endTime": 2689.15,
+    "startTime": 2688.99,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "was",
+    "endTime": 2689.32,
+    "startTime": 2689.15,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.986,
+    "content": "quite",
+    "endTime": 2689.56,
+    "startTime": 2689.32,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.377,
+    "content": "a",
+    "endTime": 2689.67,
+    "startTime": 2689.56,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.377,
+    "content": "bit",
+    "endTime": 2689.85,
+    "startTime": 2689.67,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.995,
+    "content": "to",
+    "endTime": 2689.95,
+    "startTime": 2689.85,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "the",
+    "endTime": 2690.04,
+    "startTime": 2689.95,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "fact",
+    "endTime": 2690.36,
+    "startTime": 2690.04,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "that",
+    "endTime": 2690.47,
+    "startTime": 2690.36,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.819,
+    "content": "this",
+    "endTime": 2690.62,
+    "startTime": 2690.47,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "could",
+    "endTime": 2690.79,
+    "startTime": 2690.62,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "be",
+    "endTime": 2690.93,
+    "startTime": 2690.79,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.796,
+    "content": "it",
+    "endTime": 2691.12,
+    "startTime": 2690.93,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.572,
+    "content": "in",
+    "endTime": 2691.33,
+    "startTime": 2691.2,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.167,
+    "content": "a",
+    "endTime": 2691.45,
+    "startTime": 2691.33,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "this",
+    "endTime": 2692.46,
+    "startTime": 2692.29,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "could",
+    "endTime": 2692.63,
+    "startTime": 2692.46,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.951,
+    "content": "be",
+    "endTime": 2692.75,
+    "startTime": 2692.63,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.483,
+    "content": "how",
+    "endTime": 2692.96,
+    "startTime": 2692.75,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.498,
+    "content": "I",
+    "endTime": 2693.06,
+    "startTime": 2692.96,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.917,
+    "content": "die",
+    "endTime": 2693.48,
+    "startTime": 2693.06,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.205,
+    "content": "flow",
+    "endTime": 2693.91,
+    "startTime": 2693.51,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.753,
+    "content": "wow",
+    "endTime": 2694.41,
+    "startTime": 2694.11,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.985,
+    "content": "okay",
+    "endTime": 2694.75,
+    "startTime": 2694.41,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "so",
+    "endTime": 2694.89,
+    "startTime": 2694.75,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.914,
+    "content": "even",
+    "endTime": 2695.15,
+    "startTime": 2694.89,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.976,
+    "content": "tough",
+    "endTime": 2695.37,
+    "startTime": 2695.15,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "as",
+    "endTime": 2695.5,
+    "startTime": 2695.37,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "nails",
+    "endTime": 2695.77,
+    "startTime": 2695.5,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "Brady",
+    "endTime": 2696.13,
+    "startTime": 2695.77,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "was",
+    "endTime": 2696.33,
+    "startTime": 2696.13,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.972,
+    "content": "like",
+    "endTime": 2696.51,
+    "startTime": 2696.33,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "coming",
+    "endTime": 2696.83,
+    "startTime": 2696.51,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "to",
+    "endTime": 2696.94,
+    "startTime": 2696.83,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "terms",
+    "endTime": 2697.41,
+    "startTime": 2696.94,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.998,
+    "content": "with",
+    "endTime": 2697.58,
+    "startTime": 2697.41,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.964,
+    "content": "death",
+    "endTime": 2697.85,
+    "startTime": 2697.58,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.688,
+    "content": "I",
+    "endTime": 2698.78,
+    "startTime": 2698.69,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.563,
+    "content": "mean",
+    "endTime": 2698.94,
+    "startTime": 2698.78,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.963,
+    "content": "in",
+    "endTime": 2699.07,
+    "startTime": 2698.94,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "my",
+    "endTime": 2699.25,
+    "startTime": 2699.07,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.988,
+    "content": "head",
+    "endTime": 2699.49,
+    "startTime": 2699.25,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.899,
+    "content": "I",
+    "endTime": 2699.6,
+    "startTime": 2699.49,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.915,
+    "content": "would",
+    "endTime": 2699.79,
+    "startTime": 2699.6,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.592,
+    "content": "have",
+    "endTime": 2699.91,
+    "startTime": 2699.79,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.862,
+    "content": "I",
+    "endTime": 2700.31,
+    "startTime": 2700.16,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.809,
+    "content": "would",
+    "endTime": 2700.48,
+    "startTime": 2700.31,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.529,
+    "content": "have",
+    "endTime": 2700.59,
+    "startTime": 2700.48,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.341,
+    "content": "lot",
+    "endTime": 2700.82,
+    "startTime": 2700.59,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.195,
+    "content": "walked",
+    "endTime": 2701.13,
+    "startTime": 2700.82,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.193,
+    "content": "out",
+    "endTime": 2701.24,
+    "startTime": 2701.13,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.194,
+    "content": "of",
+    "endTime": 2701.31,
+    "startTime": 2701.24,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.887,
+    "content": "the",
+    "endTime": 2701.38,
+    "startTime": 2701.31,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "vehicle",
+    "endTime": 2701.69,
+    "startTime": 2701.38,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.318,
+    "content": "and",
+    "endTime": 2701.79,
+    "startTime": 2701.69,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "just",
+    "endTime": 2701.97,
+    "startTime": 2701.79,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.619,
+    "content": "let",
+    "endTime": 2702.16,
+    "startTime": 2701.97,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.542,
+    "content": "dusted",
+    "endTime": 2702.53,
+    "startTime": 2702.16,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "myself",
+    "endTime": 2702.88,
+    "startTime": 2702.53,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.983,
+    "content": "down",
+    "endTime": 2703.25,
+    "startTime": 2702.88,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.647,
+    "content": "maybe",
+    "endTime": 2703.98,
+    "startTime": 2703.64,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.584,
+    "content": "had",
+    "endTime": 2704.14,
+    "startTime": 2703.98,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.632,
+    "content": "a",
+    "endTime": 2704.19,
+    "startTime": 2704.14,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.486,
+    "content": "break",
+    "endTime": 2704.56,
+    "startTime": 2704.19,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.521,
+    "content": "in",
+    "endTime": 2704.65,
+    "startTime": 2704.56,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.84,
+    "content": "fine",
+    "endTime": 2705.06,
+    "startTime": 2704.65,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "right",
+    "endTime": 2705.35,
+    "startTime": 2705.09,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "you",
+    "endTime": 2705.44,
+    "startTime": 2705.35,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "don't",
+    "endTime": 2705.59,
+    "startTime": 2705.44,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.816,
+    "content": "need",
+    "endTime": 2705.75,
+    "startTime": 2705.59,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.996,
+    "content": "Michael",
+    "endTime": 2705.99,
+    "startTime": 2705.75,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "Douglas",
+    "endTime": 2706.31,
+    "startTime": 2705.99,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.799,
+    "content": "to",
+    "endTime": 2706.41,
+    "startTime": 2706.31,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "save",
+    "endTime": 2706.64,
+    "startTime": 2706.41,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.994,
+    "content": "you",
+    "endTime": 2706.76,
+    "startTime": 2706.64,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.687,
+    "content": "in",
+    "endTime": 2706.86,
+    "startTime": 2706.76,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.972,
+    "content": "the",
+    "endTime": 2706.95,
+    "startTime": 2706.86,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.997,
+    "content": "jungles",
+    "endTime": 2707.35,
+    "startTime": 2706.95,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.877,
+    "content": "I",
+    "endTime": 2707.52,
+    "startTime": 2707.35,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.839,
+    "content": "understand",
+    "endTime": 2707.94,
+    "startTime": 2707.52,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.659,
+    "content": "that",
+    "endTime": 2708.23,
+    "startTime": 2707.94,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.754,
+    "content": "but",
+    "endTime": 2708.56,
+    "startTime": 2708.44,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "you",
+    "endTime": 2708.76,
+    "startTime": 2708.56,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "definitely",
+    "endTime": 2709.26,
+    "startTime": 2708.76,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "would",
+    "endTime": 2709.47,
+    "startTime": 2709.26,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "have",
+    "endTime": 2709.88,
+    "startTime": 2709.67,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "found",
+    "endTime": 2710.4,
+    "startTime": 2709.88,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.995,
+    "content": "that",
+    "endTime": 2710.83,
+    "startTime": 2710.43,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.217,
+    "content": "unpleasant",
+    "endTime": 2711.5,
+    "startTime": 2710.94,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.292,
+    "content": "thirty",
+    "endTime": 2711.82,
+    "startTime": 2711.5,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.103,
+    "content": "like",
+    "endTime": 2712.04,
+    "startTime": 2711.82,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "thirty",
+    "endTime": 2712.64,
+    "startTime": 2712.26,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "forty",
+    "endTime": 2712.97,
+    "startTime": 2712.64,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.871,
+    "content": "minute",
+    "endTime": 2713.19,
+    "startTime": 2712.97,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.523,
+    "content": "drives",
+    "endTime": 2713.66,
+    "startTime": 2713.19,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.792,
+    "content": "but",
+    "endTime": 2713.98,
+    "startTime": 2713.66,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "highly",
+    "endTime": 2714.73,
+    "startTime": 2714.29,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.385,
+    "content": "implies",
+    "endTime": 2715.07,
+    "startTime": 2714.73,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.343,
+    "content": "that",
+    "endTime": 2715.32,
+    "startTime": 2715.07,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.914,
+    "content": "note",
+    "endTime": 2715.66,
+    "startTime": 2715.32,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.723,
+    "content": "thanks",
+    "endTime": 2716.4,
+    "startTime": 2715.89,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.991,
+    "content": "I",
+    "endTime": 2717.79,
+    "startTime": 2717.69,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.98,
+    "content": "think",
+    "endTime": 2718,
+    "startTime": 2717.79,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.508,
+    "content": "I",
+    "endTime": 2718.05,
+    "startTime": 2718,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.659,
+    "content": "may",
+    "endTime": 2718.46,
+    "startTime": 2718.05,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.994,
+    "content": "very",
+    "endTime": 2718.7,
+    "startTime": 2718.49,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.915,
+    "content": "well",
+    "endTime": 2718.84,
+    "startTime": 2718.7,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.109,
+    "content": "skip",
+    "endTime": 2719.06,
+    "startTime": 2718.84,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.987,
+    "content": "that",
+    "endTime": 2719.33,
+    "startTime": 2719.06,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "but",
+    "endTime": 2719.73,
+    "startTime": 2719.44,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "you're",
+    "endTime": 2720.41,
+    "startTime": 2720.17,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "totally",
+    "endTime": 2720.8,
+    "startTime": 2720.41,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.974,
+    "content": "right",
+    "endTime": 2721.13,
+    "startTime": 2720.8,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "that",
+    "endTime": 2721.35,
+    "startTime": 2721.13,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "I",
+    "endTime": 2721.54,
+    "startTime": 2721.39,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "king",
+    "endTime": 2721.74,
+    "startTime": 2721.54,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.935,
+    "content": "in",
+    "endTime": 2721.85,
+    "startTime": 2721.74,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.985,
+    "content": "the",
+    "endTime": 2721.94,
+    "startTime": 2721.85,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.743,
+    "content": "woods",
+    "endTime": 2722.45,
+    "startTime": 2721.94,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.161,
+    "content": "that's",
+    "endTime": 2723.28,
+    "startTime": 2723.05,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.481,
+    "content": "the",
+    "endTime": 2723.39,
+    "startTime": 2723.28,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.994,
+    "content": "thing",
+    "endTime": 2723.87,
+    "startTime": 2723.39,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "is",
+    "endTime": 2724.31,
+    "startTime": 2723.9,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "right",
+    "endTime": 2724.6,
+    "startTime": 2724.38,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "up",
+    "endTime": 2724.67,
+    "startTime": 2724.6,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.961,
+    "content": "my",
+    "endTime": 2724.79,
+    "startTime": 2724.67,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "alley",
+    "endTime": 2725.2,
+    "startTime": 2724.79,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.488,
+    "content": "you",
+    "endTime": 2725.32,
+    "startTime": 2725.23,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.177,
+    "content": "gotta",
+    "endTime": 2725.48,
+    "startTime": 2725.32,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.957,
+    "content": "get",
+    "endTime": 2725.61,
+    "startTime": 2725.48,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.857,
+    "content": "the",
+    "endTime": 2725.7,
+    "startTime": 2725.61,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "mountains",
+    "endTime": 2726.29,
+    "startTime": 2725.7,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.129,
+    "content": "cried",
+    "endTime": 2726.55,
+    "startTime": 2726.29,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.215,
+    "content": "out",
+    "endTime": 2726.67,
+    "startTime": 2726.55,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "the",
+    "endTime": 2726.77,
+    "startTime": 2726.67,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.669,
+    "content": "woods",
+    "endTime": 2727.14,
+    "startTime": 2726.77,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "the",
+    "endTime": 2727.23,
+    "startTime": 2727.14,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.964,
+    "content": "mountains",
+    "endTime": 2727.7,
+    "startTime": 2727.23,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.207,
+    "content": "about",
+    "endTime": 2727.94,
+    "startTime": 2727.7,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.988,
+    "content": "something",
+    "endTime": 2728.26,
+    "startTime": 2727.94,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.998,
+    "content": "more",
+    "endTime": 2728.77,
+    "startTime": 2728.26,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.828,
+    "content": "something",
+    "endTime": 2729.74,
+    "startTime": 2729.28,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.998,
+    "content": "more",
+    "endTime": 2729.96,
+    "startTime": 2729.74,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.604,
+    "content": "look",
+    "endTime": 2730.62,
+    "startTime": 2730.37,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.68,
+    "content": "pretty",
+    "endTime": 2730.86,
+    "startTime": 2730.62,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.404,
+    "content": "is",
+    "endTime": 2731.02,
+    "startTime": 2730.86,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.827,
+    "content": "as",
+    "endTime": 2731.41,
+    "startTime": 2731.18,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.824,
+    "content": "of",
+    "endTime": 2731.53,
+    "startTime": 2731.41,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.63,
+    "content": "your",
+    "endTime": 2731.66,
+    "startTime": 2731.53,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "romantic",
+    "endTime": 2732.06,
+    "startTime": 2731.66,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "something",
+    "endTime": 2732.33,
+    "startTime": 2732.06,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "more",
+    "endTime": 2732.48,
+    "startTime": 2732.33,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.761,
+    "content": "voice",
+    "endTime": 2732.8,
+    "startTime": 2732.48,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.612,
+    "content": "does",
+    "endTime": 2733.68,
+    "startTime": 2733.51,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "the",
+    "endTime": 2733.77,
+    "startTime": 2733.68,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "Pacific",
+    "endTime": 2734.16,
+    "startTime": 2733.77,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.931,
+    "content": "Northwest",
+    "endTime": 2734.77,
+    "startTime": 2734.16,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.541,
+    "content": "count",
+    "endTime": 2735.07,
+    "startTime": 2734.81,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "for",
+    "endTime": 2735.18,
+    "startTime": 2735.07,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "you",
+    "endTime": 2735.38,
+    "startTime": 2735.18,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.979,
+    "content": "because",
+    "endTime": 2735.79,
+    "startTime": 2735.38,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.66,
+    "content": "in",
+    "endTime": 2735.9,
+    "startTime": 2735.79,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.608,
+    "content": "it",
+    "endTime": 2735.98,
+    "startTime": 2735.9,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "like",
+    "endTime": 2736.12,
+    "startTime": 2735.98,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.424,
+    "content": "in",
+    "endTime": 2736.2,
+    "startTime": 2736.12,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.977,
+    "content": "a",
+    "endTime": 2736.28,
+    "startTime": 2736.2,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "tiny",
+    "endTime": 2736.7,
+    "startTime": 2736.28,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "precursor",
+    "endTime": 2737.42,
+    "startTime": 2736.7,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "to",
+    "endTime": 2738.23,
+    "startTime": 2737.76,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "this",
+    "endTime": 2739.04,
+    "startTime": 2738.63,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "current",
+    "endTime": 2739.46,
+    "startTime": 2739.04,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.813,
+    "content": "project",
+    "endTime": 2739.83,
+    "startTime": 2739.46,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.88,
+    "content": "of",
+    "endTime": 2739.91,
+    "startTime": 2739.83,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "isolation",
+    "endTime": 2740.44,
+    "startTime": 2739.91,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.794,
+    "content": "like",
+    "endTime": 2740.59,
+    "startTime": 2740.44,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "this",
+    "endTime": 2740.72,
+    "startTime": 2740.59,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "past",
+    "endTime": 2741.04,
+    "startTime": 2740.72,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "summer",
+    "endTime": 2741.28,
+    "startTime": 2741.04,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "I",
+    "endTime": 2741.38,
+    "startTime": 2741.28,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "spent",
+    "endTime": 2741.83,
+    "startTime": 2741.38,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "a",
+    "endTime": 2742.25,
+    "startTime": 2742.12,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "week",
+    "endTime": 2742.68,
+    "startTime": 2742.25,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "in",
+    "endTime": 2743.19,
+    "startTime": 2742.71,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.997,
+    "content": "Washington",
+    "endTime": 2743.88,
+    "startTime": 2743.22,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "doing",
+    "endTime": 2744.2,
+    "startTime": 2743.91,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "exactly",
+    "endTime": 2744.59,
+    "startTime": 2744.2,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "that",
+    "endTime": 2744.82,
+    "startTime": 2744.59,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.439,
+    "content": "just",
+    "endTime": 2744.96,
+    "startTime": 2744.82,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "like",
+    "endTime": 2745.23,
+    "startTime": 2744.96,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "going",
+    "endTime": 2745.75,
+    "startTime": 2745.5,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "into",
+    "endTime": 2745.92,
+    "startTime": 2745.75,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "the",
+    "endTime": 2746,
+    "startTime": 2745.92,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.998,
+    "content": "mountains",
+    "endTime": 2746.59,
+    "startTime": 2746,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.321,
+    "content": "and",
+    "endTime": 2746.72,
+    "startTime": 2746.62,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "doing",
+    "endTime": 2746.93,
+    "startTime": 2746.72,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.994,
+    "content": "hikes",
+    "endTime": 2747.25,
+    "startTime": 2746.93,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.315,
+    "content": "are",
+    "endTime": 2747.45,
+    "startTime": 2747.25,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.592,
+    "content": "you",
+    "endTime": 2747.7,
+    "startTime": 2747.61,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.674,
+    "content": "know",
+    "endTime": 2747.8,
+    "startTime": 2747.7,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "it",
+    "endTime": 2747.93,
+    "startTime": 2747.8,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "wasn't",
+    "endTime": 2748.23,
+    "startTime": 2747.93,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "for",
+    "endTime": 2748.58,
+    "startTime": 2748.23,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "an",
+    "endTime": 2748.77,
+    "startTime": 2748.58,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "extended",
+    "endTime": 2749.37,
+    "startTime": 2748.77,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "duration",
+    "endTime": 2749.94,
+    "startTime": 2749.37,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "to",
+    "endTime": 2750.1,
+    "startTime": 2749.94,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.87,
+    "content": "a",
+    "endTime": 2750.17,
+    "startTime": 2750.1,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "particular",
+    "endTime": 2750.68,
+    "startTime": 2750.17,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.997,
+    "content": "location",
+    "endTime": 2751.28,
+    "startTime": 2750.68,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "but",
+    "endTime": 2751.54,
+    "startTime": 2751.37,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "it",
+    "endTime": 2751.65,
+    "startTime": 2751.54,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "was",
+    "endTime": 2752.04,
+    "startTime": 2751.65,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.431,
+    "content": "I",
+    "endTime": 2752.22,
+    "startTime": 2752.07,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.431,
+    "content": "guess",
+    "endTime": 2752.38,
+    "startTime": 2752.22,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "in",
+    "endTime": 2752.47,
+    "startTime": 2752.38,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "the",
+    "endTime": 2752.55,
+    "startTime": 2752.47,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "woods",
+    "endTime": 2752.99,
+    "startTime": 2752.55,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.426,
+    "content": "could",
+    "endTime": 2753.23,
+    "startTime": 2753.02,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.311,
+    "content": "around",
+    "endTime": 2753.64,
+    "startTime": 2753.23,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.467,
+    "content": "in",
+    "endTime": 2753.85,
+    "startTime": 2753.64,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.436,
+    "content": "the",
+    "endTime": 2753.94,
+    "startTime": 2753.85,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.289,
+    "content": "woods",
+    "endTime": 2754.35,
+    "startTime": 2754,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.695,
+    "content": "scared",
+    "endTime": 2754.74,
+    "startTime": 2754.38,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "I",
+    "endTime": 2755.3,
+    "startTime": 2755.17,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "need",
+    "endTime": 2755.49,
+    "startTime": 2755.3,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "to",
+    "endTime": 2755.61,
+    "startTime": 2755.49,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.772,
+    "content": "walk",
+    "endTime": 2755.91,
+    "startTime": 2755.61,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.999,
+    "content": "more",
+    "endTime": 2756.18,
+    "startTime": 2755.91,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.597,
+    "content": "I",
+    "endTime": 2756.25,
+    "startTime": 2756.18,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.598,
+    "content": "want",
+    "endTime": 2756.44,
+    "startTime": 2756.25,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.962,
+    "content": "to",
+    "endTime": 2756.54,
+    "startTime": 2756.44,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.267,
+    "content": "will",
+    "endTime": 2756.75,
+    "startTime": 2756.54,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.973,
+    "content": "contract",
+    "endTime": 2757.18,
+    "startTime": 2756.75,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.96,
+    "content": "more",
+    "endTime": 2757.43,
+    "startTime": 2757.18,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.422,
+    "content": "I",
+    "endTime": 2757.52,
+    "startTime": 2757.46,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "think",
+    "endTime": 2757.66,
+    "startTime": 2757.52,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "it's",
+    "endTime": 2757.8,
+    "startTime": 2757.66,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "good",
+    "endTime": 2758.01,
+    "startTime": 2757.8,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "for",
+    "endTime": 2758.13,
+    "startTime": 2758.01,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.983,
+    "content": "the",
+    "endTime": 2758.24,
+    "startTime": 2758.13,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.227,
+    "content": "so",
+    "endTime": 2758.73,
+    "startTime": 2758.24,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "I",
+    "endTime": 2759.13,
+    "startTime": 2758.81,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "totally",
+    "endTime": 2760.01,
+    "startTime": 2759.38,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "agree",
+    "endTime": 2760.28,
+    "startTime": 2760.01,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "with",
+    "endTime": 2760.45,
+    "startTime": 2760.28,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "you",
+    "endTime": 2760.58,
+    "startTime": 2760.45,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.871,
+    "content": "I",
+    "endTime": 2760.74,
+    "startTime": 2760.58,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "think",
+    "endTime": 2760.96,
+    "startTime": 2760.74,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "it",
+    "endTime": 2761.05,
+    "startTime": 2760.96,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "is",
+    "endTime": 2761.19,
+    "startTime": 2761.05,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.972,
+    "content": "really",
+    "endTime": 2761.45,
+    "startTime": 2761.19,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "good",
+    "endTime": 2761.61,
+    "startTime": 2761.45,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "for",
+    "endTime": 2761.74,
+    "startTime": 2761.61,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "the",
+    "endTime": 2761.87,
+    "startTime": 2761.74,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.996,
+    "content": "soul",
+    "endTime": 2762.13,
+    "startTime": 2761.87,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.59,
+    "content": "like",
+    "endTime": 2762.29,
+    "startTime": 2762.16,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.59,
+    "content": "it's",
+    "endTime": 2762.65,
+    "startTime": 2762.29,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "in",
+    "endTime": 2763.49,
+    "startTime": 2763.29,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "terms",
+    "endTime": 2763.77,
+    "startTime": 2763.49,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.95,
+    "content": "of",
+    "endTime": 2764,
+    "startTime": 2763.77,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "things",
+    "endTime": 2764.43,
+    "startTime": 2764.05,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "that",
+    "endTime": 2764.53,
+    "startTime": 2764.43,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.736,
+    "content": "I",
+    "endTime": 2764.56,
+    "startTime": 2764.53,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.709,
+    "content": "am",
+    "endTime": 2764.81,
+    "startTime": 2764.56,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "trying",
+    "endTime": 2765.33,
+    "startTime": 2764.81,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "to",
+    "endTime": 2765.48,
+    "startTime": 2765.33,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "do",
+    "endTime": 2766.05,
+    "startTime": 2765.48,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "more",
+    "endTime": 2766.42,
+    "startTime": 2766.13,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "of",
+    "endTime": 2766.6,
+    "startTime": 2766.42,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "this",
+    "endTime": 2766.78,
+    "startTime": 2766.6,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "year",
+    "endTime": 2767.14,
+    "startTime": 2766.78,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "that",
+    "endTime": 2767.37,
+    "startTime": 2767.17,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "is",
+    "endTime": 2767.5,
+    "startTime": 2767.37,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "definitely",
+    "endTime": 2768.24,
+    "startTime": 2767.5,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "one",
+    "endTime": 2768.58,
+    "startTime": 2768.38,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "of",
+    "endTime": 2768.7,
+    "startTime": 2768.58,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "those",
+    "endTime": 2768.92,
+    "startTime": 2768.7,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "things",
+    "endTime": 2769.33,
+    "startTime": 2768.92,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.459,
+    "content": "I",
+    "endTime": 2769.59,
+    "startTime": 2769.51,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.745,
+    "content": "have",
+    "endTime": 2769.72,
+    "startTime": 2769.59,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "some",
+    "endTime": 2770.07,
+    "startTime": 2769.72,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "hiking",
+    "endTime": 2770.45,
+    "startTime": 2770.1,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "boots",
+    "endTime": 2771.02,
+    "startTime": 2770.45,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "in",
+    "endTime": 2771.33,
+    "startTime": 2771.19,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "the",
+    "endTime": 2771.45,
+    "startTime": 2771.33,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.619,
+    "content": "U.",
+    "endTime": 2771.55,
+    "startTime": 2771.45,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.619,
+    "content": "K.",
+    "endTime": 2771.75,
+    "startTime": 2771.55,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.991,
+    "content": "finally",
+    "endTime": 2772.23,
+    "startTime": 2771.75,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.622,
+    "content": "I've",
+    "endTime": 2772.36,
+    "startTime": 2772.23,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.997,
+    "content": "always",
+    "endTime": 2772.54,
+    "startTime": 2772.36,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.616,
+    "content": "had",
+    "endTime": 2772.67,
+    "startTime": 2772.54,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.992,
+    "content": "hiking",
+    "endTime": 2772.96,
+    "startTime": 2772.67,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "boots",
+    "endTime": 2773.41,
+    "startTime": 2772.96,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "in",
+    "endTime": 2773.95,
+    "startTime": 2773.82,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.995,
+    "content": "America",
+    "endTime": 2774.57,
+    "startTime": 2773.95,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.511,
+    "content": "and",
+    "endTime": 2774.69,
+    "startTime": 2774.6,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.139,
+    "content": "I've",
+    "endTime": 2774.77,
+    "startTime": 2774.69,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "just",
+    "endTime": 2774.91,
+    "startTime": 2774.77,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "never",
+    "endTime": 2775.09,
+    "startTime": 2774.91,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.648,
+    "content": "bothered",
+    "endTime": 2775.44,
+    "startTime": 2775.09,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.902,
+    "content": "by",
+    "endTime": 2775.66,
+    "startTime": 2775.44,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.979,
+    "content": "any",
+    "endTime": 2776.15,
+    "startTime": 2775.66,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "here",
+    "endTime": 2776.73,
+    "startTime": 2776.21,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "so",
+    "endTime": 2777.02,
+    "startTime": 2776.84,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.773,
+    "content": "yeah",
+    "endTime": 2777.27,
+    "startTime": 2777.02,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "walking",
+    "endTime": 2778.44,
+    "startTime": 2777.66,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "in",
+    "endTime": 2779.43,
+    "startTime": 2779.01,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.995,
+    "content": "nature",
+    "endTime": 2780.23,
+    "startTime": 2779.69,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "even",
+    "endTime": 2780.83,
+    "startTime": 2780.52,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.954,
+    "content": "though",
+    "endTime": 2781.07,
+    "startTime": 2780.83,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.274,
+    "content": "I'm",
+    "endTime": 2781.24,
+    "startTime": 2781.07,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.619,
+    "content": "like",
+    "endTime": 2781.53,
+    "startTime": 2781.24,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "not",
+    "endTime": 2781.93,
+    "startTime": 2781.72,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.461,
+    "content": "a",
+    "endTime": 2781.97,
+    "startTime": 2781.93,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "huge",
+    "endTime": 2782.33,
+    "startTime": 2781.97,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "nature",
+    "endTime": 2782.63,
+    "startTime": 2782.33,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "guy",
+    "endTime": 2783,
+    "startTime": 2782.63,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.658,
+    "content": "will",
+    "endTime": 2783.26,
+    "startTime": 2783.12,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.999,
+    "content": "totally",
+    "endTime": 2783.84,
+    "startTime": 2783.26,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.643,
+    "content": "acknowledge",
+    "endTime": 2784.32,
+    "startTime": 2783.84,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.96,
+    "content": "that",
+    "endTime": 2784.59,
+    "startTime": 2784.32,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "you're",
+    "endTime": 2784.81,
+    "startTime": 2784.62,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.645,
+    "content": "phrases",
+    "endTime": 2785.31,
+    "startTime": 2784.81,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "exactly",
+    "endTime": 2785.78,
+    "startTime": 2785.31,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.941,
+    "content": "correct",
+    "endTime": 2786.18,
+    "startTime": 2785.78,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.941,
+    "content": "it",
+    "endTime": 2786.28,
+    "startTime": 2786.18,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "is",
+    "endTime": 2786.49,
+    "startTime": 2786.28,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "good",
+    "endTime": 2786.77,
+    "startTime": 2786.49,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "for",
+    "endTime": 2786.96,
+    "startTime": 2786.77,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "the",
+    "endTime": 2787.16,
+    "startTime": 2786.96,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "soul",
+    "endTime": 2787.78,
+    "startTime": 2787.16,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "to",
+    "endTime": 2788.48,
+    "startTime": 2788.34,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "do",
+    "endTime": 2788.67,
+    "startTime": 2788.48,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.993,
+    "content": "that",
+    "endTime": 2789.02,
+    "startTime": 2788.67,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.856,
+    "content": "and",
+    "endTime": 2790.19,
+    "startTime": 2789.5,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.504,
+    "content": "it's",
+    "endTime": 2790.65,
+    "startTime": 2790.48,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "perhaps",
+    "endTime": 2791.06,
+    "startTime": 2790.65,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "one",
+    "endTime": 2791.25,
+    "startTime": 2791.06,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "of",
+    "endTime": 2791.4,
+    "startTime": 2791.25,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.772,
+    "content": "my",
+    "endTime": 2792.05,
+    "startTime": 2791.4,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "growing",
+    "endTime": 2793.77,
+    "startTime": 2792.79,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "frustrations",
+    "endTime": 2795,
+    "startTime": 2793.77,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "with",
+    "endTime": 2795.19,
+    "startTime": 2795,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "London",
+    "endTime": 2795.64,
+    "startTime": 2795.19,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "is",
+    "endTime": 2795.9,
+    "startTime": 2795.64,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.974,
+    "content": "like",
+    "endTime": 2796.09,
+    "startTime": 2795.9,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.768,
+    "content": "there's",
+    "endTime": 2796.27,
+    "startTime": 2796.12,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "not",
+    "endTime": 2796.85,
+    "startTime": 2796.27,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "a",
+    "endTime": 2796.99,
+    "startTime": 2796.88,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.996,
+    "content": "lot",
+    "endTime": 2797.6,
+    "startTime": 2796.99,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "within",
+    "endTime": 2798.91,
+    "startTime": 2798.18,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.858,
+    "content": "convenient",
+    "endTime": 2799.81,
+    "startTime": 2798.91,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "striking",
+    "endTime": 2800.68,
+    "startTime": 2800.12,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "distance",
+    "endTime": 2801.35,
+    "startTime": 2800.68,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.513,
+    "content": "that's",
+    "endTime": 2801.55,
+    "startTime": 2801.38,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.992,
+    "content": "even",
+    "endTime": 2802.05,
+    "startTime": 2801.55,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "remotely",
+    "endTime": 2802.87,
+    "startTime": 2802.11,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "like",
+    "endTime": 2803.54,
+    "startTime": 2803.23,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "that",
+    "endTime": 2803.74,
+    "startTime": 2803.54,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.6,
+    "content": "to",
+    "endTime": 2803.93,
+    "startTime": 2803.74,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "do",
+    "endTime": 2804.52,
+    "startTime": 2804.09,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.864,
+    "content": "you",
+    "endTime": 2805.33,
+    "startTime": 2805.25,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "know",
+    "endTime": 2805.47,
+    "startTime": 2805.33,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.415,
+    "content": "where",
+    "endTime": 2805.64,
+    "startTime": 2805.47,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.329,
+    "content": "as",
+    "endTime": 2806.09,
+    "startTime": 2805.64,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.557,
+    "content": "visiting",
+    "endTime": 2806.76,
+    "startTime": 2806.46,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "my",
+    "endTime": 2806.87,
+    "startTime": 2806.76,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "parents",
+    "endTime": 2807.21,
+    "startTime": 2806.87,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "in",
+    "endTime": 2807.3,
+    "startTime": 2807.21,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "North",
+    "endTime": 2807.5,
+    "startTime": 2807.3,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "Carolina",
+    "endTime": 2808.03,
+    "startTime": 2807.5,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.561,
+    "content": "in",
+    "endTime": 2808.15,
+    "startTime": 2808.03,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.255,
+    "content": "a",
+    "endTime": 2808.26,
+    "startTime": 2808.15,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "as",
+    "endTime": 2808.56,
+    "startTime": 2808.34,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "with",
+    "endTime": 2808.8,
+    "startTime": 2808.56,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "much",
+    "endTime": 2809.11,
+    "startTime": 2808.83,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "of",
+    "endTime": 2809.22,
+    "startTime": 2809.11,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.997,
+    "content": "America",
+    "endTime": 2809.9,
+    "startTime": 2809.22,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.817,
+    "content": "you're",
+    "endTime": 2810.52,
+    "startTime": 2810.32,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "never",
+    "endTime": 2810.96,
+    "startTime": 2810.52,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "too",
+    "endTime": 2811.19,
+    "startTime": 2811,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "far",
+    "endTime": 2811.48,
+    "startTime": 2811.19,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "away",
+    "endTime": 2811.74,
+    "startTime": 2811.48,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "from",
+    "endTime": 2811.97,
+    "startTime": 2811.74,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "wilderness",
+    "endTime": 2812.66,
+    "startTime": 2811.97,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "in",
+    "endTime": 2812.87,
+    "startTime": 2812.71,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "most",
+    "endTime": 2813.25,
+    "startTime": 2812.87,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "of",
+    "endTime": 2813.34,
+    "startTime": 2813.25,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "America",
+    "endTime": 2813.79,
+    "startTime": 2813.34,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.95,
+    "content": "as",
+    "endTime": 2814.06,
+    "startTime": 2813.79,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.982,
+    "content": "like",
+    "endTime": 2814.28,
+    "startTime": 2814.06,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.956,
+    "content": "oh",
+    "endTime": 2814.46,
+    "startTime": 2814.28,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.988,
+    "content": "boy",
+    "endTime": 2814.97,
+    "startTime": 2814.46,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.876,
+    "content": "in",
+    "endTime": 2815.33,
+    "startTime": 2815.2,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "North",
+    "endTime": 2815.51,
+    "startTime": 2815.33,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "Carolina",
+    "endTime": 2816.04,
+    "startTime": 2815.51,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.652,
+    "content": "in",
+    "endTime": 2816.46,
+    "startTime": 2816.04,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "twenty",
+    "endTime": 2816.96,
+    "startTime": 2816.7,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.867,
+    "content": "minute",
+    "endTime": 2817.17,
+    "startTime": 2816.96,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "drive",
+    "endTime": 2817.63,
+    "startTime": 2817.17,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "you",
+    "endTime": 2817.83,
+    "startTime": 2817.66,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "can",
+    "endTime": 2817.99,
+    "startTime": 2817.83,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "feel",
+    "endTime": 2818.19,
+    "startTime": 2817.99,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "like",
+    "endTime": 2818.48,
+    "startTime": 2818.19,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "you're",
+    "endTime": 2818.7,
+    "startTime": 2818.51,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "in",
+    "endTime": 2818.79,
+    "startTime": 2818.7,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "the",
+    "endTime": 2818.86,
+    "startTime": 2818.79,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "middle",
+    "endTime": 2819.15,
+    "startTime": 2818.86,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.988,
+    "content": "of",
+    "endTime": 2819.26,
+    "startTime": 2819.15,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.781,
+    "content": "it",
+    "endTime": 2819.41,
+    "startTime": 2819.26,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "terrifying",
+    "endTime": 2820.25,
+    "startTime": 2819.56,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.621,
+    "content": "forest",
+    "endTime": 2820.71,
+    "startTime": 2820.25,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.753,
+    "content": "that",
+    "endTime": 2820.83,
+    "startTime": 2820.71,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "no",
+    "endTime": 2820.94,
+    "startTime": 2820.83,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "human",
+    "endTime": 2821.27,
+    "startTime": 2820.94,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "has",
+    "endTime": 2821.4,
+    "startTime": 2821.27,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "ever",
+    "endTime": 2821.59,
+    "startTime": 2821.4,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "seen",
+    "endTime": 2821.81,
+    "startTime": 2821.59,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "before",
+    "endTime": 2822.3,
+    "startTime": 2821.81,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.991,
+    "content": "but",
+    "endTime": 2822.9,
+    "startTime": 2822.58,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "not",
+    "endTime": 2823.37,
+    "startTime": 2823.1,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "so",
+    "endTime": 2823.51,
+    "startTime": 2823.37,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "much",
+    "endTime": 2823.77,
+    "startTime": 2823.51,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.85,
+    "content": "in",
+    "endTime": 2823.87,
+    "startTime": 2823.77,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "the",
+    "endTime": 2823.96,
+    "startTime": 2823.87,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.891,
+    "content": "southeast",
+    "endTime": 2824.41,
+    "startTime": 2823.96,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "of",
+    "endTime": 2824.5,
+    "startTime": 2824.41,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.992,
+    "content": "England",
+    "endTime": 2824.9,
+    "startTime": 2824.5,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.476,
+    "content": "night",
+    "endTime": 2825.37,
+    "startTime": 2824.93,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.838,
+    "content": "you",
+    "endTime": 2825.44,
+    "startTime": 2825.37,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.611,
+    "content": "get",
+    "endTime": 2825.57,
+    "startTime": 2825.44,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.904,
+    "content": "a",
+    "endTime": 2825.61,
+    "startTime": 2825.57,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.592,
+    "content": "guy",
+    "endTime": 2825.78,
+    "startTime": 2825.61,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.191,
+    "content": "a",
+    "endTime": 2825.83,
+    "startTime": 2825.78,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.421,
+    "content": "few",
+    "endTime": 2826.02,
+    "startTime": 2825.83,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.338,
+    "content": "hours",
+    "endTime": 2826.32,
+    "startTime": 2826.02,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "out",
+    "endTime": 2826.67,
+    "startTime": 2826.32,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "at",
+    "endTime": 2826.95,
+    "startTime": 2826.79,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.999,
+    "content": "least",
+    "endTime": 2827.42,
+    "startTime": 2826.95,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.754,
+    "content": "for",
+    "endTime": 2827.7,
+    "startTime": 2827.54,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.779,
+    "content": "you",
+    "endTime": 2827.78,
+    "startTime": 2827.7,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.285,
+    "content": "gotta",
+    "endTime": 2827.98,
+    "startTime": 2827.78,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "go",
+    "endTime": 2828.12,
+    "startTime": 2827.98,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "to",
+    "endTime": 2828.23,
+    "startTime": 2828.12,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.539,
+    "content": "Peru",
+    "endTime": 2828.56,
+    "startTime": 2828.23,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.646,
+    "content": "here",
+    "endTime": 2829.27,
+    "startTime": 2828.68,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.255,
+    "content": "so",
+    "endTime": 2830.46,
+    "startTime": 2829.91,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "I",
+    "endTime": 2831.02,
+    "startTime": 2830.89,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "spent",
+    "endTime": 2831.44,
+    "startTime": 2831.02,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.743,
+    "content": "some",
+    "endTime": 2831.6,
+    "startTime": 2831.44,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.743,
+    "content": "time",
+    "endTime": 2831.93,
+    "startTime": 2831.6,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "with",
+    "endTime": 2832.05,
+    "startTime": 2831.93,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.997,
+    "content": "Americans",
+    "endTime": 2832.98,
+    "startTime": 2832.05,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.986,
+    "content": "while",
+    "endTime": 2833.3,
+    "startTime": 2833.01,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "I",
+    "endTime": 2833.37,
+    "startTime": 2833.3,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "was",
+    "endTime": 2833.5,
+    "startTime": 2833.37,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.993,
+    "content": "away",
+    "endTime": 2833.89,
+    "startTime": 2833.5,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "okay",
+    "endTime": 2834.42,
+    "startTime": 2833.93,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.987,
+    "content": "and",
+    "endTime": 2835.28,
+    "startTime": 2834.89,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "I",
+    "endTime": 2836.24,
+    "startTime": 2836.12,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "have",
+    "endTime": 2836.38,
+    "startTime": 2836.24,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "another",
+    "endTime": 2836.64,
+    "startTime": 2836.38,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "one",
+    "endTime": 2836.76,
+    "startTime": 2836.64,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "of",
+    "endTime": 2836.85,
+    "startTime": 2836.76,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "my",
+    "endTime": 2836.98,
+    "startTime": 2836.85,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "little",
+    "endTime": 2837.19,
+    "startTime": 2836.98,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "observations",
+    "endTime": 2837.87,
+    "startTime": 2837.19,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "about",
+    "endTime": 2838.08,
+    "startTime": 2837.87,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "Americans",
+    "endTime": 2838.88,
+    "startTime": 2838.08,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.948,
+    "content": "that",
+    "endTime": 2839.13,
+    "startTime": 2838.96,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "I",
+    "endTime": 2839.2,
+    "startTime": 2839.13,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "have",
+    "endTime": 2839.37,
+    "startTime": 2839.2,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.974,
+    "content": "learned",
+    "endTime": 2839.92,
+    "startTime": 2839.37,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.827,
+    "content": "they",
+    "endTime": 2840.85,
+    "startTime": 2840.68,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "did",
+    "endTime": 2841.01,
+    "startTime": 2840.85,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "not",
+    "endTime": 2841.19,
+    "startTime": 2841.01,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "like",
+    "endTime": 2841.37,
+    "startTime": 2841.19,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "having",
+    "endTime": 2841.6,
+    "startTime": 2841.37,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "pointed",
+    "endTime": 2841.99,
+    "startTime": 2841.6,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.997,
+    "content": "out",
+    "endTime": 2842.32,
+    "startTime": 2841.99,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "okay",
+    "endTime": 2843.03,
+    "startTime": 2842.59,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.418,
+    "content": "or",
+    "endTime": 2843.2,
+    "startTime": 2843.08,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "maybe",
+    "endTime": 2843.47,
+    "startTime": 2843.2,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.808,
+    "content": "I",
+    "endTime": 2843.55,
+    "startTime": 2843.47,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.977,
+    "content": "just",
+    "endTime": 2843.72,
+    "startTime": 2843.55,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.803,
+    "content": "pointed",
+    "endTime": 2844.18,
+    "startTime": 2843.72,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "out",
+    "endTime": 2844.37,
+    "startTime": 2844.18,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.693,
+    "content": "in",
+    "endTime": 2844.54,
+    "startTime": 2844.4,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.346,
+    "content": "delicately",
+    "endTime": 2845.18,
+    "startTime": 2844.54,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "I",
+    "endTime": 2845.92,
+    "startTime": 2845.78,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.617,
+    "content": "can't",
+    "endTime": 2846.15,
+    "startTime": 2845.92,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "imagine",
+    "endTime": 2846.47,
+    "startTime": 2846.15,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.901,
+    "content": "that",
+    "endTime": 2846.59,
+    "startTime": 2846.47,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.254,
+    "content": "bring",
+    "endTime": 2846.79,
+    "startTime": 2846.59,
+    "speaker": 0
+  },
+  {
+    "confidence": 1,
+    "content": "but",
+    "endTime": 2848.13,
+    "startTime": 2847.96,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.937,
+    "content": "he",
+    "endTime": 2848.33,
+    "startTime": 2848.13,
+    "speaker": 0
+  },
+  {
+    "confidence": 0.937,
+    "content": "was",
+    "endTime": 2848.5,
+    "startTime": 2848.33,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.162,
+    "content": "he",
+    "endTime": 2848.77,
+    "startTime": 2848.53,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.251,
+    "content": "was",
+    "endTime": 2848.92,
+    "startTime": 2848.77,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "my",
+    "endTime": 2849.06,
+    "startTime": 2848.92,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.953,
+    "content": "observation",
+    "endTime": 2849.7,
+    "startTime": 2849.06,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "okay",
+    "endTime": 2850.45,
+    "startTime": 2850.16,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.348,
+    "content": "can",
+    "endTime": 2851.03,
+    "startTime": 2850.92,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.87,
+    "content": "you",
+    "endTime": 2851.18,
+    "startTime": 2851.03,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.725,
+    "content": "explain",
+    "endTime": 2851.55,
+    "startTime": 2851.18,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.938,
+    "content": "to",
+    "endTime": 2851.64,
+    "startTime": 2851.55,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "me",
+    "endTime": 2851.77,
+    "startTime": 2851.64,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.998,
+    "content": "I",
+    "endTime": 2851.93,
+    "startTime": 2851.77,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "have",
+    "endTime": 2852.13,
+    "startTime": 2851.93,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.989,
+    "content": "theories",
+    "endTime": 2852.68,
+    "startTime": 2852.13,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.981,
+    "content": "but",
+    "endTime": 2852.9,
+    "startTime": 2852.68,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.757,
+    "content": "you",
+    "endTime": 2853.02,
+    "startTime": 2852.9,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.737,
+    "content": "know",
+    "endTime": 2853.16,
+    "startTime": 2853.02,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "I'm",
+    "endTime": 2853.41,
+    "startTime": 2853.28,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "sure",
+    "endTime": 2853.59,
+    "startTime": 2853.41,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "you",
+    "endTime": 2853.75,
+    "startTime": 2853.59,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "have",
+    "endTime": 2853.91,
+    "startTime": 2853.75,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "the",
+    "endTime": 2854,
+    "startTime": 2853.91,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.997,
+    "content": "definitive",
+    "endTime": 2854.42,
+    "startTime": 2854,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.358,
+    "content": "answer",
+    "endTime": 2854.8,
+    "startTime": 2854.42,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.562,
+    "content": "so",
+    "endTime": 2855.99,
+    "startTime": 2855.64,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "at",
+    "endTime": 2856.84,
+    "startTime": 2856.61,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "some",
+    "endTime": 2857.13,
+    "startTime": 2856.84,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.634,
+    "content": "points",
+    "endTime": 2857.46,
+    "startTime": 2857.13,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.704,
+    "content": "we",
+    "endTime": 2857.6,
+    "startTime": 2857.46,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.58,
+    "content": "required",
+    "endTime": 2858.2,
+    "startTime": 2857.6,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "to",
+    "endTime": 2858.54,
+    "startTime": 2858.2,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "introduce",
+    "endTime": 2859.15,
+    "startTime": 2858.63,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "ourselves",
+    "endTime": 2859.71,
+    "startTime": 2859.15,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "to",
+    "endTime": 2859.84,
+    "startTime": 2859.71,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "say",
+    "endTime": 2860.12,
+    "startTime": 2859.84,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.929,
+    "content": "who",
+    "endTime": 2860.4,
+    "startTime": 2860.12,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "we",
+    "endTime": 2860.53,
+    "startTime": 2860.4,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.947,
+    "content": "were",
+    "endTime": 2860.77,
+    "startTime": 2860.53,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.897,
+    "content": "and",
+    "endTime": 2860.96,
+    "startTime": 2860.77,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.825,
+    "content": "where",
+    "endTime": 2861.15,
+    "startTime": 2860.96,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.999,
+    "content": "we",
+    "endTime": 2861.27,
+    "startTime": 2861.15,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.575,
+    "content": "were",
+    "endTime": 2861.36,
+    "startTime": 2861.27,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.99,
+    "content": "from",
+    "endTime": 2861.76,
+    "startTime": 2861.36,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.518,
+    "content": "it",
+    "endTime": 2861.89,
+    "startTime": 2861.79,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.819,
+    "content": "was",
+    "endTime": 2861.98,
+    "startTime": 2861.89,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "actually",
+    "endTime": 2862.24,
+    "startTime": 2861.98,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "for",
+    "endTime": 2862.35,
+    "startTime": 2862.24,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "this",
+    "endTime": 2862.5,
+    "startTime": 2862.35,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "blessing",
+    "endTime": 2862.98,
+    "startTime": 2862.5,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.783,
+    "content": "ceremony",
+    "endTime": 2863.6,
+    "startTime": 2862.98,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.936,
+    "content": "so",
+    "endTime": 2863.77,
+    "startTime": 2863.6,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "we",
+    "endTime": 2863.87,
+    "startTime": 2863.77,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.495,
+    "content": "were",
+    "endTime": 2863.95,
+    "startTime": 2863.87,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.727,
+    "content": "saying",
+    "endTime": 2864.23,
+    "startTime": 2863.95,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.911,
+    "content": "it",
+    "endTime": 2864.33,
+    "startTime": 2864.23,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "to",
+    "endTime": 2864.43,
+    "startTime": 2864.33,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "this",
+    "endTime": 2864.79,
+    "startTime": 2864.43,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.68,
+    "content": "this",
+    "endTime": 2865.49,
+    "startTime": 2865.34,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.261,
+    "content": "Shamen",
+    "endTime": 2866.02,
+    "startTime": 2865.49,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.845,
+    "content": "who",
+    "endTime": 2866.15,
+    "startTime": 2866.02,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "didn't",
+    "endTime": 2866.34,
+    "startTime": 2866.15,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "speak",
+    "endTime": 2866.57,
+    "startTime": 2866.34,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "English",
+    "endTime": 2866.85,
+    "startTime": 2866.57,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "but",
+    "endTime": 2866.96,
+    "startTime": 2866.85,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.957,
+    "content": "we",
+    "endTime": 2867.06,
+    "startTime": 2866.96,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.919,
+    "content": "had",
+    "endTime": 2867.19,
+    "startTime": 2867.06,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.87,
+    "content": "to",
+    "endTime": 2867.27,
+    "startTime": 2867.19,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.27,
+    "content": "say",
+    "endTime": 2867.47,
+    "startTime": 2867.27,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.269,
+    "content": "at",
+    "endTime": 2867.66,
+    "startTime": 2867.47,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.812,
+    "content": "nine",
+    "endTime": 2868,
+    "startTime": 2867.66,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.693,
+    "content": "I",
+    "endTime": 2868.42,
+    "startTime": 2868.22,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.626,
+    "content": "am",
+    "endTime": 2868.54,
+    "startTime": 2868.42,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.995,
+    "content": "Brady",
+    "endTime": 2869.19,
+    "startTime": 2868.54,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.7,
+    "content": "I'm",
+    "endTime": 2869.61,
+    "startTime": 2869.33,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "from",
+    "endTime": 2869.8,
+    "startTime": 2869.61,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.994,
+    "content": "England",
+    "endTime": 2870.32,
+    "startTime": 2869.8,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.985,
+    "content": "and",
+    "endTime": 2870.43,
+    "startTime": 2870.32,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.446,
+    "content": "then",
+    "endTime": 2870.53,
+    "startTime": 2870.43,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.99,
+    "content": "he",
+    "endTime": 2870.65,
+    "startTime": 2870.53,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "would",
+    "endTime": 2870.77,
+    "startTime": 2870.65,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "say",
+    "endTime": 2870.95,
+    "startTime": 2870.77,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "some",
+    "endTime": 2871.39,
+    "startTime": 2870.95,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.211,
+    "content": "prayer",
+    "endTime": 2871.97,
+    "startTime": 2871.57,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.417,
+    "content": "in",
+    "endTime": 2872.07,
+    "startTime": 2871.97,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.849,
+    "content": "his",
+    "endTime": 2872.21,
+    "startTime": 2872.07,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "native",
+    "endTime": 2872.53,
+    "startTime": 2872.21,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.914,
+    "content": "language",
+    "endTime": 2872.92,
+    "startTime": 2872.53,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.333,
+    "content": "and",
+    "endTime": 2873.12,
+    "startTime": 2872.92,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.235,
+    "content": "bless",
+    "endTime": 2873.69,
+    "startTime": 2873.38,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.759,
+    "content": "us",
+    "endTime": 2873.85,
+    "startTime": 2873.69,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "to",
+    "endTime": 2873.97,
+    "startTime": 2873.85,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "the",
+    "endTime": 2874.05,
+    "startTime": 2873.97,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "mountains",
+    "endTime": 2874.46,
+    "startTime": 2874.05,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "for",
+    "endTime": 2874.56,
+    "startTime": 2874.46,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "the",
+    "endTime": 2874.64,
+    "startTime": 2874.56,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.953,
+    "content": "trip",
+    "endTime": 2874.91,
+    "startTime": 2874.64,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.311,
+    "content": "I'm",
+    "endTime": 2875.65,
+    "startTime": 2875.38,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.729,
+    "content": "Brady",
+    "endTime": 2876.2,
+    "startTime": 2875.65,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.983,
+    "content": "I'm",
+    "endTime": 2876.47,
+    "startTime": 2876.25,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "from",
+    "endTime": 2876.63,
+    "startTime": 2876.47,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "England",
+    "endTime": 2877.05,
+    "startTime": 2876.63,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.385,
+    "content": "I'm",
+    "endTime": 2877.97,
+    "startTime": 2877.64,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "Jeff",
+    "endTime": 2878.54,
+    "startTime": 2877.97,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.6,
+    "content": "I'm",
+    "endTime": 2879.14,
+    "startTime": 2878.88,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "from",
+    "endTime": 2879.31,
+    "startTime": 2879.14,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.993,
+    "content": "Canada",
+    "endTime": 2879.93,
+    "startTime": 2879.31,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.645,
+    "content": "I",
+    "endTime": 2880.98,
+    "startTime": 2880.78,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.625,
+    "content": "am",
+    "endTime": 2881.1,
+    "startTime": 2880.98,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "sandy",
+    "endTime": 2881.81,
+    "startTime": 2881.1,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.385,
+    "content": "I'm",
+    "endTime": 2882.51,
+    "startTime": 2882.23,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "from",
+    "endTime": 2882.68,
+    "startTime": 2882.51,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "Australia",
+    "endTime": 2883.39,
+    "startTime": 2882.68,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "and",
+    "endTime": 2884.22,
+    "startTime": 2884.02,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "then",
+    "endTime": 2884.36,
+    "startTime": 2884.22,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.581,
+    "content": "it",
+    "endTime": 2884.44,
+    "startTime": 2884.36,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.988,
+    "content": "will",
+    "endTime": 2884.57,
+    "startTime": 2884.44,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.987,
+    "content": "always",
+    "endTime": 2884.95,
+    "startTime": 2884.57,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.528,
+    "content": "pay",
+    "endTime": 2885.41,
+    "startTime": 2884.95,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.499,
+    "content": "our",
+    "endTime": 2886.34,
+    "startTime": 2886.12,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.908,
+    "content": "Max",
+    "endTime": 2887.1,
+    "startTime": 2886.34,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "I'm",
+    "endTime": 2887.52,
+    "startTime": 2887.28,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "from",
+    "endTime": 2887.68,
+    "startTime": 2887.52,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "North",
+    "endTime": 2888.05,
+    "startTime": 2887.68,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.996,
+    "content": "Carolina",
+    "endTime": 2888.89,
+    "startTime": 2888.05,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.936,
+    "content": "I'm",
+    "endTime": 2890.53,
+    "startTime": 2890.24,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "Sam",
+    "endTime": 2891.25,
+    "startTime": 2890.53,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "I'm",
+    "endTime": 2891.93,
+    "startTime": 2891.71,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "from",
+    "endTime": 2892.09,
+    "startTime": 2891.93,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.996,
+    "content": "Texas",
+    "endTime": 2892.9,
+    "startTime": 2892.09,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.831,
+    "content": "what",
+    "endTime": 2894.65,
+    "startTime": 2894.26,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.63,
+    "content": "do",
+    "endTime": 2894.75,
+    "startTime": 2894.65,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "Americans",
+    "endTime": 2895.38,
+    "startTime": 2894.75,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "always",
+    "endTime": 2895.66,
+    "startTime": 2895.38,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.667,
+    "content": "say",
+    "endTime": 2895.85,
+    "startTime": 2895.66,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.738,
+    "content": "the",
+    "endTime": 2895.99,
+    "startTime": 2895.85,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.973,
+    "content": "state",
+    "endTime": 2896.46,
+    "startTime": 2895.99,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.629,
+    "content": "they're",
+    "endTime": 2896.63,
+    "startTime": 2896.46,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.876,
+    "content": "from",
+    "endTime": 2897.11,
+    "startTime": 2896.63,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.211,
+    "content": "and",
+    "endTime": 2897.71,
+    "startTime": 2897.51,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.909,
+    "content": "not",
+    "endTime": 2897.88,
+    "startTime": 2897.71,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.909,
+    "content": "the",
+    "endTime": 2897.98,
+    "startTime": 2897.88,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.994,
+    "content": "country",
+    "endTime": 2898.59,
+    "startTime": 2897.98,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.882,
+    "content": "whenever",
+    "endTime": 2899.42,
+    "startTime": 2898.95,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.536,
+    "content": "they",
+    "endTime": 2899.56,
+    "startTime": 2899.42,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.762,
+    "content": "introducing",
+    "endTime": 2900.16,
+    "startTime": 2899.56,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.996,
+    "content": "themselves",
+    "endTime": 2900.54,
+    "startTime": 2900.16,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "Hey",
+    "endTime": 2900.92,
+    "startTime": 2900.54,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.986,
+    "content": "Hey",
+    "endTime": 2901.29,
+    "startTime": 2900.92,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.636,
+    "content": "who",
+    "endTime": 2901.54,
+    "startTime": 2901.29,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.498,
+    "content": "yeah",
+    "endTime": 2901.81,
+    "startTime": 2901.54,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.807,
+    "content": "where",
+    "endTime": 2901.99,
+    "startTime": 2901.81,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.607,
+    "content": "you're",
+    "endTime": 2902.1,
+    "startTime": 2901.99,
+    "speaker": 1
+  },
+  {
+    "confidence": 1,
+    "content": "from",
+    "endTime": 2902.5,
+    "startTime": 2902.1,
+    "speaker": 1
+  },
+  {
+    "confidence": 0.296,
+    "content": "on",
+    "endTime": 2902.99,
+    "startTime": 2902.73,
+    "speaker": 1
+  }
+]
