@@ -5,7 +5,6 @@ import {
   getTranscriptionJob,
   WATSON_TRANSCRIBE_STATUS,
 } from '@boombox/shared/src/utils/watson/transcribe'
-import { SpeechRecognitionResults } from 'watson-developer-cloud/speech-to-text/v1-generated'
 import { EpisodeJob, ISegment } from '../../episode'
 import { WatsonTranscription } from './WatsonTranscription'
 
@@ -14,7 +13,7 @@ export const transcriptionsReadyToBeNormalized = async (episode: EpisodeJob): Pr
   let erroredJobs = 0
   const bucket = episode.transcriptionsBucket
   for (const segment of episode.segments) {
-    if (await checkFileExists(bucket, segment.transcription.watson.filename)) {
+    if (await checkFileExists(bucket, segment.transcription.watson.normalizedFilename)) {
       transcriptionsReady += 1
     } else {
       if (segment.transcription.watson.jobName) {
@@ -56,8 +55,9 @@ export const getEpisodeTranscriptions = async (episode: EpisodeJob): Promise<ITr
   const bucket = episode.transcriptionsBucket
 
   for (const segment of episode.segments) {
-    const filename = segment.transcription.watson.filename
-    let rawTranscription: SpeechRecognitionResults | undefined
+    const filename = segment.transcription.watson.normalizedFilename
+    const rawFilename = segment.transcription.watson.rawFilename
+    let transcription: ITranscript | undefined
 
     if (!(await checkFileExists(bucket, filename))) {
       if (segment.transcription.watson.jobName) {
@@ -69,20 +69,26 @@ export const getEpisodeTranscriptions = async (episode: EpisodeJob): Promise<ITr
           job.results[0].results &&
           job.status === WATSON_TRANSCRIBE_STATUS.SUCCESS
         ) {
-          rawTranscription = job.results[0]
-          await putJsonFile(bucket, filename, rawTranscription)
+          const rawTranscription = job.results[0]
+          await putJsonFile(bucket, rawFilename, rawTranscription)
+
+          const watsonTranscription = new WatsonTranscription(
+            rawTranscription,
+            segment.audio.startTime
+          )
+          transcription = watsonTranscription.getNormalizedTranscription()
+          await putJsonFile(bucket, filename, transcription)
         }
       }
     } else {
-      rawTranscription = (await getJsonFile(bucket, filename)) as SpeechRecognitionResults
+      transcription = (await getJsonFile(bucket, filename)) as ITranscript
     }
 
-    if (!rawTranscription) {
+    if (!transcription) {
       throw Error(`Cannot get transcription for segment: ${segment.audio.filename}`)
     }
 
-    const transcription = new WatsonTranscription(rawTranscription, segment.audio.startTime)
-    transcriptions.push(transcription.getNormalizedTranscription())
+    transcriptions.push(transcription)
   }
 
   return transcriptions
@@ -94,7 +100,7 @@ export const getUntranscribedSegments = async (episode: EpisodeJob): Promise<ISe
   for (const segment of episode.segments) {
     const fileExists = await checkFileExists(
       episode.transcriptionsBucket,
-      segment.transcription.watson.filename
+      segment.transcription.watson.normalizedFilename
     )
     let transcriptionExists = false
     if (segment.transcription.watson.jobName) {

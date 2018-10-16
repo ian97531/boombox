@@ -10,8 +10,10 @@ const SEGMENT_OVERLAP_LENGTH = 4 * 60 // 4 minutes
 enum DESIGNATIONS {
   ORIGINAL_AUDIO = 'original-audio',
   AUDIO_SEGMENT = 'audio-segment',
+  AWS_RAW_TRANSCRIPTION_SEGMENT = 'aws-raw-transcription-segment',
   AWS_TRANSCRIPTION_SEGMENT = 'aws-transcription-segment',
   AWS_TRANSCRIPTION = 'aws-transcription-full',
+  WATSON_RAW_TRANSCRIPTION_SEGMENT = 'watson-raw-transcription-segment',
   WATSON_TRANSCRIPTION_SEGMENT = 'watson-transcription-segment',
   WATSON_TRANSCRIPTION = 'watson-transcription',
   FINAL_TRANSCRIPTION = 'final-transcription',
@@ -31,7 +33,8 @@ interface IBuckets {
 }
 
 interface ITranscriptionJob {
-  filename: string
+  normalizedFilename: string
+  rawFilename: string
   jobName?: string
 }
 
@@ -243,10 +246,24 @@ export class EpisodeJob {
       startTime,
     })
 
+    const awsRawFilename = this.buildFilename(DESIGNATIONS.AWS_RAW_TRANSCRIPTION_SEGMENT, 'json', {
+      duration,
+      startTime,
+    })
+
     const watsonFilename = this.buildFilename(DESIGNATIONS.WATSON_TRANSCRIPTION_SEGMENT, 'json', {
       duration,
       startTime,
     })
+
+    const watsonRawFilename = this.buildFilename(
+      DESIGNATIONS.WATSON_RAW_TRANSCRIPTION_SEGMENT,
+      'json',
+      {
+        duration,
+        startTime,
+      }
+    )
 
     return {
       audio: {
@@ -255,8 +272,14 @@ export class EpisodeJob {
         startTime,
       },
       transcription: {
-        aws: { filename: awsFilename },
-        watson: { filename: watsonFilename },
+        aws: {
+          normalizedFilename: awsFilename,
+          rawFilename: awsRawFilename,
+        },
+        watson: {
+          normalizedFilename: watsonFilename,
+          rawFilename: watsonRawFilename,
+        },
       },
     }
   }

@@ -1,4 +1,4 @@
-import { IAWSTranscription, IAWSTranscriptionResult } from '@boombox/shared/src/types/aws'
+import { IAWSTranscription } from '@boombox/shared/src/types/aws'
 import { ITranscript } from '@boombox/shared/src/types/models/transcript'
 import { checkFileExists, getJsonFile, putJsonFile } from '@boombox/shared/src/utils/aws/s3'
 import {
@@ -22,7 +22,7 @@ export const transcriptionsReadyToBeNormalized = async (episode: EpisodeJob): Pr
   let erroredJobs = 0
   const bucket = episode.transcriptionsBucket
   for (const segment of episode.segments) {
-    if (await checkFileExists(bucket, segment.transcription.aws.filename)) {
+    if (await checkFileExists(bucket, segment.transcription.aws.normalizedFilename)) {
       transcriptionsReady += 1
     } else {
       const jobName = createJobName(segment.audio.filename)
@@ -59,8 +59,9 @@ export const getEpisodeTranscriptions = async (episode: EpisodeJob): Promise<ITr
   const bucket = episode.transcriptionsBucket
 
   for (const segment of episode.segments) {
-    const filename = segment.transcription.aws.filename
-    let rawTranscription: IAWSTranscriptionResult | undefined
+    const filename = segment.transcription.aws.normalizedFilename
+    const rawFilename = segment.transcription.aws.rawFilename
+    let transcription: ITranscript | undefined
 
     if (!(await checkFileExists(bucket, filename))) {
       const jobName = createJobName(segment.audio.filename)
@@ -75,17 +76,20 @@ export const getEpisodeTranscriptions = async (episode: EpisodeJob): Promise<ITr
           responseType: 'json',
           url,
         })
-        rawTranscription = (transcriptResponse.data as IAWSTranscription).results
-        await putJsonFile(bucket, filename, rawTranscription)
+        const rawTranscription = (transcriptResponse.data as IAWSTranscription).results
+        await putJsonFile(bucket, rawFilename, rawTranscription)
+
+        const awsTranscription = new AWSTranscription(rawTranscription, segment.audio.startTime)
+        transcription = awsTranscription.getNormalizedTranscription()
+        await putJsonFile(bucket, filename, transcription)
       } else {
         throw Error(`Cannot get transcription for job: ${jobName}`)
       }
     } else {
-      rawTranscription = (await getJsonFile(bucket, filename)) as IAWSTranscriptionResult
+      transcription = (await getJsonFile(bucket, filename)) as ITranscript
     }
 
-    const transcription = new AWSTranscription(rawTranscription, segment.audio.startTime)
-    transcriptions.push(transcription.getNormalizedTranscription())
+    transcriptions.push(transcription)
   }
 
   return transcriptions
@@ -97,7 +101,7 @@ export const getUntranscribedSegments = async (episode: EpisodeJob): Promise<ISe
   for (const segment of episode.segments) {
     const fileExists = await checkFileExists(
       episode.transcriptionsBucket,
-      segment.transcription.aws.filename
+      segment.transcription.aws.normalizedFilename
     )
 
     let transcriptionExists = false
