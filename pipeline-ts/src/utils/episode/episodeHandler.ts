@@ -7,7 +7,12 @@ const episodeHandlerFunction = (
 ) => {
   return async (lambda: Lambda, job: Job, message: ISerializedEpisodeJob) => {
     const episode = new EpisodeJob(message)
-    await func(lambda, job, episode)
+    try {
+      await func(lambda, job, episode)
+    } catch (error) {
+      await episode.completeWithError()
+      throw error
+    }
   }
 }
 

@@ -1,9 +1,9 @@
-import { checkFileExists } from '../../utils/aws/s3'
-import { createJob } from '../../utils/aws/transcode'
+import { checkFileExists } from '@boombox/shared/src/utils/aws/s3'
+import { createJob } from '@boombox/shared/src/utils/aws/transcode'
 import { ENV, episodeCaller, episodeHandler, EpisodeJob, ISegment } from '../../utils/episode'
 import { Job } from '../../utils/job'
 import { Lambda } from '../../utils/lambda'
-import { episodeSegmentComplete } from './d-episode-segment-complete'
+import { episodeTranscribe } from './d-episode-transcribe'
 
 const startSegmentJob = async (
   pipelineId: string,
@@ -40,7 +40,7 @@ const startSegmentJob = async (
   return jobStarted
 }
 
-const episodeSegmentStartHandler = async (lambda: Lambda, job: Job, episode: EpisodeJob) => {
+const episodeSegmentHandler = async (lambda: Lambda, job: Job, episode: EpisodeJob) => {
   const pipelineId = Lambda.getEnvVariable(ENV.TRANSCODE_PIPELINE_ID) as string
   let delay = 0
   for (const segment of episode.segments) {
@@ -48,8 +48,8 @@ const episodeSegmentStartHandler = async (lambda: Lambda, job: Job, episode: Epi
     delay = jobStarted ? 60 : 0
   }
 
-  episodeSegmentComplete(lambda, job, episode, delay)
+  episodeTranscribe(lambda, job, episode, delay)
 }
 
-export const episodeSegmentStart = episodeCaller(ENV.EPISODE_SEGMENT_START_QUEUE)
-export const handler = episodeHandler(episodeSegmentStartHandler)
+export const episodeSegment = episodeCaller(ENV.EPISODE_SEGMENT_QUEUE)
+export const handler = episodeHandler(episodeSegmentHandler)

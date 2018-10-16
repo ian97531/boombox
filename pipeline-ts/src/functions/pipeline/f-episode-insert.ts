@@ -4,8 +4,13 @@ import {
   ITranscript,
   ITranscriptWord,
 } from '@boombox/shared/src/types/models/transcript'
+import {
+  checkFileExists,
+  deleteFile,
+  getJsonFile,
+  putJsonFile,
+} from '@boombox/shared/src/utils/aws/s3'
 import { round } from '@boombox/shared/src/utils/numbers'
-import { checkFileExists, deleteFile, getJsonFile, putJsonFile } from '../../utils/aws/s3'
 import { ENV, episodeCaller, episodeHandler, EpisodeJob } from '../../utils/episode'
 import { Job } from '../../utils/job'
 import { Lambda } from '../../utils/lambda'
@@ -57,6 +62,7 @@ const episodeInsertHandler = async (lambda: Lambda, job: Job, episode: EpisodeJo
       await putEpisode(episode.getEpisode())
       await deleteFile(episode.bucket, episode.transcriptions.insertQueue)
       await job.log('Added the episode record to dynamodb.')
+      await job.completeWithSuccess()
     } else {
       await job.log(`Writing remaining ${insertQueue.length} insert queue items to S3.`)
       await putJsonFile(episode.bucket, insertQueueFilename, insertQueue)

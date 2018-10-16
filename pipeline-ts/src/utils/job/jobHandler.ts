@@ -30,8 +30,7 @@ const jobHandlerFunction = <Input>(
         await putJob(job.getJob())
       }
     } catch (error) {
-      await putJob(job.getJob())
-      await job.logError('jobHandler: An exception was encountered.', error)
+      await job.completeWithError(error)
     }
   }
 }

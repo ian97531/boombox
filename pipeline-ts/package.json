@@ -22,10 +22,8 @@
   "dependencies": {
     "@boombox/shared": "1.0.0",
     "@types/aws-lambda": "^8.10.11",
-    "@types/aws-sdk": "^2.7.0",
-    "@types/axios": "^0.14.0",
     "@types/node": "^10.9.4",
-    "aws-sdk": "^2.296.0",
+    "aws-sdk": "^2.335.0",
     "axios": "^0.18.0",
     "mp3-duration": "^1.1.0",
     "punycode": "^2.1.1",

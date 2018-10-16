@@ -1,4 +1,4 @@
-import { createLogger, getLogger, ILogger } from '../aws/cloudwatch'
+import { createLogger, getLogger, ILogger } from '@boombox/shared/src/utils/aws/cloudwatch'
 import { Lambda } from '../lambda/Lambda'
 import { ENV } from './constants'
 import { putJob } from './db'
@@ -55,6 +55,18 @@ export class Job {
 
   public getJob(): IJob {
     return this.job
+  }
+
+  public async completeWithError(error: Error) {
+    this.job.status = JOB_STATUS.ERROR
+    await this.logError('Job has ended with an error', error)
+    await putJob(this.getJob())
+  }
+
+  public async completeWithSuccess() {
+    this.job.status = JOB_STATUS.COMPLETED
+    await this.logError('Job has successfully completed')
+    await putJob(this.getJob())
   }
 
   public getName(): string {

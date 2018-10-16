@@ -1,7 +1,6 @@
-import { sleep } from '@boombox/shared/src/utils/timing'
 import * as AWS from 'aws-sdk'
+import { retryThrottledRequests } from './throttle'
 
-const DEFAULT_TIMEOUT_MS = 5 * 1000 // 5 seconds
 const cloudwatch = new AWS.CloudWatchLogs()
 
 export interface ILogger {
@@ -16,11 +15,7 @@ export const getLogger = (
 ): ILogger => {
   const logger: ILogger = {
     sequenceToken,
-    async sendLog(
-      message: string,
-      timeoutMilliseconds: number = DEFAULT_TIMEOUT_MS
-    ): Promise<void> {
-      const startTime = Date.now()
+    async sendLog(message: string, timeoutMilliseconds?: number): Promise<void> {
       const logEventsParams: AWS.CloudWatchLogs.PutLogEventsRequest = {
         logEvents: [
           {
@@ -34,26 +29,9 @@ export const getLogger = (
       if (this.sequenceToken) {
         logEventsParams.sequenceToken = this.sequenceToken
       }
-      let response: AWS.CloudWatchLogs.PutLogEventsResponse | undefined
-      let timedOut = false
-
-      while (!response && !timedOut) {
-        try {
-          response = await cloudwatch.putLogEvents(logEventsParams).promise()
-        } catch (error) {
-          if (error.name === 'ThrottlingException') {
-            console.log('cloudwatch log was throttled.')
-            await sleep(1000)
-          } else {
-            throw error
-          }
-        }
-        timedOut = Date.now() - startTime > timeoutMilliseconds
-      }
-
-      if (!response) {
-        throw Error('sendLog timed out')
-      }
+      const response = await retryThrottledRequests(async () => {
+        return await cloudwatch.putLogEvents(logEventsParams).promise()
+      }, timeoutMilliseconds)
 
       if (response.nextSequenceToken) {
         this.sequenceToken = response.nextSequenceToken

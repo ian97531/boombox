@@ -1,5 +1,5 @@
+import { sendSQSMessage } from '@boombox/shared/src/utils/aws/sqs'
 import { Callback, Context, SQSEvent } from 'aws-lambda'
-import { sendSQSMessage } from '../aws/sqs'
 import { Lambda, LambdaCallback } from './Lambda'
 
 const callHandlers = async (handlers: LambdaCallback[]) => {

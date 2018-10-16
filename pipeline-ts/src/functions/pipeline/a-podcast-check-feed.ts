@@ -36,7 +36,11 @@ const podcastCheckFeedHandler = async (lambda: Lambda): Promise<void> => {
   // Retrieve the podcast feed.
   const parser = new Parser()
   const feed = await parser.parseURL(FEED_URL)
-  const bucket = Lambda.getEnvVariable(ENV.BUCKET) as string
+  const buckets = {
+    episode: Lambda.getEnvVariable(ENV.BUCKET) as string,
+    segments: Lambda.getEnvVariable(ENV.SEGMENTS_BUCKET) as string,
+    transcriptions: Lambda.getEnvVariable(ENV.TRANSCRIPTIONS_BUCKET) as string,
+  }
 
   // Get all pages of the podcast's episodes
   let items = feed.items
@@ -64,10 +68,8 @@ const podcastCheckFeedHandler = async (lambda: Lambda): Promise<void> => {
   let episodeIndex = 0
   let episodeJobs = 0
   while (episodeJobs < EPISODE_JOB_LIMIT && episodeIndex < items.length) {
-    const episode = EpisodeJob.createFromFeed(bucket, podcastSlug, items[episodeIndex])
-    if (!(episode.slug in podcast.episodes)) {
-      podcast.episodes[episode.slug] = episode.publishedAt.toISOString()
-      await putPodcast(podcast)
+    const episode = await EpisodeJob.createFromFeed(buckets, podcast, items[episodeIndex])
+    if (episode) {
       const logName = `${episode.podcastSlug} ${episode.slug}`
       const job = await Job.create(lambda, logName)
       episodeDownload(lambda, job, episode)

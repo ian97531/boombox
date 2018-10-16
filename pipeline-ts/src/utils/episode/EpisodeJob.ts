@@ -1,4 +1,6 @@
+import { getPodcast, putPodcast } from '@boombox/shared/src/db/podcasts'
 import { IEpisode } from '@boombox/shared/src/types/models/episode'
+import { IPodcast } from '@boombox/shared/src/types/models/podcast'
 import slugify from 'slugify'
 import { SLUGIFY_OPTIONS } from '../../constants'
 
@@ -20,6 +22,12 @@ interface IAudio {
   duration: number
   filename: string
   startTime: number
+}
+
+interface IBuckets {
+  episode: string
+  segments?: string
+  transcriptions?: string
 }
 
 interface ITranscriptionJob {
@@ -44,6 +52,7 @@ export interface ISerializedEpisodeJob {
   podcastSlug: string
   publishedAt: string
   segments: ISegment[]
+  segmentsBucket: string
   slug: string
   speakers: string[]
   summary: string
@@ -54,28 +63,39 @@ export interface ISerializedEpisodeJob {
     insertQueue: string
     watson: string
   }
+  transcriptionsBucket: string
   totalStatements?: number
 }
 
 export class EpisodeJob {
-  public static createFromFeed(bucket: string, podcastSlug: string, item: any): EpisodeJob {
+  public static async createFromFeed(
+    buckets: IBuckets,
+    podcast: IPodcast,
+    item: any
+  ): Promise<EpisodeJob | void> {
     const publishedAt = new Date()
     publishedAt.setTime(Date.parse(item.pubDate))
 
     const episode = {
-      bucket,
+      bucket: buckets.episode,
       imageURL: item.itunes.image,
       mp3URL: item.enclosure.url,
-      podcastSlug,
+      podcastSlug: podcast.slug,
       publishedAt: publishedAt.toISOString(),
       segments: [],
+      segmentsBucket: buckets.segments || buckets.episode,
       slug: slugify(item.title, SLUGIFY_OPTIONS),
       speakers: [],
       summary: item.content,
       title: item.title,
+      transcriptionsBucket: buckets.transcriptions || buckets.episode,
     }
 
-    return new EpisodeJob(episode)
+    if (!podcast.episodes[episode.slug]) {
+      podcast.episodes[episode.slug] = episode.publishedAt
+      await putPodcast(podcast)
+      return new EpisodeJob(episode)
+    }
   }
 
   public bucket: string
@@ -86,6 +106,7 @@ export class EpisodeJob {
   public podcastSlug: string
   public publishedAt: Date
   public segments: ISegment[]
+  public segmentsBucket: string
   public slug: string
   public speakers: string[]
   public summary: string
@@ -96,6 +117,7 @@ export class EpisodeJob {
     insertQueue: string
     watson: string
   }
+  public transcriptionsBucket: string
   public totalStatements?: number
 
   constructor(episode: ISerializedEpisodeJob) {
@@ -112,6 +134,14 @@ export class EpisodeJob {
         insertQueue: this.buildFilename(DESIGNATIONS.FINAL_TRANSCRIPTION_INSERT_QUEUE, 'json'),
         watson: this.buildFilename(DESIGNATIONS.WATSON_TRANSCRIPTION, 'json'),
       }
+    }
+  }
+
+  public async completeWithError(): Promise<void> {
+    const podcast = await getPodcast(this.podcastSlug)
+    if (podcast.episodes[this.slug]) {
+      delete podcast.episodes[this.slug]
+      await putPodcast(podcast)
     }
   }
 
@@ -169,11 +199,13 @@ export class EpisodeJob {
       podcastSlug: this.podcastSlug,
       publishedAt: this.publishedAt.toISOString(),
       segments: this.segments,
+      segmentsBucket: this.segmentsBucket,
       slug: this.slug,
       speakers: this.speakers,
       summary: this.summary,
       title: this.title,
       transcriptions: this.transcriptions,
+      transcriptionsBucket: this.transcriptionsBucket,
     }
   }
 

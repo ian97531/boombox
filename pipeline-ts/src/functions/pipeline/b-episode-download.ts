@@ -4,8 +4,8 @@ import * as mp3Duration from 'mp3-duration'
 import { ENV, episodeCaller, episodeHandler, EpisodeJob } from '../../utils/episode'
 import { Job } from '../../utils/job'
 import { Lambda } from '../../utils/lambda'
-import { episodeSegmentStart } from './c-episode-segment-start'
-import { episodeTranscribeStart } from './e-episode-transcribe-start'
+import { episodeSegment } from './c-episode-segment'
+import { episodeTranscribe } from './d-episode-transcribe'
 
 const axios = Axios.create()
 const s3 = new AWS.S3()
@@ -47,9 +47,9 @@ const episodeDownloadHandler = async (lambda: Lambda, job: Job, episode: Episode
     if (episode.segments.length === 1) {
       job.log('Skipping transcoding because the entire audio fits into a single segment.')
       episode.segments[0].audio.filename = episode.audio.filename
-      episodeTranscribeStart(lambda, job, episode)
+      episodeTranscribe(lambda, job, episode)
     } else {
-      episodeSegmentStart(lambda, job, episode)
+      episodeSegment(lambda, job, episode)
     }
   } else {
     throw Error(
