@@ -9,6 +9,7 @@ interface IPodcastBase {
   lastCheckedAt: Date | string
   lastPublishedAt: Date | string
   podcastURL: string
+  speakers: string[]
   subtitle: string
   summary: string
   title: string

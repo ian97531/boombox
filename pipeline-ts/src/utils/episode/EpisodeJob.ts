@@ -88,7 +88,7 @@ export class EpisodeJob {
       segments: [],
       segmentsBucket: buckets.segments || buckets.episode,
       slug: slugify(item.title, SLUGIFY_OPTIONS),
-      speakers: [],
+      speakers: podcast.speakers,
       summary: item.content,
       title: item.title,
       transcriptionsBucket: buckets.transcriptions || buckets.episode,

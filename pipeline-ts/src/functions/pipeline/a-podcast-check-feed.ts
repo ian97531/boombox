@@ -26,6 +26,7 @@ function createPodcastFromFeed(podcastSlug: string, feed: any): IPodcast {
     lastPublishedAt: publishDate,
     podcastURL: feed.link,
     slug: podcastSlug,
+    speakers: [],
     subtitle: feed.itunes.subtitle,
     summary: feed.itunes.summary,
     title: feed.title,
