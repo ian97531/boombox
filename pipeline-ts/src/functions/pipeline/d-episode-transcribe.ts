@@ -1,7 +1,8 @@
 import { checkFileExists } from '@boombox/shared/src/utils/aws/s3'
-import { aws, ENV, episodeCaller, episodeHandler, EpisodeJob, watson } from '../../utils/episode'
+import { ENV, episodeCaller, episodeHandler, EpisodeJob } from '../../utils/episode'
 import { Job } from '../../utils/job'
 import { Lambda } from '../../utils/lambda'
+import { aws, watson } from '../../utils/transcribe'
 import { episodeNormalize } from './e-episode-normalize'
 
 const episodeTranscribeHandler = async (lambda: Lambda, job: Job, episode: EpisodeJob) => {

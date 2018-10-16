@@ -1,8 +1,8 @@
 import { putJsonFile } from '@boombox/shared/src/utils/aws/s3'
-import { aws, ENV, episodeCaller, episodeHandler, EpisodeJob, watson } from '../../utils/episode'
+import { ENV, episodeCaller, episodeHandler, EpisodeJob } from '../../utils/episode'
 import { Job } from '../../utils/job'
 import { Lambda } from '../../utils/lambda'
-import { appendAllTranscriptions, combineTranscriptions } from '../../utils/normalized'
+import { aws, normalized, watson } from '../../utils/transcribe'
 import { episodeTranscribe } from './d-episode-transcribe'
 import { episodeInsert } from './f-episode-insert'
 
@@ -28,13 +28,16 @@ const episodeNormalizeHandler = async (lambda: Lambda, job: Job, episode: Episod
     const watsonTranscriptions = await watson.getEpisodeTranscriptions(episode)
 
     await job.log(`Zipping ${awsTranscriptions.length} segments into a single transcription.`)
-    const awsTranscription = appendAllTranscriptions(awsTranscriptions)
-    const watsonTranscription = appendAllTranscriptions(watsonTranscriptions)
+    const awsTranscription = normalized.appendAllTranscriptions(awsTranscriptions)
+    const watsonTranscription = normalized.appendAllTranscriptions(watsonTranscriptions)
     await putJsonFile(episode.bucket, episode.transcriptions.aws, awsTranscription)
     await putJsonFile(episode.bucket, episode.transcriptions.watson, watsonTranscription)
 
     await job.log('Combining the AWS and Watson transcriptions.')
-    const finalTranscription = combineTranscriptions(awsTranscription, watsonTranscription)
+    const finalTranscription = normalized.combineTranscriptions(
+      awsTranscription,
+      watsonTranscription
+    )
     await putJsonFile(episode.bucket, episode.transcriptions.final, finalTranscription)
     await putJsonFile(episode.bucket, episode.transcriptions.insertQueue, finalTranscription)
 

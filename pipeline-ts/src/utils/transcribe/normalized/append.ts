@@ -21,28 +21,23 @@ export const appendTranscriptions = (
 
   let matchFound = false
   let rightIndex = 1
-  let rightOffset = 0
 
   while (!matchFound && leftIndex < left.length) {
     while (
       !matchFound &&
-      rightIndex + rightOffset < right.length &&
-      computeDistanceBetweenWords(left[leftIndex], right[rightIndex + rightOffset]) < 5
+      rightIndex < right.length &&
+      computeDistanceBetweenWords(left[leftIndex], right[rightIndex]) < 5
     ) {
-      matchFound = matchWords(left, right, leftIndex, rightIndex + rightOffset, withOverlap)
+      matchFound = matchWords(left, right, leftIndex, rightIndex, withOverlap)
 
       if (!matchFound) {
-        rightOffset += 1
+        rightIndex += 1
       }
     }
 
     if (!matchFound) {
-      rightOffset = 0
-      rightIndex += 1
+      rightIndex = 0
       leftIndex += 1
-    } else {
-      rightIndex += rightOffset
-      rightOffset = 0
     }
   }
 
