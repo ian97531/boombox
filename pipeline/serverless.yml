@@ -76,15 +76,6 @@ custom:
       name: ${self:custom.global.product}-${self:custom.stage}-${self:custom.global.dynamodb.jobs.suffix}
       arn: arn:aws:dynamodb:${self:provider.region}:${self:custom.global.awsAccountId}:table/${self:custom.dynamodb.jobs.name}
 
-  sns:
-    topics:
-      errors:
-        name: ${self:service}-${self:custom.stage}-errors
-        arn: arn:aws:sns:${self:provider.region}:${self:custom.global.awsAccountId}:${self:custom.sns.topics.errors.name}
-      status:
-        name: ${self:service}-${self:custom.stage}-status
-        arn: arn:aws:sns:${self:provider.region}:${self:custom.global.awsAccountId}:${self:custom.sns.topics.status.name}
-
   transcoder:
     jobs:
       arn: arn:aws:elastictranscoder:${self:provider.region}:${self:custom.global.awsAccountId}:job/*
@@ -124,8 +115,6 @@ provider:
     SPEAKERS_TABLE: ${self:custom.dynamodb.speakers.name}
     JOBS_LOG_GROUP: ${self:custom.logGroups.jobs.name}
     JOBS_TABLE: ${self:custom.dynamodb.jobs.name}
-    ERROR_TOPIC: ${self:custom.sns.topics.errors.arn}
-    STATUS_TOPIC: ${self:custom.sns.topics.status.arn}
     BUCKET: ${self:custom.buckets.episode}
     SEGMENTS_BUCKET: ${self:custom.buckets.segments}
     TRANSCRIPTIONS_BUCKET: ${self:custom.buckets.transcriptions}
@@ -171,16 +160,6 @@ provider:
         - ${self:custom.dynamodb.speakers.arn}
         - ${self:custom.dynamodb.statements.arn}
         - ${self:custom.dynamodb.jobs.arn}
-
-    #
-    # SNS Topic Publish Permissions
-    #
-    - Effect: Allow
-      Action:
-        - SNS:Publish
-      Resource:
-        - ${self:custom.sns.topics.errors.arn}
-        - ${self:custom.sns.topics.status.arn}
 
     #
     # SQS Send and Receive Permissions
@@ -312,42 +291,6 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.episode}
-
-    #
-    # SNS for Errors
-    #
-    errorSNSTopic:
-      Type: AWS::SNS::Topic
-      Properties:
-        DisplayName: Boombox Pipeline Errors (${self:custom.stage})
-        TopicName: ${self:custom.sns.topics.errors.name}
-
-    errorSNSSubscription:
-      Type: AWS::SNS::Subscription
-      DependsOn:
-        - errorSNSTopic
-      Properties:
-        Endpoint: boombox-pipeline-errors@googlegroups.com
-        Protocol: 'email'
-        TopicArn: ${self:custom.sns.topics.errors.arn}
-
-    #
-    # SNS for Status Updates
-    #
-    statusSNSTopic:
-      Type: AWS::SNS::Topic
-      Properties:
-        DisplayName: Boombox Pipeline Status (${self:custom.stage})
-        TopicName: ${self:custom.sns.topics.status.name}
-
-    statusSNSSubscription:
-      Type: AWS::SNS::Subscription
-      DependsOn:
-        - statusSNSTopic
-      Properties:
-        Endpoint: boombox-pipeline-status@googlegroups.com
-        Protocol: 'email'
-        TopicArn: ${self:custom.sns.topics.status.arn}
 
     #
     # SQS Queues
