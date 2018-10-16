@@ -16,7 +16,7 @@ const startSegmentJob = async (
     throw Error('The provided episode does not have audio information set.')
   }
 
-  if (!(await checkFileExists(episode.bucket, segment.audio.filename))) {
+  if (!(await checkFileExists(episode.segmentsBucket, segment.audio.filename))) {
     await createJob(
       pipelineId,
       episode.audio.filename,
