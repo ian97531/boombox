@@ -106,32 +106,6 @@ export const transcriptionsReadyToBeNormalized = async (episode: EpisodeJob): Pr
 
   return transcriptionsReady
 }
-export const episodeTranscriptionIsComplete = async (episode: EpisodeJob): Promise<boolean> => {
-  let transcriptionsComplete = 0
-  let erroredJobs = 0
-  for (const segment of episode.segments) {
-    const jobName = createJobName(segment.audio.filename)
-    try {
-      const response = await getTranscriptionJob(jobName)
-      if (
-        response.Transcript &&
-        response.TranscriptionJobStatus === AWS_TRANSCRIBE_STATUS.SUCCESS
-      ) {
-        transcriptionsComplete += 1
-      } else if (response.TranscriptionJobStatus === AWS_TRANSCRIBE_STATUS.ERROR) {
-        await deleteTranscriptionJob(jobName)
-        erroredJobs += 1
-      }
-    } catch (error) {
-      console.log(`No transcription job found for ${jobName}`)
-    }
-  }
-  if (erroredJobs) {
-    throw Error(`${erroredJobs} segment transcription job(s) encountered an error.`)
-  }
-
-  return transcriptionsComplete === episode.segments.length
-}
 
 export const transcribeSegment = async (episode: EpisodeJob, segment: ISegment): Promise<void> => {
   const jobName = createJobName(segment.audio.filename)
@@ -183,6 +157,7 @@ export const getUntranscribedSegments = async (episode: EpisodeJob): Promise<ISe
       episode.transcriptionsBucket,
       segment.transcription.aws.filename
     )
+
     let transcriptionExists = false
     try {
       const jobName = createJobName(segment.audio.filename)

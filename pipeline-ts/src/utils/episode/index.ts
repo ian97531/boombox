@@ -1,5 +1,4 @@
 import {
-  episodeTranscriptionIsComplete as episodeAwsTranscriptionIsComplete,
   getEpisodeTranscriptions as getEpisodeAwsTranscriptions,
   getUntranscribedSegments as getUntranscribedAwsSegments,
   transcribeSegment as awsTranscribeSegment,
@@ -17,7 +16,6 @@ export { EpisodeJob, ISegment } from './EpisodeJob'
 export { episodeCaller, episodeHandler } from './episodeHandler'
 
 export const aws = {
-  episodeTranscriptionIsComplete: episodeAwsTranscriptionIsComplete,
   getEpisodeTranscriptions: getEpisodeAwsTranscriptions,
   getUntranscribedSegments: getUntranscribedAwsSegments,
   transcribeSegment: awsTranscribeSegment,

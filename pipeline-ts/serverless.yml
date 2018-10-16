@@ -18,8 +18,8 @@ custom:
 
   buckets:
     episode: ${self:service}-${self:custom.stage}
-    segments: ${self:service}-segments
-    transcriptions: ${self:service}-transcriptions
+    segments: boombox-pipeline-segments
+    transcriptions: boombox-pipeline-transcriptions
 
   steps:
     podcastCheckFeed:
