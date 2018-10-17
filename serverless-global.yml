@@ -30,3 +30,7 @@ dynamodb:
     suffix: statements
     rcu: 5
     wcu: 5
+  jobs:
+    suffix: jobs
+    rcu: 1
+    wcu: 1

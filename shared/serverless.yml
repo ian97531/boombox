@@ -58,18 +58,16 @@ resources:
         AttributeDefinitions:
           - AttributeName: podcastSlug
             AttributeType: S
-          - AttributeName: publishTimestamp
-            AttributeType: N
+          - AttributeName: publishedAt
+            AttributeType: S
         KeySchema:
           - AttributeName: podcastSlug
             KeyType: HASH
-          - AttributeName: publishTimestamp
+          - AttributeName: publishedAt
             KeyType: RANGE
         ProvisionedThroughput:
           ReadCapacityUnits: ${self:custom.global.dynamodb.episodes.rcu}
           WriteCapacityUnits: ${self:custom.global.dynamodb.episodes.wcu}
-        StreamSpecification:
-          StreamViewType: NEW_IMAGE
     statementsTable:
       Type: AWS::DynamoDB::Table
       Properties:

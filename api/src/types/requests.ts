@@ -1,15 +1,15 @@
 import { Request } from 'express'
 
 export interface IListRequest extends Request {
-  nextItem?: number
+  nextItem?: string | number
   totalItems: number
   items: any[]
   query: IListRequestQueryParams
 }
 
 export interface IListRequestQueryParams {
-  start?: number
-  pageSize?: number
+  start: number
+  pageSize: number
 }
 
 export interface IItemRequest extends Request {

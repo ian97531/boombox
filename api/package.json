@@ -2,38 +2,36 @@
   "name": "@boombox/api",
   "version": "1.0.0",
   "description": "API for Boombox",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ian97531/boombox.git"
-  },
+  "repository": "https://github.com/gg-incorporated/boombox",
   "keywords": [
     "podcast",
     "transcription"
   ],
   "author": "Ian White, Andrew Hoyer",
-  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/ian97531/boombox/issues"
+    "url": "https://github.com/gg-incorporated/boombox/issues"
   },
-  "homepage": "https://github.com/ian97531/boombox#readme",
+  "private": true,
+  "license": "UNLICENSED",
+  "homepage": "https://github.com/gg-incorporated/boombox/tree/master/api#readme",
   "scripts": {
     "format": "prettier --write --config .prettierrc.yaml '**/*.ts'",
     "clean": "rm -f src/*.js && rm -f src/*.js.map",
     "lint": "tslint 'src/**/*.ts'",
     "start": "ts-node src/local.ts",
+    "build-shared": "cd node_modules/@boombox/shared && yarn build",
     "build": "yarn clean && tsc",
     "domain": "serverless create_domain",
-    "package": "yarn build && serverless package",
-    "deploy": "yarn build && serverless deploy"
+    "package": "yarn build-shared && yarn build && serverless package",
+    "deploy": "yarn build-shared && yarn build && serverless deploy"
   },
   "dependencies": {
     "@boombox/shared": "1.0.0",
     "@types/aws-lambda": "^8.10.11",
-    "@types/aws-sdk": "^2.7.0",
     "@types/aws-serverless-express": "^3.0.1",
     "@types/cors": "^2.8.4",
     "@types/validator": "^9.4.1",
-    "aws-sdk": "^2.296.0",
+    "aws-sdk": "^2.336.0",
     "aws-serverless-express": "^3.2.0",
     "cors": "^2.8.4",
     "express": "^4.16.3",

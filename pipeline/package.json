@@ -1,31 +1,52 @@
 {
-  "name": "@boombox/pipeline",
+  "name": "@boombox/pipeline-ts",
   "version": "1.0.0",
   "description": "The pipeline that ingests, processes, and transcribes podcast episodes.",
   "main": "index.js",
+  "repository": "https://github.com/gg-incorporated/boombox",
+  "homepage": "https://github.com/gg-incorporated/boombox/tree/master/pipeline-ts#readme",
+  "author": "Ian White and Andrew Hoyer",
+  "private": true,
+  "license": "UNLICENSED",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "format": "prettier --write --config .prettierrc.yaml '**/*.ts'",
+    "clean": "rm -f src/*.js && rm -f src/*.js.map",
+    "lint": "tslint 'src/**/*.ts'",
+    "start": "ts-node src/local.ts",
+    "build-shared": "cd node_modules/@boombox/shared && yarn build",
+    "build": "yarn clean && tsc",
     "domain": "serverless create_domain",
-    "deploy": "serverless deploy"
+    "package": "yarn build-shared && yarn build && serverless package",
+    "deploy": "yarn build-shared && yarn build && serverless deploy"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://ian97531@github.com/ian97531/boombox.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/ian97531/boombox/issues"
-  },
-  "homepage": "https://github.com/ian97531/boombox#readme",
   "dependencies": {
-    "npm": "^6.1.0"
+    "@boombox/shared": "1.0.0",
+    "@types/aws-lambda": "^8.10.11",
+    "@types/node": "^10.9.4",
+    "aws-sdk": "^2.335.0",
+    "axios": "^0.18.0",
+    "mp3-duration": "^1.1.0",
+    "punycode": "^2.1.1",
+    "rss-parser": "^3.4.3",
+    "slugify": "^1.3.1",
+    "source-map-support": "^0.5.9",
+    "stream": "^0.0.2",
+    "feedparser-promised": "https://github.com/alabeduarte/feedparser-promised.git",
+    "validator": "^10.6.0",
+    "watson-developer-cloud": "^3.11.1"
   },
   "devDependencies": {
-    "@boombox/shared": "1.0.0",
+    "lint-staged": "^7.2.2",
+    "nodemon": "^1.13.0",
+    "prettier": "^1.14.2",
     "serverless-domain-manager": "^2.6.0",
-    "serverless-plugin-tracing": "^2.0.0",
-    "serverless-python-requirements": "^4.1.1"
+    "serverless-offline": "^3.25.7",
+    "serverless-plugin-typescript": "^1.1.5",
+    "tslint": "^5.11.0",
+    "tslint-config-prettier": "^1.14.0",
+    "tslint-config-standard": "^7.1.0",
+    "tslint-react": "^3.6.0",
+    "ts-node": "^7.0.1",
+    "typescript": "^2.7.2"
   }
 }

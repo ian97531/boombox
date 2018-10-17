@@ -1,5 +1,5 @@
-import { IStatement } from '@boombox/shared/types/models'
-import { IListResponse } from '@boombox/shared/types/responses'
+import { IStatement } from '@boombox/shared/src/types/models/transcript'
+import { IListResponse } from '@boombox/shared/src/types/responses'
 import { AxiosResponse } from 'axios'
 import { Action, ActionCreator, AnyAction, Dispatch } from 'redux'
 import { api } from 'utilities/axios'
@@ -81,7 +81,7 @@ export const getStatements: ActionCreator<any> = (options: IGetStatementsOptions
         )
 
         if (response.data.info.nextItem) {
-          params.start = response.data.info.nextItem
+          params.start = response.data.info.nextItem as number
         } else {
           moreResults = false
         }

@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
-import validator = require('validator')
+import * as validator from 'validator'
 import { BadRequest } from '../errors'
 
 export default function(defaultStart = 0) {

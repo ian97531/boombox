@@ -25,7 +25,7 @@ const originApiHostMap = {
 
 const defaultApiHost = API_TEST
 const originApiHost = originApiHostMap[window.location.hostname]
-const queryStringApiHost = params.api ? paramsApiHostMap[params.api] : undefined
+const queryStringApiHost = params.api ? paramsApiHostMap[params.api as string] : undefined
 
 // If the 'api' query string parameter is defined with one of the values
 // in the paramsApiHostMap, use that value to determine the API

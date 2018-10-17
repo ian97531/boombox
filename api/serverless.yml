@@ -39,12 +39,6 @@ custom:
     statements: ${self:custom.global.product}-${self:custom.stage}-${self:custom.global.dynamodb.statements.suffix}
     speakers: ${self:custom.global.product}-${self:custom.stage}-${self:custom.global.dynamodb.speakers.suffix}
 
-  sns:
-    topics:
-      errors:
-        name: ${self:service}-${self:custom.stage}-errors
-        arn: arn:aws:sns:${self:provider.region}:${self:custom.global.awsAccountId}:${self:custom.sns.topics.errors.name}
-
 provider:
   name: aws
   runtime: nodejs8.10
@@ -55,7 +49,6 @@ provider:
     EPISODES_TABLE: ${self:custom.dynamodb.episodes}
     STATEMENTS_TABLE: ${self:custom.dynamodb.statements}
     SPEAKERS_TABLE: ${self:custom.dynamodb.speakers}
-    ERROR_TOPIC: ${self:custom.sns.topics.errors.arn}
     DOMAIN_NAME: ${self:custom.global.domain}
   iamRoleStatements:
     #
@@ -74,38 +67,9 @@ provider:
         - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dynamodb.speakers}
         - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dynamodb.statements}
 
-    #
-    # SNS Topic Publish Permissions
-    #
-    - Effect: Allow
-      Action:
-        - SNS:Publish
-      Resource:
-        - ${self:custom.sns.topics.errors.arn}
-
 functions:
   http:
     handler: src/lambda.http
     events:
       - http: ANY /
       - http: ANY /{proxy+}
-
-resources:
-  Resources:
-    #
-    # SNS for Errors
-    #
-    errorSNSTopic:
-      Type: AWS::SNS::Topic
-      Properties:
-        DisplayName: Boombox API Errors (${self:custom.stage})
-        TopicName: ${self:custom.sns.topics.errors.name}
-
-    errorSNSSubscription:
-      Type: AWS::SNS::Subscription
-      DependsOn:
-        - errorSNSTopic
-      Properties:
-        Endpoint: boombox-api-errors@googlegroups.com
-        Protocol: 'email'
-        TopicArn: ${self:custom.sns.topics.errors.arn}

@@ -1,5 +1,5 @@
-import { IEpisode } from '@boombox/shared/types/models'
-import { IItemResponse, IListResponse } from '@boombox/shared/types/responses'
+import { IEpisode } from '@boombox/shared/src/types/models/episode'
+import { IItemResponse, IListResponse } from '@boombox/shared/src/types/responses'
 import { AxiosResponse } from 'axios'
 import { Action, ActionCreator, AnyAction, Dispatch } from 'redux'
 import { api } from 'utilities/axios'
@@ -17,7 +17,7 @@ export enum EpisodesAction {
 export interface IGetEpisodesOptions {
   podcastSlug: string
   pageSize?: number
-  start?: number
+  start?: string
 }
 
 export interface IGetSingleEpisodeOptions {
@@ -115,9 +115,8 @@ export const getEpisodes: ActionCreator<any> = (options: IGetEpisodesOptions) =>
     dispatch(getEpisodesPending(options))
 
     let moreResults = true
-    const params = {
+    const params: { pageSize: number; start?: string } = {
       pageSize: options.pageSize || 50,
-      start: options.start || 0,
     }
 
     try {
@@ -128,7 +127,7 @@ export const getEpisodes: ActionCreator<any> = (options: IGetEpisodesOptions) =>
         )
 
         if (response.data.info.nextItem) {
-          params.start = response.data.info.nextItem
+          params.start = response.data.info.nextItem as string
         } else {
           moreResults = false
         }

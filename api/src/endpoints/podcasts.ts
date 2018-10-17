@@ -1,7 +1,6 @@
-import { IStatement, IStatementDBResult } from '@boombox/shared/types/models'
+import { getEpisodeForSlugs, getEpisodes, getPodcast, getStatements } from '@boombox/shared/src/db'
 import { NextFunction, Response, Router } from 'express'
-import validator = require('validator')
-import { getEpisodeForSlugs, getEpisodes, getPodcast, getSpeakers, getStatements } from '../db'
+import * as validator from 'validator'
 import { handleAsync, validatePageSize, validateQueryParams, validateStart } from '../middleware'
 import { returnItem, returnList } from '../middleware/response'
 import { IItemRequest, IListRequest } from '../types/requests'
@@ -53,17 +52,19 @@ const findEpisode = async (req: IItemRequest, res: Response, next: NextFunction)
 const findEpisodes = async (req: IListRequest, res: Response, next: NextFunction) => {
   const podcastSlug = validator.escape(req.params.podcastSlug)
   const podcast = await getPodcast(podcastSlug)
-  const query = {
-    pageSize: req.query.pageSize as number,
-    start: req.query.start as number,
-  }
-  const episodeResult = await getEpisodes(podcastSlug, query)
 
-  req.items = episodeResult.items
-  req.totalItems = Object.keys(podcast.episodes).length
-  if (episodeResult.nextItem) {
-    req.nextItem = episodeResult.nextItem
+  const pageSize = req.query.pageSize
+  const startTime = new Date(req.query.start)
+
+  const episodes = await getEpisodes(podcastSlug, startTime, pageSize + 1)
+
+  if (episodes.length === pageSize + 1) {
+    req.nextItem = episodes[pageSize].publishedAt.toISOString()
+    req.items = episodes.slice(0, pageSize)
+  } else {
+    req.items = episodes
   }
+  req.totalItems = Object.keys(podcast.episodes).length
 
   next()
 }
@@ -72,30 +73,19 @@ const findStatements = async (req: IListRequest, res: Response, next: NextFuncti
   const podcastSlug = validator.escape(req.params.podcastSlug)
   const episodeSlug = validator.escape(req.params.episodeSlug)
 
-  const episodeResult = await getEpisodeForSlugs(podcastSlug, episodeSlug)
-  const speakerResult = await getSpeakers(episodeResult.speakers)
+  const episode = await getEpisodeForSlugs(podcastSlug, episodeSlug)
 
-  const query = {
-    pageSize: req.query.pageSize as number,
-    start: req.query.start as number,
+  const pageSize = req.query.pageSize
+  const startTime = req.query.start
+
+  const statements = await getStatements(podcastSlug, episode.publishedAt, startTime, pageSize + 1)
+
+  if (statements.length === pageSize + 1) {
+    req.nextItem = statements[pageSize].endTime
+    req.items = statements.slice(0, pageSize)
   }
-  const statementResult = await getStatements(podcastSlug, episodeResult.publishTimestamp, query)
 
-  const items: IStatement[] = statementResult.items.map((statement: IStatementDBResult) => {
-    const newStatement: IStatement = {
-      endTime: statement.endTime,
-      speaker: speakerResult[statement.speaker],
-      startTime: statement.startTime,
-      words: statement.words,
-    }
-    return newStatement
-  })
-
-  req.items = items
-  req.totalItems = episodeResult.totalStatements
-  if (statementResult.nextItem) {
-    req.nextItem = statementResult.nextItem
-  }
+  req.totalItems = episode.totalStatements || 0
 
   next()
 }

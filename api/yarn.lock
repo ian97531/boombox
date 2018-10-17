@@ -12,12 +12,6 @@
   version "8.10.11"
   resolved "https://registry.yarnpkg.com/@types/aws-lambda/-/aws-lambda-8.10.11.tgz#2c51a7dacb1abf880d35778aca68ed1075d0b300"
 
-"@types/aws-sdk@^2.7.0":
-  version "2.7.0"
-  resolved "https://registry.yarnpkg.com/@types/aws-sdk/-/aws-sdk-2.7.0.tgz#83588b3d14ebdca1d4ce5e023387577568ce82f3"
-  dependencies:
-    aws-sdk "*"
-
 "@types/aws-serverless-express@^3.0.1":
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/@types/aws-serverless-express/-/aws-serverless-express-3.0.1.tgz#ea29611d71370ecf3ca59a90d606af55da9abf01"
@@ -215,9 +209,23 @@ atob@^2.1.1:
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/atob/-/atob-2.1.2.tgz#6d9517eb9e030d2436666651e86bd9f6f13533c9"
 
-aws-sdk@*, aws-sdk@^2.177.0, aws-sdk@^2.296.0:
+aws-sdk@^2.177.0:
   version "2.302.0"
   resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.302.0.tgz#f659c441b43db4e95e68e9392865e23507a788d2"
+  dependencies:
+    buffer "4.9.1"
+    events "1.1.1"
+    ieee754 "1.1.8"
+    jmespath "0.15.0"
+    querystring "0.2.0"
+    sax "1.2.1"
+    url "0.10.3"
+    uuid "3.1.0"
+    xml2js "0.4.19"
+
+aws-sdk@^2.335.0:
+  version "2.336.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.336.0.tgz#b15371aff3e30ba77b74968c086375594be897c9"
   dependencies:
     buffer "4.9.1"
     events "1.1.1"

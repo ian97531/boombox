@@ -1,0 +1,10 @@
+# package directories
+node_modules
+jspm_packages
+.build
+
+# Serverless directories
+.serverless
+
+# JavaScript Files
+*.js
