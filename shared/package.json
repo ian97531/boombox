@@ -10,7 +10,7 @@
   "dependencies": {
     "@types/aws-sdk": "^2.7.0",
     "@types/node": "^10.9.4",
-    "aws-sdk": "^2.335.0",
+    "aws-sdk": "^2.336.0",
     "axios": "^0.18.0",
     "ts-node": "^7.0.1",
     "watson-developer-cloud": "^3.12.0"
