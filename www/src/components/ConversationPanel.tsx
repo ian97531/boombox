@@ -30,24 +30,26 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
   }
 
   public render() {
-    let highightElement: React.ReactNode | null = null
-
+    let styles: object
     if (this.state && this.state.activeElement && this.conversationPanelRef.current) {
       const parentRect = this.conversationPanelRef.current.getBoundingClientRect()
       const statementRect = this.state.activeElement.getBoundingClientRect()
       const y = statementRect.top - parentRect.top + statementRect.height / 2
-      const styles = {
+      styles = {
         height: 1,
         transform: `translateY(${y}px) scaleY(${statementRect.height})`,
+        width: statementRect.width,
       }
-      highightElement = <div className="ConversationPanel__statement-hightlight" style={styles} />
     } else {
-      highightElement = <div className="ConversationPanel__statement-hightlight" />
+      styles = {
+        height: 0,
+        width: '100%',
+      }
     }
 
     return (
       <div className="ConversationPanel" ref={this.conversationPanelRef}>
-        {highightElement}
+        <div className="ConversationPanel__statement-hightlight" style={styles} />
         <div className="ConversationPanel__statement-list">
           {this.props.statements.map(statement => (
             <Statement
