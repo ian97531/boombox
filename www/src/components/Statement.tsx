@@ -1,5 +1,4 @@
 import { IStatement } from '@boombox/shared/src/types/models/transcript'
-import classNames from 'classnames'
 import * as React from 'react'
 import { connect } from 'react-redux'
 import { Dispatch } from 'redux'
@@ -10,26 +9,32 @@ import './Statement.css'
 
 interface IStatementProps extends IStatement {
   isActive: boolean
+  activeCallback: (activeRef: React.RefObject<HTMLDivElement>) => any
   changeCurrentTime: (newCurrentTime: number) => void
 }
 
 class Statement extends React.Component<IStatementProps> {
+  public statementRef = React.createRef<HTMLDivElement>()
+
+  public componentDidUpdate() {
+    if (this.props.isActive && this.statementRef) {
+      this.props.activeCallback(this.statementRef)
+    }
+  }
+
   public render() {
-    const formatedTime = formatTimeMarker(this.props.startTime)
+    const formattedTime = formatTimeMarker(this.props.startTime)
+
     return (
-      <div
-        className={classNames('Statement', {
-          'Statement--active': this.props.isActive,
-        })}
-      >
+      <div ref={this.statementRef} className="Statement">
         <div className="Statement__speaker">
           <div className="Statement__speaker-name">{this.props.speaker.name}</div>
           <div
             className="Statement__speaker-time"
             onClick={this.onClick}
-            title={`Jump to ${formatedTime}`}
+            title={`Jump to ${formattedTime}`}
           >
-            {formatedTime}
+            {formattedTime}
           </div>
         </div>
         <div className="Statement__content-wrapper">
