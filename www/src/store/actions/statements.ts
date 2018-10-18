@@ -86,7 +86,11 @@ export const getStatements: ActionCreator<any> = (options: IGetStatementsOptions
           moreResults = false
         }
 
-        dispatch(getStatementsSuccess(options, response.data.info.totalItems, response.data.items))
+        if (response.data && response.data.items && response.data.items.length) {
+          dispatch(
+            getStatementsSuccess(options, response.data.info.totalItems, response.data.items)
+          )
+        }
       }
     } catch (err) {
       dispatch(getStatementsError(options, err.message))
