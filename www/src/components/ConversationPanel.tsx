@@ -37,12 +37,12 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
       const statementRect = this.state.activeElement.getBoundingClientRect()
       const y = statementRect.top - parentRect.top + statementRect.height / 2
       const styles = {
-        left: statementRect.left - parentRect.left,
+        height: 1,
         transform: `translateY(${y}px) scaleY(${statementRect.height})`,
-        width: statementRect.width,
       }
-      console.log(styles.transform)
       highightElement = <div className="ConversationPanel__statement-hightlight" style={styles} />
+    } else {
+      highightElement = <div className="ConversationPanel__statement-hightlight" />
     }
 
     return (
