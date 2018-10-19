@@ -1,6 +1,7 @@
 import EpisodeListPage from 'components/EpisodeListPage'
 import EpisodePage from 'components/EpisodePage'
 import SpriteSheet from 'components/utilities/SpriteSheet'
+import Window from 'components/Window'
 import * as React from 'react'
 import { Link, Route } from 'react-router-dom'
 import './App.css'
@@ -8,6 +9,7 @@ import './App.css'
 const App: React.SFC = () => (
   <div className="App">
     <SpriteSheet />
+    <Window />
     <div className="App__header">
       <Link className="App__header-name" to="/">
         BOOMBOX
