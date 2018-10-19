@@ -1,34 +1,53 @@
 import * as React from 'react'
 import { connect } from 'react-redux'
 import { Dispatch } from 'redux'
-import { setCurrentScrollPosition } from 'store/actions/windowEvents'
+import { setCurrentScrollPosition, setCurrentWindowSize } from 'store/actions/windowEvents'
 
 interface IWindowEventsProps {
   dispatch: Dispatch
 }
 
 class WindowEvents extends React.Component<IWindowEventsProps> {
-  private updateScrollPositionCallback: (event: Event) => void
+  private updateScrollPosition: (event: Event) => void
+  private updateWindowSize: (event: Event) => void
 
   public componentDidMount() {
-    let currentScrollPosition = 0
-    let updateRequested = false
-    this.updateScrollPositionCallback = event => {
+    let currentScrollPosition = window.scrollY
+    let scrollUpdateRequested = false
+    this.updateScrollPosition = event => {
       currentScrollPosition = window.scrollY
-      if (!updateRequested) {
+      if (!scrollUpdateRequested) {
         window.requestAnimationFrame(() => {
           this.props.dispatch(setCurrentScrollPosition(currentScrollPosition))
-          updateRequested = false
+          scrollUpdateRequested = false
         })
-        updateRequested = true
+        scrollUpdateRequested = true
       }
     }
-    window.addEventListener('scroll', this.updateScrollPositionCallback)
+    window.addEventListener('scroll', this.updateScrollPosition)
     this.props.dispatch(setCurrentScrollPosition(window.scrollY))
+
+    let currentWidth = window.innerWidth
+    let currentHeight = window.innerHeight
+    let sizeUpdateRequested = false
+    this.updateWindowSize = event => {
+      currentWidth = window.innerWidth
+      currentHeight = window.innerHeight
+      if (!sizeUpdateRequested) {
+        window.requestAnimationFrame(() => {
+          this.props.dispatch(setCurrentWindowSize(currentWidth, currentHeight))
+          sizeUpdateRequested = false
+        })
+        sizeUpdateRequested = true
+      }
+    }
+    window.addEventListener('resize', this.updateWindowSize)
+    this.props.dispatch(setCurrentWindowSize(window.innerWidth, window.innerHeight))
   }
 
   public componentWillUnmount() {
-    window.removeEventListener('scroll', this.updateScrollPositionCallback)
+    window.removeEventListener('scroll', this.updateScrollPosition)
+    window.removeEventListener('resize', this.updateWindowSize)
   }
 
   public render() {

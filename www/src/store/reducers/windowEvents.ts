@@ -3,11 +3,14 @@ import {
   ISetScrollAnimationComplete,
   ISetScrollAnimationStart,
   ISetScrollPositionAction,
+  ISetWindowSizeAction,
   WindowEventsActions,
 } from 'store/actions/windowEvents'
 import { createBasicReducer } from 'utilities/ReducerUtils'
 
 export interface IWindowEventsStore {
+  currentWidth: number
+  currentHeight: number
   currentScrollPosition: number
   scrollAnimationCancelled: boolean
   scrollAnimationInProgress: boolean
@@ -15,13 +18,20 @@ export interface IWindowEventsStore {
 }
 
 const DEFAULT_STATE: IWindowEventsStore = {
-  currentScrollPosition: 0,
+  currentHeight: window.innerHeight,
+  currentScrollPosition: window.scrollY,
+  currentWidth: window.innerWidth,
   scrollAnimationCancelled: false,
   scrollAnimationInProgress: false,
   scrollAnimationRequestedPosition: null,
 }
 
 const windowEventsReducer = createBasicReducer(DEFAULT_STATE, {
+  [WindowEventsActions.SET_WINDOW_SIZE]: (state, action: ISetWindowSizeAction) => ({
+    ...state,
+    currentHeight: action.currentHeight,
+    currentWidth: action.currentWidth,
+  }),
   [WindowEventsActions.SET_SCROLL_POSITION]: (state, action: ISetScrollPositionAction) => ({
     ...state,
     currentScrollPosition: action.currentScrollPosition,

@@ -1,10 +1,17 @@
 import { Action, ActionCreator, AnyAction, Dispatch } from 'redux'
 
 export enum WindowEventsActions {
+  SET_WINDOW_SIZE = 'SET_WINDOW_SIZE',
   SET_SCROLL_POSITION = 'SET_SCROLL_POSITION',
   SET_SCROLL_ANIMATION_CANCELLED = 'SET_SCROLL_ANIMATION_CANCELLED',
   SET_SCROLL_ANIMATION_START = 'SET_SCROLL_ANIMATION_START',
   SET_SCROLL_ANIMATION_STOP = 'SET_SCROLL_ANIMATION_STOP',
+}
+
+export interface ISetWindowSizeAction extends Action {
+  currentWidth: number
+  currentHeight: number
+  type: WindowEventsActions.SET_WINDOW_SIZE
 }
 
 export interface ISetScrollPositionAction extends Action {
@@ -24,6 +31,15 @@ export interface ISetScrollAnimationStart extends Action {
 export interface ISetScrollAnimationComplete extends Action {
   type: WindowEventsActions.SET_SCROLL_ANIMATION_STOP
 }
+
+export const setCurrentWindowSize = (
+  currentWidth: number,
+  currentHeight: number
+): ISetWindowSizeAction => ({
+  currentHeight,
+  currentWidth,
+  type: WindowEventsActions.SET_WINDOW_SIZE,
+})
 
 export const setCurrentScrollPosition = (
   currentScrollPosition: number
@@ -55,34 +71,57 @@ export const scrollToPosition: ActionCreator<any> = (
   }
 
   return (dispatch: Dispatch<AnyAction>): void => {
-    let startTime: number | null = null
-    const startPosition = window.scrollY
-    const scrollDistance = position - startPosition
-    let currentScrollPosition = startPosition
-    const updateScrollPosition = (timestamp: number) => {
-      if (!startTime) {
-        startTime = timestamp
+    dispatch(setScrollAnimationStart(position))
+    if (animateMilliseconds) {
+      let startTime: number | null = null
+      const startPosition = window.scrollY
+      const scrollDistance = position - startPosition
+      let currentScrollPosition = startPosition
+      let complete = false
+
+      // Window resizes will cancel scroll animations
+      let resizeDetected = false
+      const detectResize = (event: Event) => {
+        resizeDetected = true
       }
+      window.addEventListener('resize', detectResize)
+      const updateScrollPosition = (timestamp: number) => {
+        if (!startTime) {
+          startTime = timestamp
+        }
 
-      if (window.scrollY === currentScrollPosition || !allowCancel) {
-        const progress = timestamp - startTime
-        const percentComplete = progress / animateMilliseconds
-        const nextPosition = startPosition + scrollDistance * cubicEaseInOut(percentComplete)
-        window.scrollTo({ top: nextPosition })
-        currentScrollPosition = window.scrollY
+        if (!resizeDetected && (window.scrollY === currentScrollPosition || !allowCancel)) {
+          const progress = timestamp - startTime
+          const percentComplete = progress / animateMilliseconds
+          const nextPosition = startPosition + scrollDistance * cubicEaseInOut(percentComplete)
+          window.scrollTo({ top: nextPosition })
+          currentScrollPosition = window.scrollY
 
-        if (progress < animateMilliseconds) {
-          window.requestAnimationFrame(updateScrollPosition)
+          if (progress < animateMilliseconds) {
+            window.requestAnimationFrame(updateScrollPosition)
+          } else {
+            complete = true
+          }
+        } else if (resizeDetected) {
+          complete = true
         } else {
+          dispatch(setScrollAnimationCancelled())
+          window.removeEventListener('resize', detectResize)
+        }
+
+        if (complete) {
           window.requestAnimationFrame(() => {
             dispatch(setScrollAnimationComplete())
           })
+          window.removeEventListener('resize', detectResize)
         }
-      } else {
-        dispatch(setScrollAnimationCancelled())
       }
+      window.requestAnimationFrame(updateScrollPosition)
+    } else {
+      window.scrollTo({ top: position })
+      window.requestAnimationFrame(() => {
+        dispatch(setScrollAnimationComplete())
+      })
     }
-    window.requestAnimationFrame(updateScrollPosition)
-    dispatch(setScrollAnimationStart(position))
   }
 }

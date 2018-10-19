@@ -12,23 +12,32 @@ interface IConversationPanelProps extends IStatementsStore {
   dispatch: Dispatch
   requestedEpisodeSlug: string
   requestedPodcastSlug: string
+  scrollPosition: number
   scrollAnimationCancelled: boolean
   scrollAnimationInProgress: boolean
+  windowHeight: number
+  windowWidth: number
 }
 
 interface IConversationPanelState {
-  activeStatementElement: Element
-  activeStatementBounds: ClientRect | DOMRect
-  conversationPanelBounds: ClientRect | DOMRect
+  activeStatementBounds?: ClientRect | DOMRect
+  conversationPanelBounds?: ClientRect | DOMRect
   syncScrollPosition: boolean
 }
 
+const initialState: IConversationPanelState = {
+  syncScrollPosition: true,
+}
+
 class ConversationPanel extends React.Component<IConversationPanelProps, IConversationPanelState> {
+  public readonly state: IConversationPanelState = initialState
   private conversationPanelRef = React.createRef<HTMLDivElement>()
+  private activeStatementRef?: React.RefObject<HTMLDivElement>
+  private animate: boolean = true
 
   public render() {
     let styles: object
-    if (this.state && this.state.activeStatementBounds) {
+    if (this.state.activeStatementBounds && this.state.conversationPanelBounds) {
       const top =
         this.state.activeStatementBounds.top -
         this.state.conversationPanelBounds.top +
@@ -38,6 +47,7 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
       styles = {
         height: 1,
         transform: `translateY(${top}px) scaleY(${height})`,
+        transitionProperty: this.animate ? 'transform' : 'none',
         width,
       }
     } else {
@@ -53,7 +63,7 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
         <div className="ConversationPanel__statement-list">
           {this.props.statements.map(statement => (
             <Statement
-              activeCallback={this.updateSelection}
+              activeCallback={this.updateActiveStatementRef}
               key={statement.startTime}
               {...statement}
             />
@@ -72,64 +82,75 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
         })
       )
     }
-
-    this.setState({
-      syncScrollPosition: true,
-    })
-
-    window.addEventListener('resize', this.updateSelectionListener)
-    window.addEventListener('scroll', this.scrollListener)
-    this.updateSelection()
   }
 
-  public componentWillUnmount() {
-    window.removeEventListener('resize', this.updateSelectionListener)
-    window.removeEventListener('scroll', this.scrollListener)
-  }
+  public componentDidUpdate(prevProps: IConversationPanelProps) {
+    // Turn animations back on if we just rendered without them. This happens when the window
+    // resizes and the highlights and scroll positions need to be updated without animations.
+    if (this.animate === false) {
+      this.animate = true
+    }
 
-  public componentWillReceiveProps() {
-    if (this.props.scrollAnimationCancelled) {
+    // If a scroll animation is cancelled (because a user scrolled while it was underway), disable
+    // scroll syncing.
+    if (this.state.syncScrollPosition && this.props.scrollAnimationCancelled) {
       this.setState({
         syncScrollPosition: false,
       })
     }
-  }
 
-  private scrollListener = (event: Event) => {
-    if (!this.props.scrollAnimationInProgress) {
+    // If the user scrolls the window while a scroll animation is not happening, disable scroll
+    // syncing.
+    if (
+      this.state.syncScrollPosition &&
+      !this.props.scrollAnimationInProgress &&
+      this.props.scrollPosition !== prevProps.scrollPosition &&
+      this.props.windowWidth === prevProps.windowWidth
+    ) {
       this.setState({
         syncScrollPosition: false,
       })
     }
+
+    // If the window is resized, re-render the active statement highlight and reset the scroll
+    // position without any animation.
+    if (
+      this.props.windowWidth !== prevProps.windowWidth ||
+      this.props.windowHeight !== prevProps.windowHeight
+    ) {
+      this.animate = false
+      this.updateSelection()
+    }
   }
 
-  private updateSelectionListener = () => {
-    this.updateSelection()
+  private updateActiveStatementRef = (activeRef: React.RefObject<HTMLDivElement>) => {
+    if (this.activeStatementRef !== activeRef) {
+      this.activeStatementRef = activeRef
+      this.updateSelection()
+    }
   }
 
-  private updateSelection = (activeRef?: React.RefObject<HTMLDivElement>) => {
-    const activeStatementElement: Element =
-      activeRef && activeRef.current
-        ? activeRef.current
-        : this.state && this.state.activeStatementElement
-
-    if (activeStatementElement && this.conversationPanelRef && this.conversationPanelRef.current) {
-      const activeStatementBounds = activeStatementElement.getBoundingClientRect()
+  private updateSelection = () => {
+    if (
+      this.activeStatementRef &&
+      this.activeStatementRef.current &&
+      this.conversationPanelRef.current
+    ) {
+      const activeStatementBounds = this.activeStatementRef.current.getBoundingClientRect()
       const conversationPanelBounds = this.conversationPanelRef.current.getBoundingClientRect()
 
-      // The request animation frame here is not needed, but it helps to sync up the highlight
-      // motion with the scroll.
+      // This helps syncronize the highlight animation with the scroll animation.
       window.requestAnimationFrame(() => {
         this.setState({
           activeStatementBounds,
-          activeStatementElement,
           conversationPanelBounds,
         })
       })
 
-      if (this.state && this.state.syncScrollPosition) {
-        const scrollPosition = activeStatementBounds.top - conversationPanelBounds.top
-        this.props.dispatch(scrollToPosition(scrollPosition, 300))
+      if (this.state.syncScrollPosition) {
+        const animateMilliseconds = this.animate ? 300 : 0
+        const position = activeStatementBounds.top - conversationPanelBounds.top
+        this.props.dispatch(scrollToPosition(position, animateMilliseconds))
       }
     }
   }
@@ -146,6 +167,9 @@ function mapStateToProps({
     ...statements,
     scrollAnimationCancelled: windowEvents.scrollAnimationCancelled,
     scrollAnimationInProgress: windowEvents.scrollAnimationInProgress,
+    scrollPosition: windowEvents.currentScrollPosition,
+    windowHeight: windowEvents.currentHeight,
+    windowWidth: windowEvents.currentWidth,
   }
 }
 
