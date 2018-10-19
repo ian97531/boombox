@@ -3,7 +3,7 @@ import * as React from 'react'
 import { connect } from 'react-redux'
 import { Dispatch } from 'redux'
 import { getStatements } from 'store/actions/statements'
-import { scrollToPosition } from 'store/actions/windowEvents'
+import { requestScrollPosition } from 'store/actions/windowEvents'
 import { IStatementsStore } from 'store/reducers/statements'
 import { IWindowEventsStore } from 'store/reducers/windowEvents'
 import './ConversationPanel.css'
@@ -12,6 +12,7 @@ interface IConversationPanelProps extends IStatementsStore {
   dispatch: Dispatch
   requestedEpisodeSlug: string
   requestedPodcastSlug: string
+  requestedScrollCancelled: boolean
   userScrolled: boolean
   windowHeight: number
   windowWidth: number
@@ -20,17 +21,13 @@ interface IConversationPanelProps extends IStatementsStore {
 interface IConversationPanelState {
   activeStatementBounds?: ClientRect | DOMRect
   conversationPanelBounds?: ClientRect | DOMRect
-  syncScrollPosition: boolean
-}
-
-const initialState: IConversationPanelState = {
-  syncScrollPosition: true,
 }
 
 class ConversationPanel extends React.Component<IConversationPanelProps, IConversationPanelState> {
-  public readonly state: IConversationPanelState = initialState
+  public readonly state: IConversationPanelState = {}
   private conversationPanelRef = React.createRef<HTMLDivElement>()
   private activeStatementRef?: React.RefObject<HTMLDivElement>
+  private syncScrollPosition: boolean = true
   private animate: boolean = true
 
   public render() {
@@ -90,19 +87,26 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
     }
 
     // If the user scrolls, disable scroll syncing.
-    if (this.state.syncScrollPosition && this.props.userScrolled) {
-      this.setState({
-        syncScrollPosition: false,
-      })
+    if (this.syncScrollPosition && this.props.userScrolled) {
+      this.syncScrollPosition = false
     }
 
-    // If the window is resized, re-render the active statement highlight and reset the scroll
-    // position without any animation.
+    // If the window is resized, or the scroll failed (probably due to a resize) re-render the
+    // active statement highlight and reset the scroll position without any animation.
     if (
       this.props.windowWidth !== prevProps.windowWidth ||
       this.props.windowHeight !== prevProps.windowHeight
     ) {
       this.animate = false
+      this.updateSelection()
+    }
+
+    if (
+      this.props.requestedScrollCancelled &&
+      this.props.requestedScrollCancelled !== prevProps.requestedScrollCancelled
+    ) {
+      // If the scroll was cancelled due to a user scroll, there's no need to turn off animations.
+      this.animate = this.props.userScrolled
       this.updateSelection()
     }
   }
@@ -131,10 +135,10 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
         })
       })
 
-      if (this.state.syncScrollPosition) {
+      if (this.syncScrollPosition) {
         const duration = this.animate ? 300 : 0
         const position = activeStatementBounds.top - conversationPanelBounds.top
-        this.props.dispatch(scrollToPosition(position, duration))
+        this.props.dispatch(requestScrollPosition(position, duration))
       }
     }
   }
@@ -149,9 +153,10 @@ function mapStateToProps({
 }) {
   return {
     ...statements,
+    requestedScrollCancelled: windowEvents.requestedScrollCancelled,
     userScrolled: windowEvents.userScrolled,
-    windowHeight: windowEvents.currentHeight,
-    windowWidth: windowEvents.currentWidth,
+    windowHeight: windowEvents.width,
+    windowWidth: windowEvents.height,
   }
 }
 

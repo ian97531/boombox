@@ -1,46 +1,62 @@
 import {
-  IScrollToPositionAction,
-  ISetScrollPositionAction,
-  ISetWindowSizeAction,
+  IRequestScrollPositionAction,
+  IUpdateCurrentScrollPositionAction,
+  IUpdateCurrentWindowSizeAction,
+  IUpdateScrollCompleteAction,
   WindowEventsActions,
 } from 'store/actions/windowEvents'
 import { createBasicReducer } from 'utilities/ReducerUtils'
 
 export interface IWindowEventsStore {
-  currentWidth: number
-  currentHeight: number
-  currentScrollPosition: number
-  requestedScrollPosition: number | null
+  height: number
+  requestedScrollCancelled: boolean
   requestedScrollDuration: number | null
+  requestedScrollPosition: number | null
+  scrollPosition: number
   userScrolled: boolean
+  width: number
 }
 
 const DEFAULT_STATE: IWindowEventsStore = {
-  currentHeight: window.innerHeight,
-  currentScrollPosition: window.scrollY,
-  currentWidth: window.innerWidth,
+  height: 0,
+  requestedScrollCancelled: false,
   requestedScrollDuration: null,
   requestedScrollPosition: null,
+  scrollPosition: 0,
   userScrolled: false,
+  width: 0,
 }
 
 const windowEventsReducer = createBasicReducer(DEFAULT_STATE, {
-  [WindowEventsActions.SET_WINDOW_SIZE]: (state, action: ISetWindowSizeAction) => ({
+  [WindowEventsActions.REQUEST_SCROLL_POSITION]: (state, action: IRequestScrollPositionAction) => ({
     ...state,
-    currentHeight: action.currentHeight,
-    currentWidth: action.currentWidth,
+    requestedScrollCancelled: false,
+    requestedScrollDuration: action.requestedScrollDuration,
+    requestedScrollPosition: action.requestedScrollPosition,
+    userScrolled: false,
   }),
-  [WindowEventsActions.SET_SCROLL_POSITION]: (state, action: ISetScrollPositionAction) => ({
+  [WindowEventsActions.UPDATE_CURRENT_SCROLL_POSITION]: (
+    state,
+    action: IUpdateCurrentScrollPositionAction
+  ) => ({
     ...state,
-    currentScrollPosition: action.currentScrollPosition,
+    scrollPosition: action.scrollPosition,
+    userScrolled: action.userScrolled,
+  }),
+  [WindowEventsActions.UPDATE_CURRENT_WINDOW_SIZE]: (
+    state,
+    action: IUpdateCurrentWindowSizeAction
+  ) => ({
+    ...state,
+    height: action.height,
+    width: action.width,
+  }),
+  [WindowEventsActions.UPDATE_SCROLL_COMPLETE]: (state, action: IUpdateScrollCompleteAction) => ({
+    ...state,
+    requestedScrollCancelled: action.requestedScrollCancelled,
     requestedScrollDuration: null,
     requestedScrollPosition: null,
     userScrolled: action.userScrolled,
-  }),
-  [WindowEventsActions.SCROLL_TO_POSITION]: (state, action: IScrollToPositionAction) => ({
-    ...state,
-    requestedScrollDuration: action.requestedScrollDuration,
-    requestedScrollPosition: action.requestedScrollPosition,
   }),
 })
 

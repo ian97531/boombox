@@ -8,7 +8,7 @@
   position: absolute;
   background-color: var(--color-grey);
   transition-property: transform;
-  transition-duration: 0.3s;
+  transition-duration: 300ms;
   top: 0px;
   left: 0px;
 }

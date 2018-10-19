@@ -1,13 +1,20 @@
 import * as React from 'react'
 import { connect } from 'react-redux'
 import { Dispatch } from 'redux'
-import { setCurrentScrollPosition, setCurrentWindowSize } from 'store/actions/windowEvents'
+import {
+  updateCurrentScrollPosition,
+  updateCurrentWindowSize,
+  updateScrollComplete,
+} from 'store/actions/windowEvents'
 import { IWindowEventsStore } from 'store/reducers/windowEvents'
 
 interface IWindowEventsProps {
   dispatch: Dispatch
+  height: number
   requestedScrollDuration: number
   requestedScrollPosition: number
+  scrollPosition: number
+  width: number
 }
 
 class WindowEvents extends React.Component<IWindowEventsProps> {
@@ -21,20 +28,24 @@ class WindowEvents extends React.Component<IWindowEventsProps> {
   private scrollAnimationDuration: number
   private scrollAnimationInterrupted: boolean
   private scrollAnimationStartPosition: number
+  private scrollAnimationEndPosition: number | null
   private scrollAnimationStartTime: number | null
+  private scrollAnimationInProgress = false
+  private scrollAnimationRaf: number | null
 
-  private listeningForScrollEvents = false
-  private resizeTimeout: NodeJS.Timeout
+  private resizeInProgress = false
 
   public componentDidMount() {
-    this.listenForScrollEvents()
+    window.addEventListener('wheel', this.mouseWheelEvent, { passive: true })
+    window.addEventListener('scroll', this.updateScrollPosition, { passive: true })
     window.addEventListener('resize', this.updateWindowSize, { passive: true })
-    this.props.dispatch(setCurrentScrollPosition(this.scrollPosition))
-    this.props.dispatch(setCurrentWindowSize(this.windowWidth, this.windowHeight))
+    this.props.dispatch(updateCurrentScrollPosition(this.scrollPosition))
+    this.props.dispatch(updateCurrentWindowSize(this.windowWidth, this.windowHeight))
   }
 
   public componentWillUnmount() {
-    this.stopListeningForScrollEvents()
+    window.removeEventListener('wheel', this.mouseWheelEvent)
+    window.removeEventListener('scroll', this.updateScrollPosition)
     window.removeEventListener('resize', this.updateWindowSize)
   }
 
@@ -44,32 +55,43 @@ class WindowEvents extends React.Component<IWindowEventsProps> {
 
   public componentDidUpdate(prevProps: IWindowEventsProps) {
     if (
-      this.props.requestedScrollPosition &&
-      this.props.requestedScrollPosition !== prevProps.requestedScrollPosition
+      this.props.requestedScrollPosition !== null &&
+      this.props.requestedScrollPosition !== this.scrollAnimationEndPosition
     ) {
       this.scrollToPosition(this.props.requestedScrollPosition, this.props.requestedScrollDuration)
     }
-  }
 
-  private listenForScrollEvents = () => {
-    if (!this.listeningForScrollEvents) {
-      window.addEventListener('scroll', this.updateScrollPosition, { passive: true })
-      this.listeningForScrollEvents = true
+    if (
+      !this.props.requestedScrollPosition &&
+      this.scrollAnimationInProgress &&
+      this.props.scrollPosition === this.scrollAnimationEndPosition
+    ) {
+      this.scrollAnimationInProgress = false
+      this.scrollAnimationEndPosition = null
+    }
+
+    if (
+      this.props.width === this.windowWidth &&
+      this.props.height === this.windowHeight &&
+      !this.windowSizeUpdateRequested
+    ) {
+      this.resizeInProgress = false
     }
   }
 
-  private stopListeningForScrollEvents = () => {
-    if (this.listeningForScrollEvents) {
-      window.removeEventListener('scroll', this.updateScrollPosition)
-      this.listeningForScrollEvents = false
+  private mouseWheelEvent = (event: WheelEvent) => {
+    if (event.wheelDeltaY && this.scrollAnimationInProgress) {
+      this.scrollAnimationInterrupted = true
     }
   }
 
   private updateScrollPosition = (event: Event) => {
     this.scrollPosition = window.scrollY
+
     if (!this.scrollUpdateRequested) {
       window.requestAnimationFrame(() => {
-        this.props.dispatch(setCurrentScrollPosition(this.scrollPosition, true))
+        const userScrolled = !this.scrollAnimationInProgress && !this.resizeInProgress
+        this.props.dispatch(updateCurrentScrollPosition(this.scrollPosition, userScrolled))
         this.scrollUpdateRequested = false
       })
       this.scrollUpdateRequested = true
@@ -77,17 +99,14 @@ class WindowEvents extends React.Component<IWindowEventsProps> {
   }
 
   private updateWindowSize = (event: Event) => {
-    this.stopListeningForScrollEvents()
+    this.resizeInProgress = true
+    this.scrollAnimationInterrupted = true
     this.windowWidth = window.innerWidth
     this.windowHeight = window.innerHeight
-    this.scrollAnimationInterrupted = true
-    if (this.resizeTimeout) {
-      clearTimeout(this.resizeTimeout)
-    }
-    this.resizeTimeout = setTimeout(this.listenForScrollEvents, 1000)
+
     if (!this.windowSizeUpdateRequested) {
       window.requestAnimationFrame(() => {
-        this.props.dispatch(setCurrentWindowSize(this.windowWidth, this.windowHeight))
+        this.props.dispatch(updateCurrentWindowSize(this.windowWidth, this.windowHeight))
         this.windowSizeUpdateRequested = false
       })
       this.windowSizeUpdateRequested = true
@@ -95,24 +114,31 @@ class WindowEvents extends React.Component<IWindowEventsProps> {
   }
 
   private scrollToPosition(position: number, duration: number) {
-    this.stopListeningForScrollEvents()
-    if (duration) {
-      this.scrollAnimationDuration = duration
-      this.scrollAnimationInterrupted = false
-      this.scrollAnimationStartPosition = window.scrollY
-      this.scrollAnimationDistance = position - this.scrollAnimationStartPosition
-      this.scrollAnimationStartTime = null
-      window.requestAnimationFrame(this.stepScrollPosition)
-    } else {
-      window.scrollTo({ top: position })
-      this.listenForScrollEvents()
+    if (position !== this.scrollPosition || this.scrollAnimationInProgress) {
+      if (this.scrollAnimationInProgress) {
+        if (this.scrollAnimationRaf) {
+          cancelAnimationFrame(this.scrollAnimationRaf)
+        }
+      }
+
+      this.scrollAnimationInProgress = true
+      this.scrollAnimationEndPosition = position
+      if (duration) {
+        this.scrollAnimationDuration = duration
+        this.scrollAnimationInterrupted = false
+        this.scrollAnimationStartPosition = this.scrollPosition
+        this.scrollAnimationDistance = position - this.scrollAnimationStartPosition
+        this.scrollAnimationStartTime = null
+        this.scrollAnimationRaf = window.requestAnimationFrame(this.stepScrollPosition)
+      } else {
+        window.scrollTo({ top: position })
+      }
     }
   }
 
   private stepScrollPosition = (timestamp: number) => {
     const cancelled = this.scrollAnimationInterrupted || window.scrollY !== this.scrollPosition
     let complete = false
-
     if (!this.scrollAnimationStartTime) {
       this.scrollAnimationStartTime = timestamp
     }
@@ -127,7 +153,7 @@ class WindowEvents extends React.Component<IWindowEventsProps> {
       this.scrollPosition = window.scrollY
 
       if (progress < this.scrollAnimationDuration) {
-        window.requestAnimationFrame(this.stepScrollPosition)
+        this.scrollAnimationRaf = window.requestAnimationFrame(this.stepScrollPosition)
       } else {
         complete = true
       }
@@ -136,8 +162,7 @@ class WindowEvents extends React.Component<IWindowEventsProps> {
     }
 
     if (complete) {
-      this.props.dispatch(setCurrentScrollPosition(this.scrollPosition, cancelled))
-      this.listenForScrollEvents()
+      this.props.dispatch(updateScrollComplete(cancelled, !this.resizeInProgress))
     }
   }
 
@@ -148,8 +173,11 @@ class WindowEvents extends React.Component<IWindowEventsProps> {
 
 function mapStateToProps({ windowEvents }: { windowEvents: IWindowEventsStore }) {
   return {
+    height: windowEvents.height,
     requestedScrollDuration: windowEvents.requestedScrollDuration,
     requestedScrollPosition: windowEvents.requestedScrollPosition,
+    scrollPosition: windowEvents.scrollPosition,
+    width: windowEvents.width,
   }
 }
 
