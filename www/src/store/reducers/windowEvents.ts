@@ -1,7 +1,5 @@
 import {
-  ISetScrollAnimationCancelled,
-  ISetScrollAnimationComplete,
-  ISetScrollAnimationStart,
+  IScrollToPositionAction,
   ISetScrollPositionAction,
   ISetWindowSizeAction,
   WindowEventsActions,
@@ -12,18 +10,18 @@ export interface IWindowEventsStore {
   currentWidth: number
   currentHeight: number
   currentScrollPosition: number
-  scrollAnimationCancelled: boolean
-  scrollAnimationInProgress: boolean
-  scrollAnimationRequestedPosition: number | null
+  requestedScrollPosition: number | null
+  requestedScrollDuration: number | null
+  userScrolled: boolean
 }
 
 const DEFAULT_STATE: IWindowEventsStore = {
   currentHeight: window.innerHeight,
   currentScrollPosition: window.scrollY,
   currentWidth: window.innerWidth,
-  scrollAnimationCancelled: false,
-  scrollAnimationInProgress: false,
-  scrollAnimationRequestedPosition: null,
+  requestedScrollDuration: null,
+  requestedScrollPosition: null,
+  userScrolled: false,
 }
 
 const windowEventsReducer = createBasicReducer(DEFAULT_STATE, {
@@ -35,30 +33,14 @@ const windowEventsReducer = createBasicReducer(DEFAULT_STATE, {
   [WindowEventsActions.SET_SCROLL_POSITION]: (state, action: ISetScrollPositionAction) => ({
     ...state,
     currentScrollPosition: action.currentScrollPosition,
+    requestedScrollDuration: null,
+    requestedScrollPosition: null,
+    userScrolled: action.userScrolled,
   }),
-  [WindowEventsActions.SET_SCROLL_ANIMATION_START]: (state, action: ISetScrollAnimationStart) => ({
+  [WindowEventsActions.SCROLL_TO_POSITION]: (state, action: IScrollToPositionAction) => ({
     ...state,
-    scrollAnimationCancelled: false,
-    scrollAnimationInProgress: true,
-    setScrollAnimationRequestedPosition: action.requestedPosition,
-  }),
-  [WindowEventsActions.SET_SCROLL_ANIMATION_STOP]: (
-    state,
-    action: ISetScrollAnimationComplete
-  ) => ({
-    ...state,
-    scrollAnimationCancelled: false,
-    scrollAnimationInProgress: false,
-    setScrollAnimationRequestedPosition: null,
-  }),
-  [WindowEventsActions.SET_SCROLL_ANIMATION_CANCELLED]: (
-    state,
-    action: ISetScrollAnimationCancelled
-  ) => ({
-    ...state,
-    scrollAnimationCancelled: true,
-    scrollAnimationInProgress: false,
-    setScrollAnimationRequestedPosition: null,
+    requestedScrollDuration: action.requestedScrollDuration,
+    requestedScrollPosition: action.requestedScrollPosition,
   }),
 })
 

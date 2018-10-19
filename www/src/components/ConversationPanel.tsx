@@ -12,9 +12,7 @@ interface IConversationPanelProps extends IStatementsStore {
   dispatch: Dispatch
   requestedEpisodeSlug: string
   requestedPodcastSlug: string
-  scrollPosition: number
-  scrollAnimationCancelled: boolean
-  scrollAnimationInProgress: boolean
+  userScrolled: boolean
   windowHeight: number
   windowWidth: number
 }
@@ -91,22 +89,8 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
       this.animate = true
     }
 
-    // If a scroll animation is cancelled (because a user scrolled while it was underway), disable
-    // scroll syncing.
-    if (this.state.syncScrollPosition && this.props.scrollAnimationCancelled) {
-      this.setState({
-        syncScrollPosition: false,
-      })
-    }
-
-    // If the user scrolls the window while a scroll animation is not happening, disable scroll
-    // syncing.
-    if (
-      this.state.syncScrollPosition &&
-      !this.props.scrollAnimationInProgress &&
-      this.props.scrollPosition !== prevProps.scrollPosition &&
-      this.props.windowWidth === prevProps.windowWidth
-    ) {
+    // If the user scrolls, disable scroll syncing.
+    if (this.state.syncScrollPosition && this.props.userScrolled) {
       this.setState({
         syncScrollPosition: false,
       })
@@ -148,9 +132,9 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
       })
 
       if (this.state.syncScrollPosition) {
-        const animateMilliseconds = this.animate ? 300 : 0
+        const duration = this.animate ? 300 : 0
         const position = activeStatementBounds.top - conversationPanelBounds.top
-        this.props.dispatch(scrollToPosition(position, animateMilliseconds))
+        this.props.dispatch(scrollToPosition(position, duration))
       }
     }
   }
@@ -165,9 +149,7 @@ function mapStateToProps({
 }) {
   return {
     ...statements,
-    scrollAnimationCancelled: windowEvents.scrollAnimationCancelled,
-    scrollAnimationInProgress: windowEvents.scrollAnimationInProgress,
-    scrollPosition: windowEvents.currentScrollPosition,
+    userScrolled: windowEvents.userScrolled,
     windowHeight: windowEvents.currentHeight,
     windowWidth: windowEvents.currentWidth,
   }
