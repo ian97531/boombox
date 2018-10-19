@@ -1,7 +1,5 @@
 import { Action, ActionCreator, AnyAction, Dispatch } from 'redux'
 
-let currentAnimation: number | null = null
-
 export enum WindowEventsActions {
   SET_SCROLL_POSITION = 'SET_SCROLL_POSITION',
   SET_SCROLL_ANIMATION_CANCELLED = 'SET_SCROLL_ANIMATION_CANCELLED',
@@ -60,7 +58,7 @@ export const scrollToPosition: ActionCreator<any> = (
     let startTime: number | null = null
     const startPosition = window.scrollY
     const scrollDistance = position - startPosition
-    let currentScrollPosition: number | null = null
+    let currentScrollPosition = startPosition
     const updateScrollPosition = (timestamp: number) => {
       if (!startTime) {
         startTime = timestamp
@@ -71,28 +69,20 @@ export const scrollToPosition: ActionCreator<any> = (
         const percentComplete = progress / animateMilliseconds
         const nextPosition = startPosition + scrollDistance * cubicEaseInOut(percentComplete)
         window.scrollTo({ top: nextPosition })
-        currentScrollPosition = nextPosition
+        currentScrollPosition = window.scrollY
 
         if (progress < animateMilliseconds) {
-          currentAnimation = window.requestAnimationFrame(updateScrollPosition)
+          window.requestAnimationFrame(updateScrollPosition)
         } else {
-          dispatch(setScrollAnimationComplete())
+          window.requestAnimationFrame(() => {
+            dispatch(setScrollAnimationComplete())
+          })
         }
       } else {
         dispatch(setScrollAnimationCancelled())
       }
     }
-    currentAnimation = window.requestAnimationFrame(updateScrollPosition)
+    window.requestAnimationFrame(updateScrollPosition)
     dispatch(setScrollAnimationStart(position))
-  }
-}
-
-export const cancelScrollAnimation: ActionCreator<any> = () => {
-  return (dispatch: Dispatch<AnyAction>): void => {
-    if (currentAnimation) {
-      window.cancelAnimationFrame(currentAnimation)
-      currentAnimation = null
-      dispatch(setScrollAnimationComplete())
-    }
   }
 }

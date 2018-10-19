@@ -12,6 +12,8 @@ interface IConversationPanelProps extends IStatementsStore {
   dispatch: Dispatch
   requestedEpisodeSlug: string
   requestedPodcastSlug: string
+  scrollAnimationCancelled: boolean
+  scrollAnimationInProgress: boolean
 }
 
 interface IConversationPanelState {
@@ -71,6 +73,10 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
       )
     }
 
+    this.setState({
+      syncScrollPosition: true,
+    })
+
     window.addEventListener('resize', this.updateSelectionListener)
     window.addEventListener('scroll', this.scrollListener)
     this.updateSelection()
@@ -81,8 +87,20 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
     window.removeEventListener('scroll', this.scrollListener)
   }
 
+  public componentWillReceiveProps() {
+    if (this.props.scrollAnimationCancelled) {
+      this.setState({
+        syncScrollPosition: false,
+      })
+    }
+  }
+
   private scrollListener = (event: Event) => {
-    console.log(event)
+    if (!this.props.scrollAnimationInProgress) {
+      this.setState({
+        syncScrollPosition: false,
+      })
+    }
   }
 
   private updateSelectionListener = () => {
@@ -108,8 +126,11 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
           conversationPanelBounds,
         })
       })
-      const scrollPosition = activeStatementBounds.top - conversationPanelBounds.top
-      this.props.dispatch(scrollToPosition(scrollPosition, 300))
+
+      if (this.state && this.state.syncScrollPosition) {
+        const scrollPosition = activeStatementBounds.top - conversationPanelBounds.top
+        this.props.dispatch(scrollToPosition(scrollPosition, 300))
+      }
     }
   }
 }
@@ -123,8 +144,8 @@ function mapStateToProps({
 }) {
   return {
     ...statements,
-    currentScrollPosition: windowEvents.currentScrollPosition,
     scrollAnimationCancelled: windowEvents.scrollAnimationCancelled,
+    scrollAnimationInProgress: windowEvents.scrollAnimationInProgress,
   }
 }
 
