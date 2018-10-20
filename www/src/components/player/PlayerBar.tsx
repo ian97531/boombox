@@ -1,3 +1,4 @@
+import { IWindowContext } from 'components/WindowEvents'
 import * as React from 'react'
 import { connect } from 'react-redux'
 import { Dispatch } from 'redux'
@@ -16,6 +17,8 @@ interface IPlayerBarProps {
   currentScrubTime: number | null
   currentTime: number
   duration: number
+  scrollScrub: boolean
+  windowEvents: IWindowContext
 }
 
 function timeToWidthPercent(time: number, duration: number) {
@@ -23,31 +26,48 @@ function timeToWidthPercent(time: number, duration: number) {
 }
 
 class PlayerBar extends React.Component<IPlayerBarProps> {
+  public componentDidMount() {
+    this.props.windowEvents.addUserScrollListener(this.scrollEvent)
+  }
+
+  public componentWillUnmount() {
+    this.props.windowEvents.removeUserScrollListener(this.scrollEvent)
+  }
+
   public render() {
     const currentScrubTimeWidth =
       this.props.currentScrubTime !== null
         ? timeToWidthPercent(this.props.currentScrubTime, this.props.duration)
         : '0'
     const currentTimeWidth = timeToWidthPercent(this.props.currentTime, this.props.duration)
-
+    const playerBarStyle: any = {}
+    const scrubStyle: any = { width: currentScrubTimeWidth }
+    if (this.props.scrollScrub) {
+      playerBarStyle.transform = 'translateY(-50%) scaleY(2)'
+      scrubStyle.opacity = 1
+    }
     return (
       <div
         className="PlayerBar"
         onClick={this.onClick}
         onMouseMove={this.onMouseMove}
         onMouseLeave={this.onMouseLeave}
+        style={playerBarStyle}
       >
         <div
           className="PlayerBar__progress PlayerBar__progress--current"
           style={{ width: currentTimeWidth }}
         />
-        <div
-          className="PlayerBar__progress PlayerBar__progress--scrub"
-          style={{ width: currentScrubTimeWidth }}
-        />
+        <div className="PlayerBar__progress PlayerBar__progress--scrub" style={scrubStyle} />
         <div className="PlayerBar__progress PlayerBar__progress--inactive" />
       </div>
     )
+  }
+
+  private scrollEvent = (position: number, scrollHeight: number) => {
+    if (this.props.scrollScrub) {
+      this.props.changeCurrentScrubTime(this.props.duration * (position / scrollHeight))
+    }
   }
 
   private mouseEventToTime(evt: React.MouseEvent<HTMLDivElement>) {
