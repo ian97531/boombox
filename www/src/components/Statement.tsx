@@ -1,13 +1,10 @@
 import { IStatement } from '@boombox/shared/src/types/models/transcript'
 import * as React from 'react'
-import { connect } from 'react-redux'
-import { Dispatch } from 'redux'
 import { formatTimeMarker } from 'utilities/Time'
 import './Statement.css'
 
 interface IStatementProps {
   audioTime?: number
-  dispatch: Dispatch
   isActive: boolean
   isPast: boolean
   onClick: (statement: IStatement) => void
@@ -44,4 +41,4 @@ class Statement extends React.Component<IStatementProps> {
   }
 }
 
-export default connect()(Statement)
+export default Statement
