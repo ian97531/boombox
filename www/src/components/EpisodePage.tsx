@@ -2,7 +2,6 @@ import { IEpisode } from '@boombox/shared/src/types/models/episode'
 import { IStatement } from '@boombox/shared/src/types/models/transcript'
 import ConversationPanel from 'components/ConversationPanel'
 import Player from 'components/player/Player'
-import { WindowEventsConsumer } from 'components/WindowEvents'
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import { connect } from 'react-redux'
@@ -53,47 +52,34 @@ class EpisodePage extends React.Component<IEpisodePageProps, IEpisodeState> {
   public render() {
     let episodeConversationPanel: React.ReactNode | null = null
     let player: React.ReactNode | null = null
-
+    if (this.props.episode) {
+      episodeConversationPanel = (
+        <ConversationPanel
+          audioTime={this.props.audioTime}
+          onDisableSyncToAudio={this.disableSyncToAudio}
+          onEnableSyncToAudio={this.enableSyncToAudio}
+          onStatementClick={this.statementClick}
+          requestedEpisodeSlug={this.props.episode.slug}
+          requestedPodcastSlug={this.props.episode.podcastSlug}
+        />
+      )
+      // TODO(ndrwhr): This should be rendered in the App so that the user can keep listening
+      // to the current podcast while browsing around. To do this we will have to rework the store
+      // so that the currently episode information isn't tightly coupled with the router.
+      player = ReactDOM.createPortal(
+        <Player audioUrl={this.props.episode.mp3URL} scrollScrub={this.state.scrollScrub} />,
+        document.querySelector('.App__player') as Element
+      )
+    }
     return (
-      <WindowEventsConsumer>
-        {windowContext => {
-          if (this.props.episode) {
-            episodeConversationPanel = (
-              <ConversationPanel
-                audioTime={this.props.audioTime}
-                onDisableSyncToAudio={this.disableSyncToAudio}
-                onEnableSyncToAudio={this.enableSyncToAudio}
-                onStatementClick={this.statementClick}
-                requestedEpisodeSlug={this.props.episode.slug}
-                requestedPodcastSlug={this.props.episode.podcastSlug}
-                windowEvents={windowContext}
-              />
-            )
-            // TODO(ndrwhr): This should be rendered in the App so that the user can keep listening
-            // to the current podcast while browsing around. To do this we will have to rework the store
-            // so that the currently episode information isn't tightly coupled with the router.
-            player = ReactDOM.createPortal(
-              <Player
-                audioUrl={this.props.episode.mp3URL}
-                scrollScrub={this.state.scrollScrub}
-                windowEvents={windowContext}
-              />,
-              document.querySelector('.App__player') as Element
-            )
-          }
-          return (
-            <div className="EpisodePage">
-              {episodeConversationPanel}
-              {player}
-            </div>
-          )
-        }}
-      </WindowEventsConsumer>
+      <div className="EpisodePage">
+        {episodeConversationPanel}
+        {player}
+      </div>
     )
   }
 
   private disableSyncToAudio = () => {
-    console.log('disable audio sync')
     this.setState({
       scrollScrub: true,
     })

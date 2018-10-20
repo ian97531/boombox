@@ -2,43 +2,34 @@ import * as React from 'react'
 
 export type IUserScrollListener = (position?: number, scrollHeight?: number) => void
 export type IResizeListener = (width?: number, height?: number, scrollHeight?: number) => void
-export type IScrollCompleteListener = (cancelled?: boolean, userScrolled?: boolean) => void
+export type IScrollCancelledListener = (userScrolled?: boolean) => void
 
-export type IUpdateUserScrollListener = (listener: IUserScrollListener) => void
-export type IUpdateResizeListener = (listener: IResizeListener) => void
-export type IRequestScrollPosition = (
-  position: number,
-  duration: number,
-  complete?: IScrollCompleteListener
-) => void
-
-export interface IWindowContext {
-  addUserScrollListener: IUpdateUserScrollListener
-  addResizeListener: IUpdateResizeListener
-  removeUserScrollListener: IUpdateUserScrollListener
-  removeResizeListener: IUpdateResizeListener
-  requestScrollPosition: IRequestScrollPosition
+interface IWindowState {
+  height: number
+  scrollHeight: number
+  scrollPosition: number
+  width: number
 }
 
-let scrollUpdateRequested = false
-let windowSizeUpdateRequested = false
+interface IWindowConsumerProps {
+  children: (windowContext: IWindowState) => React.ReactNode
+  onResize?: IResizeListener
+  onUserScroll?: IUserScrollListener
+  onScrollCancelled?: IScrollCancelledListener
+  scrollDuration?: number
+  scrollPosition?: number
+}
 
-let scrollPosition: number = window.scrollY
-let scrollAnimationDistance: number = 0
-let scrollAnimationDuration: number = 0
-let scrollAnimationInterrupted: boolean = false
-let scrollAnimationStartPosition: number = 0
-let scrollAnimationEndPosition: number | null = null
-let scrollAnimationStartTime: number | null = null
-let scrollAnimationInProgress: boolean = false
-let scrollAnimationRaf: number | null = null
-let scrollCompleteListener: IScrollCompleteListener | null
+interface IScrollAnimation {
+  distance: number
+  duration: number
+  endPosition: number
+  lastScrollPosition: number
+  startPosition: number
+  startTime: number | null
+}
 
-let resizeInProgress: boolean = false
-let resizeTimeout: NodeJS.Timeout | undefined
-
-const scrollListeners: IUserScrollListener[] = []
-const resizeListeners: IResizeListener[] = []
+let scrollAnimation: IScrollAnimation | null = null
 
 const getScrollHeight = (): number => {
   const body = document.body
@@ -48,182 +39,159 @@ const getScrollHeight = (): number => {
   return Math.max(body.scrollHeight, body.offsetHeight, clientHeight, scrollHeight, offsetHeight)
 }
 
-const addUserScrollListener = (listener: IUserScrollListener) => {
-  scrollListeners.push(listener)
+const initialState: IWindowState = {
+  height: window.innerHeight,
+  scrollHeight: getScrollHeight(),
+  scrollPosition: window.scrollY,
+  width: window.innerWidth,
 }
 
-const addResizeListener = (listener: IResizeListener) => {
-  resizeListeners.push(listener)
-}
-
-const removeUserScrollListener = (listener: IUserScrollListener) => {
-  const index = scrollListeners.indexOf(listener)
-  if (index !== -1) {
-    scrollListeners.splice(index, 1)
-  }
-}
-
-const removeResizeListener = (listener: IResizeListener) => {
-  const index = resizeListeners.indexOf(listener)
-  if (index !== -1) {
-    resizeListeners.splice(index, 1)
-  }
-}
-
-const scrollFinished = (cancelled: boolean = false, userScrolled: boolean = false) => {
-  if (scrollCompleteListener) {
-    scrollCompleteListener(cancelled, userScrolled)
-    scrollCompleteListener = null
-  }
-}
-
-// helps us cancel scroll animations when the user scrolls.
-const mouseWheelEvent = (event: WheelEvent) => {
-  if (event.wheelDeltaY && scrollAnimationInProgress) {
-    scrollAnimationInterrupted = true
-  }
-}
-
-const updateScrollPosition = (event?: Event) => {
-  if (!scrollUpdateRequested) {
-    window.requestAnimationFrame(() => {
-      const userScrolled = !scrollAnimationInProgress && !resizeInProgress
-      const scrollHeight = getScrollHeight()
-      if (userScrolled) {
-        for (const listener of scrollListeners) {
-          listener(window.scrollY, scrollHeight)
-        }
-      }
-      if (scrollAnimationInProgress && window.scrollY === scrollAnimationEndPosition) {
-        console.log('scroll animation complete')
-        scrollAnimationInProgress = false
-        scrollAnimationEndPosition = null
-      }
-      scrollUpdateRequested = false
-    })
-    scrollUpdateRequested = true
-  }
-}
-
-const updateWindowSize = (event?: Event) => {
-  resizeInProgress = true
-  scrollAnimationInterrupted = true
-
-  if (resizeTimeout) {
-    clearTimeout(resizeTimeout)
-    resizeTimeout = undefined
+export class WindowContext extends React.Component<IWindowConsumerProps, IWindowState> {
+  public static cubicEaseInOut = (t: number): number => {
+    return t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1
   }
 
-  if (!windowSizeUpdateRequested) {
-    window.requestAnimationFrame(() => {
-      const scrollHeight = getScrollHeight()
-      for (const listener of resizeListeners) {
-        listener(window.innerWidth, window.innerHeight, scrollHeight)
-        setTimeout(() => {
-          resizeInProgress = false
-          resizeTimeout = undefined
-        }, 500)
-      }
-      windowSizeUpdateRequested = false
-    })
-    windowSizeUpdateRequested = true
-  }
-}
+  public readonly state: IWindowState = initialState
 
-const requestScrollPosition = (
-  position: number,
-  duration: number,
-  complete: IScrollCompleteListener
-) => {
-  if (
-    position === scrollAnimationEndPosition ||
-    (!scrollAnimationInProgress && position === window.scrollY)
-  ) {
-    return
-  } else {
-    // If another scroll animation is already in progress, cancel it before starting one.
-    if (scrollAnimationInProgress) {
-      if (scrollAnimationRaf) {
-        cancelAnimationFrame(scrollAnimationRaf)
-      }
-    }
-    scrollCompleteListener = complete
-    scrollAnimationInProgress = true
-    scrollAnimationEndPosition = position
-    if (duration) {
-      scrollAnimationDuration = duration
-      scrollAnimationInterrupted = false
-      scrollAnimationStartPosition = window.scrollY
-      scrollAnimationDistance = position - scrollAnimationStartPosition
-      scrollAnimationStartTime = null
-      scrollAnimationRaf = window.requestAnimationFrame(stepScrollPosition)
-    } else {
-      window.scrollTo({ top: position })
-      scrollPosition = window.scrollY
-      scrollFinished()
-    }
-  }
-}
+  private scrollUpdateRequested = false
+  private windowSizeUpdateRequested = false
+  private resizeInProgress: boolean = false
+  // private resizeTimeout: NodeJS.Timeout | undefined
 
-const cubicEaseInOut = (t: number): number => {
-  return t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1
-}
-
-const stepScrollPosition = (timestamp: number) => {
-  const scrollAnimationCancelled = scrollAnimationInterrupted || window.scrollY !== scrollPosition
-  let complete = false
-  if (!scrollAnimationStartTime) {
-    scrollAnimationStartTime = timestamp
-  }
-
-  if (!scrollAnimationCancelled) {
-    const timeSpent = timestamp - scrollAnimationStartTime
-    const percentComplete = timeSpent / scrollAnimationDuration
-    const nextScrollPosition =
-      scrollAnimationStartPosition + scrollAnimationDistance * cubicEaseInOut(percentComplete)
-    window.scrollTo({ top: nextScrollPosition })
-    scrollPosition = window.scrollY
-
-    if (timeSpent < scrollAnimationDuration) {
-      scrollAnimationRaf = window.requestAnimationFrame(stepScrollPosition)
-    } else {
-      complete = true
-    }
-  } else {
-    complete = true
-  }
-
-  if (complete) {
-    const userScrolled = scrollAnimationCancelled && !resizeInProgress
-    scrollFinished(scrollAnimationCancelled, userScrolled)
-  }
-}
-
-const context: IWindowContext = {
-  addResizeListener,
-  addUserScrollListener,
-  removeResizeListener,
-  removeUserScrollListener,
-  requestScrollPosition,
-}
-
-const WindowContext = React.createContext<IWindowContext>(context)
-
-export const WindowEventsConsumer = WindowContext.Consumer
-export class WindowEvents extends React.Component {
   public componentDidMount() {
-    window.addEventListener('wheel', mouseWheelEvent, { passive: true })
-    window.addEventListener('scroll', updateScrollPosition, { passive: true })
-    window.addEventListener('resize', updateWindowSize, { passive: true })
+    window.addEventListener('wheel', this.mouseWheelEvent, { passive: true })
+    window.addEventListener('scroll', this.updateScrollPosition, { passive: true })
+    window.addEventListener('resize', this.updateWindowSize, { passive: true })
   }
 
   public componentWillUnmount() {
-    window.removeEventListener('wheel', mouseWheelEvent)
-    window.removeEventListener('scroll', updateScrollPosition)
-    window.removeEventListener('resize', updateWindowSize)
+    window.removeEventListener('wheel', this.mouseWheelEvent)
+    window.removeEventListener('scroll', this.updateScrollPosition)
+    window.removeEventListener('resize', this.updateWindowSize)
   }
 
   public render() {
-    return <WindowContext.Provider value={context}>{this.props.children}</WindowContext.Provider>
+    return this.props.children(this.state)
+  }
+
+  public componentDidUpdate(prevProps: IWindowConsumerProps) {
+    if (
+      this.props.scrollPosition !== undefined &&
+      this.props.scrollPosition !== prevProps.scrollPosition
+    ) {
+      this.requestScrollPosition(this.props.scrollPosition, this.props.scrollDuration)
+    }
+  }
+
+  private mouseWheelEvent = (event: WheelEvent) => {
+    if (event.wheelDeltaY) {
+      this.cancelScrollAnimation()
+    }
+  }
+
+  private updateScrollPosition = (event?: Event) => {
+    if (!this.scrollUpdateRequested) {
+      window.requestAnimationFrame(() => {
+        const userScrolled = !scrollAnimation && !this.resizeInProgress
+        const scrollHeight = getScrollHeight()
+        const newState: any = {
+          scrollPosition: window.scrollY,
+        }
+        if (scrollHeight !== this.state.scrollHeight) {
+          newState.scrollHeight = scrollHeight
+        }
+        this.setState(newState)
+
+        if (this.props.onUserScroll && userScrolled) {
+          this.props.onUserScroll(window.scrollY)
+        }
+
+        this.checkScrollAnimationComplete()
+
+        this.scrollUpdateRequested = false
+      })
+      this.scrollUpdateRequested = true
+    }
+  }
+
+  private updateWindowSize = (event?: Event) => {
+    this.resizeInProgress = true
+    this.cancelScrollAnimation()
+
+    if (!this.windowSizeUpdateRequested) {
+      const scrollHeight = getScrollHeight()
+      window.requestAnimationFrame(() => {
+        this.setState({
+          height: window.innerHeight,
+          scrollHeight,
+          width: window.innerWidth,
+        })
+
+        if (this.props.onResize) {
+          this.props.onResize(window.innerWidth, window.innerHeight, scrollHeight)
+        }
+        this.windowSizeUpdateRequested = false
+      })
+      this.windowSizeUpdateRequested = true
+    }
+  }
+
+  private requestScrollPosition = (position: number, duration: number = 0) => {
+    if (!scrollAnimation && position !== window.scrollY) {
+      scrollAnimation = {
+        distance: position - window.scrollY,
+        duration,
+        endPosition: position,
+        lastScrollPosition: window.scrollY,
+        startPosition: window.scrollY,
+        startTime: null,
+      }
+      if (scrollAnimation.duration) {
+        window.requestAnimationFrame(this.stepScrollPosition)
+      } else {
+        window.scrollTo({ top: position })
+        scrollAnimation.lastScrollPosition = window.scrollY
+      }
+    }
+  }
+
+  private stepScrollPosition = (timestamp: number) => {
+    if (scrollAnimation) {
+      if (!scrollAnimation.startTime) {
+        scrollAnimation.startTime = timestamp
+      }
+
+      if (window.scrollY === scrollAnimation.lastScrollPosition) {
+        const timeSpent = timestamp - scrollAnimation.startTime
+        const percentComplete = timeSpent / scrollAnimation.duration
+        const nextScrollPosition =
+          scrollAnimation.startPosition +
+          scrollAnimation.distance * WindowContext.cubicEaseInOut(percentComplete)
+        window.scrollTo({ top: nextScrollPosition })
+        scrollAnimation.lastScrollPosition = window.scrollY
+
+        if (timeSpent < scrollAnimation.duration) {
+          window.requestAnimationFrame(this.stepScrollPosition)
+        }
+      } else {
+        this.cancelScrollAnimation()
+      }
+    }
+  }
+
+  private cancelScrollAnimation = () => {
+    if (scrollAnimation) {
+      if (this.props.onScrollCancelled) {
+        const userCancelled = !this.resizeInProgress
+        this.props.onScrollCancelled(userCancelled)
+      }
+      scrollAnimation = null
+    }
+  }
+
+  private checkScrollAnimationComplete = () => {
+    if (scrollAnimation && window.scrollY === scrollAnimation.endPosition) {
+      scrollAnimation = null
+    }
   }
 }

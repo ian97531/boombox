@@ -1,4 +1,3 @@
-import { IWindowContext } from 'components/WindowEvents'
 import * as React from 'react'
 import { connect } from 'react-redux'
 import { Dispatch } from 'redux'
@@ -17,8 +16,9 @@ interface IPlayerBarProps {
   currentScrubTime: number | null
   currentTime: number
   duration: number
+  scrollHeight: number
+  scrollPosition: number
   scrollScrub: boolean
-  windowEvents: IWindowContext
 }
 
 function timeToWidthPercent(time: number, duration: number) {
@@ -26,14 +26,6 @@ function timeToWidthPercent(time: number, duration: number) {
 }
 
 class PlayerBar extends React.Component<IPlayerBarProps> {
-  public componentDidMount() {
-    this.props.windowEvents.addUserScrollListener(this.scrollEvent)
-  }
-
-  public componentWillUnmount() {
-    this.props.windowEvents.removeUserScrollListener(this.scrollEvent)
-  }
-
   public render() {
     const currentScrubTimeWidth =
       this.props.currentScrubTime !== null
@@ -64,8 +56,10 @@ class PlayerBar extends React.Component<IPlayerBarProps> {
     )
   }
 
-  private scrollEvent = (position: number, scrollHeight: number) => {
-    if (this.props.scrollScrub) {
+  public componentDidUpdate(prevProps: IPlayerBarProps) {
+    if (this.props.scrollScrub && this.props.scrollPosition !== prevProps.scrollPosition) {
+      const position = this.props.scrollPosition
+      const scrollHeight = this.props.scrollHeight
       this.props.changeCurrentScrubTime(this.props.duration * (position / scrollHeight))
     }
   }

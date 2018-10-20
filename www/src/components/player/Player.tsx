@@ -1,7 +1,7 @@
 import PlayerBar from 'components/player/PlayerBar'
 import PlayerTimer from 'components/player/PlayerTimer'
 import Sprite from 'components/utilities/Sprite'
-import { IWindowContext } from 'components/WindowEvents'
+import { WindowContext } from 'components/WindowEvents'
 import * as React from 'react'
 import { connect } from 'react-redux'
 import { Dispatch } from 'redux'
@@ -14,7 +14,6 @@ interface IPlayerProps extends IPlayerStore {
   audioUrl: string
   dispatch: Dispatch
   scrollScrub: boolean
-  windowEvents: IWindowContext
 }
 
 class Player extends React.Component<IPlayerProps> {
@@ -54,7 +53,17 @@ class Player extends React.Component<IPlayerProps> {
           <PlayerTimer />
         </div>
         <div className="Player__bar-wrapper">
-          <PlayerBar scrollScrub={this.props.scrollScrub} windowEvents={this.props.windowEvents} />
+          <WindowContext>
+            {context => {
+              return (
+                <PlayerBar
+                  scrollHeight={context.scrollHeight}
+                  scrollPosition={context.scrollPosition}
+                  scrollScrub={this.props.scrollScrub}
+                />
+              )
+            }}
+          </WindowContext>
         </div>
       </div>
     )
