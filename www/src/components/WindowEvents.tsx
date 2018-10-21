@@ -56,7 +56,7 @@ export class WindowContext extends React.Component<IWindowConsumerProps, IWindow
   private scrollUpdateRequested = false
   private windowSizeUpdateRequested = false
   private resizeInProgress: boolean = false
-  // private resizeTimeout: NodeJS.Timeout | undefined
+  private resizeTimeout: NodeJS.Timeout | undefined
 
   public componentDidMount() {
     window.addEventListener('wheel', this.mouseWheelEvent, { passive: true })
@@ -91,7 +91,9 @@ export class WindowContext extends React.Component<IWindowConsumerProps, IWindow
 
   private updateScrollPosition = (event?: Event) => {
     if (!this.scrollUpdateRequested) {
+      const scrollPosition = window.scrollY
       window.requestAnimationFrame(() => {
+        console.log('scroll')
         const userScrolled = !scrollAnimation && !this.resizeInProgress
         const scrollHeight = getScrollHeight()
         const newState: any = {
@@ -106,7 +108,7 @@ export class WindowContext extends React.Component<IWindowConsumerProps, IWindow
           this.props.onUserScroll(window.scrollY)
         }
 
-        this.checkScrollAnimationComplete()
+        this.checkScrollAnimationComplete(scrollPosition)
 
         this.scrollUpdateRequested = false
       })
@@ -118,9 +120,17 @@ export class WindowContext extends React.Component<IWindowConsumerProps, IWindow
     this.resizeInProgress = true
     this.cancelScrollAnimation()
 
+    if (this.resizeTimeout) {
+      clearTimeout(this.resizeTimeout)
+      this.resizeTimeout = undefined
+    }
+
     if (!this.windowSizeUpdateRequested) {
+      const widthAtRequest = window.innerWidth
+      const heightAtRequest = window.innerHeight
       const scrollHeight = getScrollHeight()
       window.requestAnimationFrame(() => {
+        console.log('resize')
         this.setState({
           height: window.innerHeight,
           scrollHeight,
@@ -130,6 +140,14 @@ export class WindowContext extends React.Component<IWindowConsumerProps, IWindow
         if (this.props.onResize) {
           this.props.onResize(window.innerWidth, window.innerHeight, scrollHeight)
         }
+
+        this.resizeTimeout = setTimeout(() => {
+          if (widthAtRequest === window.innerWidth && heightAtRequest === window.innerHeight) {
+            this.resizeInProgress = false
+            console.log('resize complete')
+          }
+        }, 200)
+
         this.windowSizeUpdateRequested = false
       })
       this.windowSizeUpdateRequested = true
@@ -189,8 +207,8 @@ export class WindowContext extends React.Component<IWindowConsumerProps, IWindow
     }
   }
 
-  private checkScrollAnimationComplete = () => {
-    if (scrollAnimation && window.scrollY === scrollAnimation.endPosition) {
+  private checkScrollAnimationComplete = (position: number) => {
+    if (scrollAnimation && position === scrollAnimation.endPosition) {
       scrollAnimation = null
     }
   }

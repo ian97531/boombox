@@ -9,8 +9,10 @@ import { RouteComponentProps, withRouter } from 'react-router'
 import { Dispatch } from 'redux'
 import { getEpisode } from 'store/actions/episodes'
 import { playerCurrentTimeSeek } from 'store/actions/player'
+import { getStatements } from 'store/actions/statements'
 import { IEpisodesStore } from 'store/reducers/episodes'
 import { IPlayerStore } from 'store/reducers/player'
+import { IStatementsStore } from 'store/reducers/statements'
 import './EpisodePage.css'
 
 interface IEpisodeRouterProps {
@@ -22,10 +24,11 @@ interface IEpisodePageRouterProps extends RouteComponentProps<IEpisodeRouterProp
 
 interface IEpisodePageProps extends IEpisodePageRouterProps {
   audioTime: number
-  episode: IEpisode | undefined
-  podcastSlug: string
-  episodeSlug: string
   dispatch: Dispatch
+  episode: IEpisode | undefined
+  episodeSlug: string
+  podcastSlug: string
+  statements: IStatement[] | undefined
 }
 
 interface IEpisodeState {
@@ -47,20 +50,25 @@ class EpisodePage extends React.Component<IEpisodePageProps, IEpisodeState> {
       const episodeSlug = this.props.episodeSlug
       this.props.dispatch(getEpisode({ podcastSlug, episodeSlug }))
     }
+
+    if (!this.props.statements) {
+      const podcastSlug = this.props.podcastSlug
+      const episodeSlug = this.props.episodeSlug
+      this.props.dispatch(getStatements({ podcastSlug, episodeSlug }))
+    }
   }
 
   public render() {
     let episodeConversationPanel: React.ReactNode | null = null
     let player: React.ReactNode | null = null
-    if (this.props.episode) {
+    if (this.props.episode && this.props.statements) {
       episodeConversationPanel = (
         <ConversationPanel
           audioTime={this.props.audioTime}
-          onDisableSyncToAudio={this.disableSyncToAudio}
-          onEnableSyncToAudio={this.enableSyncToAudio}
-          onStatementClick={this.statementClick}
-          requestedEpisodeSlug={this.props.episode.slug}
-          requestedPodcastSlug={this.props.episode.podcastSlug}
+          onDisableSyncToAudio={this.onDisableSyncToAudio}
+          onEnableSyncToAudio={this.onEnableSyncToAudio}
+          onStatementClick={this.onStatementClick}
+          statements={this.props.statements}
         />
       )
       // TODO(ndrwhr): This should be rendered in the App so that the user can keep listening
@@ -79,25 +87,29 @@ class EpisodePage extends React.Component<IEpisodePageProps, IEpisodeState> {
     )
   }
 
-  private disableSyncToAudio = () => {
+  private onDisableSyncToAudio = () => {
     this.setState({
       scrollScrub: true,
     })
   }
 
-  private enableSyncToAudio = () => {
+  private onEnableSyncToAudio = () => {
     this.setState({
       scrollScrub: false,
     })
   }
 
-  private statementClick = (statement: IStatement) => {
+  private onStatementClick = (statement: IStatement) => {
     this.props.dispatch(playerCurrentTimeSeek(statement.startTime))
   }
 }
 
 const mapStateToProps = (
-  { episodes, player }: { episodes: IEpisodesStore; player: IPlayerStore },
+  {
+    episodes,
+    player,
+    statements,
+  }: { episodes: IEpisodesStore; player: IPlayerStore; statements: IStatementsStore },
   ownProps: IEpisodePageRouterProps
 ) => {
   const podcastSlug = ownProps.match.params.podcastSlug
@@ -105,6 +117,10 @@ const mapStateToProps = (
   const episode = episodes.episodes[podcastSlug]
     ? episodes.episodes[podcastSlug][episodeSlug]
     : undefined
+  const episodeStatements =
+    statements.episodes[podcastSlug] && statements.episodes[podcastSlug][episodeSlug]
+      ? statements.episodes[podcastSlug][episodeSlug].statements
+      : undefined
 
   return {
     // TODO(ndrwhr): Add error handling case (i.e. if the episode id isn't in the episodes store).
@@ -112,6 +128,7 @@ const mapStateToProps = (
     episode,
     episodeSlug,
     podcastSlug,
+    statements: episodeStatements,
   }
 }
 

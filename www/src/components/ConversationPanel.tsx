@@ -3,27 +3,21 @@ import Statement from 'components/Statement'
 import { WindowContext } from 'components/WindowEvents'
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
-import { connect } from 'react-redux'
-import { Dispatch } from 'redux'
-import { getStatements } from 'store/actions/statements'
-import { IStatementsStore } from 'store/reducers/statements'
 import './ConversationPanel.css'
 
 const SCROLL_DURATION = 300
+const ELEMENT_NODE = 1
 
-interface IConversationPanelProps extends IStatementsStore {
+interface IConversationPanelProps {
   audioTime: number
-  dispatch: Dispatch
   onEnableSyncToAudio: () => void
   onDisableSyncToAudio: () => void
   onStatementClick: (statement: IStatement) => void
-  requestedEpisodeSlug: string
-  requestedPodcastSlug: string
+  statements: IStatement[]
 }
 
 interface IConversationPanelState {
-  activeStatementIndex?: number
-  activeStatementTop?: number
+  activeStatementTopPosition?: number
   animate: boolean
   highlightStyle: React.CSSProperties
   syncToAudio: boolean
@@ -38,79 +32,53 @@ const initialState: IConversationPanelState = {
   syncToAudio: true,
 }
 
+const isElementNode = (node?: Element | Text | null): node is Element => {
+  return node !== undefined && node !== null && node.nodeType === ELEMENT_NODE
+}
+
 class ConversationPanel extends React.Component<IConversationPanelProps, IConversationPanelState> {
-  public static getDerivedStateFromProps(
-    props: IConversationPanelProps,
-    state: IConversationPanelState
-  ) {
-    const derivedState: IConversationPanelState = {
-      ...state,
-      activeStatementIndex: state.activeStatementIndex,
+  public readonly state: IConversationPanelState = initialState
+  private conversationPanelRef = React.createRef<HTMLDivElement>()
+  private pastStatements: JSX.Element[] = []
+  private futureStatements: JSX.Element[] = []
+  private activeStatement: IStatement | undefined
+  private updateHighlight = false
+  private syncToAudio = true
+
+  public render() {
+    this.updateStatementsIfNecessary()
+
+    let activeStatement: React.ReactNode | undefined
+    if (this.activeStatement) {
+      activeStatement = (
+        <Statement
+          audioTime={this.props.audioTime}
+          isActive={true}
+          isPast={false}
+          key={this.activeStatement.startTime}
+          onClick={this.props.onStatementClick}
+          ref={this.activeStatement.startTime.toString()}
+          statement={this.activeStatement}
+        />
+      )
     }
-    const activeIndex = state.activeStatementIndex
-    let findNewActiveIndex = activeIndex === undefined
-    if (activeIndex !== undefined) {
-      const active = props.statements[activeIndex]
-      findNewActiveIndex = !ConversationPanel.checkTimeInStatement(props.audioTime, active)
-    }
-    if (findNewActiveIndex) {
-      // It's probably the next statement.
-      const next = activeIndex ? activeIndex + 1 : 0
-      if (
-        props.statements[next] &&
-        ConversationPanel.checkTimeInStatement(props.audioTime, props.statements[next])
-      ) {
-        derivedState.activeStatementIndex = next
-      } else {
-        // But if not, go find it in the array.
-        props.statements.find((statement, index) => {
-          if (ConversationPanel.checkTimeInStatement(props.audioTime, statement)) {
-            derivedState.activeStatementIndex = index
-            return true
-          }
-          return false
-        })
+
+    let scrollPosition: number | undefined
+    if (this.state.syncToAudio) {
+      if (this.activeStatement && this.state.activeStatementTopPosition !== undefined) {
+        scrollPosition = this.state.activeStatementTopPosition
+      } else if (this.state.syncToAudio && this.props.audioTime === 0) {
+        scrollPosition = 0
       }
     }
 
-    return derivedState
-  }
-
-  public static checkTimeInStatement(time: number, statement: IStatement): boolean {
-    return time >= statement.startTime && time <= statement.endTime
-  }
-
-  public readonly state: IConversationPanelState = initialState
-  private conversationPanelRef = React.createRef<HTMLDivElement>()
-  private syncToAudio: boolean = true
-
-  public render() {
-    const statements = this.props.statements.map((statement, index) => {
-      const isActive = this.state.activeStatementIndex === index
-      const isPast: boolean = !!(
-        this.state.activeStatementIndex &&
-        this.state.activeStatementIndex >= 0 &&
-        this.state.activeStatementIndex < index
-      )
-      return (
-        <Statement
-          audioTime={isActive ? this.props.audioTime : undefined}
-          isActive={isActive}
-          isPast={isPast}
-          key={statement.startTime}
-          onClick={this.props.onStatementClick}
-          ref={statement.startTime.toString()}
-          statement={statement}
-        />
-      )
-    })
-
+    console.log(this.state.highlightStyle)
     return (
       <WindowContext
         onResize={this.onResize}
         onUserScroll={this.onUserScroll}
         onScrollCancelled={this.onScrollCancelled}
-        scrollPosition={this.state.syncToAudio ? this.state.activeStatementTop : undefined}
+        scrollPosition={scrollPosition}
         scrollDuration={this.state.animate ? SCROLL_DURATION : 0}
       >
         {() => {
@@ -120,7 +88,9 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
                 className="ConversationPanel__statement-hightlight"
                 style={this.state.highlightStyle}
               />
-              <div className="ConversationPanel__statement-list">{statements}</div>
+              <div className="ConversationPanel__statement-list">
+                {[...this.pastStatements, activeStatement, ...this.futureStatements]}
+              </div>
             </div>
           )
         }}
@@ -128,39 +98,43 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
     )
   }
 
-  public componentDidMount() {
-    if (this.props.episodeSlug !== this.props.requestedEpisodeSlug) {
-      this.props.dispatch(
-        getStatements({
-          episodeSlug: this.props.requestedEpisodeSlug,
-          podcastSlug: this.props.requestedPodcastSlug,
-        })
-      )
+  public componentDidUpdate() {
+    if (this.updateHighlight) {
+      this.updateActiveStatementHightlight()
     }
   }
 
-  public componentDidUpdate(
-    prevProps: IConversationPanelProps,
-    prevState: IConversationPanelState
-  ) {
-    if (this.state.activeStatementIndex !== prevState.activeStatementIndex) {
-      this.updateActiveStatement()
+  private getActiveStatementBounds = (): ClientRect | void => {
+    if (this.activeStatement) {
+      const activeRef = this.refs[this.activeStatement.startTime.toString()]
+      const activeStatementElement = ReactDOM.findDOMNode(activeRef)
+      if (isElementNode(activeStatementElement)) {
+        return activeStatementElement.getBoundingClientRect()
+      }
+    }
+  }
+
+  private getConversationPanelBounds = (): ClientRect | void => {
+    if (this.conversationPanelRef.current) {
+      return this.conversationPanelRef.current.getBoundingClientRect()
     }
   }
 
   private onResize = () => {
-    this.updateActiveStatement(false)
+    this.updateActiveStatementHightlight(false)
   }
 
   private onUserScroll = () => {
+    console.log('user scroll')
     this.setSyncToAudio(false)
   }
 
   private onScrollCancelled = (userCancelled: boolean) => {
     if (userCancelled) {
+      console.log('user scroll')
       this.setSyncToAudio(false)
     } else {
-      this.updateActiveStatement(false)
+      this.updateActiveStatementHightlight(false)
     }
   }
 
@@ -177,47 +151,76 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
     }
   }
 
-  private updateActiveStatement = (animate = true) => {
+  private updateActiveStatementHightlight = (animate = true) => {
+    this.updateHighlight = false
     const activeStatement = this.getActiveStatementBounds()
     const conversationPanel = this.getConversationPanelBounds()
     if (activeStatement && conversationPanel) {
-      const activeStatementTop = activeStatement.top - conversationPanel.top
-      const top = activeStatementTop + activeStatement.height / 2
+      const activeStatementTopPosition = activeStatement.top - conversationPanel.top
+      const top = activeStatementTopPosition + activeStatement.height / 2
       const height = activeStatement.height
       const width = activeStatement.width
       this.setState({
-        activeStatementTop,
+        activeStatementTopPosition,
         animate,
         highlightStyle: {
           height: 1,
           transform: `translateY(${top}px) scaleY(${height})`,
-          transitionDuration: animate ? SCROLL_DURATION.toString() : '0',
+          transitionDuration: `${SCROLL_DURATION}ms`,
+          transitionProperty: animate ? 'transform' : 'none',
           width,
         },
       })
     }
   }
 
-  private getActiveStatementBounds = (): ClientRect | void => {
-    if (this.state.activeStatementIndex !== undefined) {
-      const activeStatement = this.props.statements[this.state.activeStatementIndex]
-      const activeRef = this.refs[activeStatement.startTime.toString()]
-      const activeStatementElement = ReactDOM.findDOMNode(activeRef) as Element
-      return activeStatementElement.getBoundingClientRect()
-    }
-  }
+  private updateStatementsIfNecessary = () => {
+    const { audioTime, statements } = this.props
+    let findNewActiveStatement = false
 
-  private getConversationPanelBounds = (): ClientRect | void => {
-    if (this.conversationPanelRef.current) {
-      return this.conversationPanelRef.current.getBoundingClientRect()
+    if (this.activeStatement) {
+      findNewActiveStatement = !Statement.duringTime(this.activeStatement, audioTime)
+    } else {
+      findNewActiveStatement = true
+    }
+
+    if (findNewActiveStatement) {
+      this.pastStatements = []
+      this.futureStatements = []
+      this.activeStatement = undefined
+      statements.forEach(statement => {
+        if (Statement.afterTime(statement, audioTime)) {
+          this.futureStatements.push(
+            <Statement
+              isActive={false}
+              isPast={false}
+              key={statement.startTime}
+              onClick={this.props.onStatementClick}
+              statement={statement}
+            />
+          )
+        } else if (Statement.beforeTime(statement, audioTime)) {
+          this.pastStatements.push(
+            <Statement
+              isActive={false}
+              isPast={true}
+              key={statement.startTime}
+              onClick={this.props.onStatementClick}
+              statement={statement}
+            />
+          )
+        } else if (Statement.duringTime(statement, audioTime)) {
+          this.activeStatement = statement
+        } else {
+          console.error('Statement could not be placed: ', statement)
+        }
+      })
+
+      if (this.activeStatement) {
+        this.updateHighlight = true
+      }
     }
   }
 }
 
-function mapStateToProps({ statements }: { statements: IStatementsStore }) {
-  return {
-    ...statements,
-  }
-}
-
-export default connect(mapStateToProps)(ConversationPanel)
+export default ConversationPanel
