@@ -376,9 +376,9 @@ aws-sdk@*:
     uuid "3.1.0"
     xml2js "0.4.19"
 
-aws-sdk@^2.335.0:
-  version "2.335.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.335.0.tgz#9e050fe8a01591bb1e7e8e6c928dfe38c90e30b7"
+aws-sdk@^2.336.0:
+  version "2.339.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.339.0.tgz#869ce594b87854c723c6157c2a56f101334ce258"
   dependencies:
     buffer "4.9.1"
     events "1.1.1"

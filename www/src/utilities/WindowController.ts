@@ -12,6 +12,7 @@ interface IScrollAnimation {
   duration: number
   endPosition: number
   lastScrollPosition: number
+  nextAnimationFrame?: number
   startPosition: number
   startTime: number | null
 }
@@ -41,11 +42,28 @@ export class WindowController {
   private resizeInProgress: boolean = false
   private resizeTimeout: NodeJS.Timeout | undefined
   private easingFunction = BezierEasing(0.42, 0, 0.58, 1)
+  private registered = false
 
   constructor() {
-    window.addEventListener('wheel', this.mouseWheelEvent, { passive: true })
-    window.addEventListener('scroll', this.updateScrollPosition, { passive: true })
-    window.addEventListener('resize', this.updateWindowSize, { passive: true })
+    this.register()
+  }
+
+  public register() {
+    if (!this.registered) {
+      window.addEventListener('wheel', this.mouseWheelEvent, { passive: true })
+      window.addEventListener('scroll', this.updateScrollPosition, { passive: true })
+      window.addEventListener('resize', this.updateWindowSize, { passive: true })
+      this.registered = true
+    }
+  }
+
+  public unregister() {
+    if (this.registered) {
+      window.removeEventListener('wheel', this.mouseWheelEvent)
+      window.removeEventListener('scroll', this.updateScrollPosition)
+      window.removeEventListener('resize', this.updateWindowSize)
+      this.registered = false
+    }
   }
 
   public scrollToPosition = (
@@ -68,7 +86,7 @@ export class WindowController {
         startTime: null,
       }
       if (scrollAnimation.duration) {
-        window.requestAnimationFrame(this.stepScrollPosition)
+        scrollAnimation.nextAnimationFrame = window.requestAnimationFrame(this.stepScrollPosition)
       } else {
         window.scrollTo({ top: position })
         scrollAnimation.lastScrollPosition = window.scrollY
@@ -159,7 +177,7 @@ export class WindowController {
         scrollAnimation.lastScrollPosition = window.scrollY
 
         if (timeSpent < scrollAnimation.duration) {
-          window.requestAnimationFrame(this.stepScrollPosition)
+          scrollAnimation.nextAnimationFrame = window.requestAnimationFrame(this.stepScrollPosition)
         }
       } else {
         this.cancelScrollAnimation(true)
@@ -169,19 +187,28 @@ export class WindowController {
 
   private cancelScrollAnimation = (cancelledByUser = false) => {
     if (scrollAnimation) {
+      scrollAnimation.complete = true
+      if (scrollAnimation.nextAnimationFrame !== undefined) {
+        window.cancelAnimationFrame(scrollAnimation.nextAnimationFrame)
+        scrollAnimation.nextAnimationFrame = undefined
+      }
       if (scrollAnimation.callback) {
         scrollAnimation.callback(false, cancelledByUser)
       }
       if (this.onScroll && cancelledByUser) {
         this.onScroll(window.scrollY, cancelledByUser)
       }
-      scrollAnimation.complete = true
     }
   }
 
   private checkScrollAnimationComplete = (position: number) => {
     if (scrollAnimation && !scrollAnimation.complete && position === scrollAnimation.endPosition) {
       scrollAnimation.complete = true
+      if (scrollAnimation.nextAnimationFrame !== undefined) {
+        window.cancelAnimationFrame(scrollAnimation.nextAnimationFrame)
+        scrollAnimation.nextAnimationFrame = undefined
+      }
+
       if (scrollAnimation.callback) {
         scrollAnimation.callback(true, false)
       }
