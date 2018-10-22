@@ -8,6 +8,7 @@
   position: absolute;
   background-color: var(--color-grey);
   transition-property: transform;
+  transition-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
   top: 0px;
   left: 0px;
 }

@@ -1,4 +1,4 @@
-import EasingFunctions from 'utilities/easing'
+import * as BezierEasing from 'bezier-easing'
 
 export type IUserScrollListener = (position: number) => void
 export type IScrollListener = (position: number, userScrolled: boolean) => void
@@ -40,7 +40,7 @@ export class WindowController {
   private windowSizeUpdateRequested = false
   private resizeInProgress: boolean = false
   private resizeTimeout: NodeJS.Timeout | undefined
-  private easingFunction = EasingFunctions.easeInOutCubic
+  private easingFunction = BezierEasing(0.42, 0, 0.58, 1)
 
   constructor() {
     window.addEventListener('wheel', this.mouseWheelEvent, { passive: true })
@@ -72,6 +72,10 @@ export class WindowController {
       } else {
         window.scrollTo({ top: position })
         scrollAnimation.lastScrollPosition = window.scrollY
+      }
+    } else {
+      if (callback) {
+        callback(false, false)
       }
     }
   }

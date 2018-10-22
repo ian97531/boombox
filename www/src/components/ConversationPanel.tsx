@@ -45,6 +45,7 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
   private activeStatement: IStatement | undefined
 
   private updateHighlight = false
+  private delayRenders = false
 
   public render() {
     this.updateStatementsIfNecessary()
@@ -77,7 +78,7 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
       <div className="ConversationPanel" ref={this.conversationPanelRef}>
         <WindowContext
           onResize={this.onResize}
-          onScrollCancelled={this.onScrollCancelled}
+          onScrollComplete={this.onScrollComplete}
           onUserScroll={this.onUserScroll}
           scrollDuration={this.state.animate ? SCROLL_DURATION : 0}
           scrollPosition={scrollPosition}
@@ -93,14 +94,30 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
     )
   }
 
-  public componentDidUpdate() {
+  public shouldComponentUpdate() {
+    return !this.delayRenders
+  }
+
+  public componentDidUpdate(
+    prevProps: IConversationPanelProps,
+    prevState: IConversationPanelState
+  ) {
     if (!this.state.animate) {
       this.setState({
         animate: true,
       })
     }
+
     if (this.updateHighlight) {
       this.updateActiveStatementHightlight()
+    }
+
+    if (this.state.activeStatementTop !== prevState.activeStatementTop) {
+      this.delayRenders = true
+      setTimeout(() => {
+        this.delayRenders = false
+        this.forceUpdate()
+      }, SCROLL_DURATION + 100)
     }
   }
 
@@ -127,8 +144,8 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
     this.props.onUserScroll()
   }
 
-  private onScrollCancelled = (userCancelled: boolean) => {
-    if (!userCancelled) {
+  private onScrollComplete = (completed: boolean, userCancelled: boolean) => {
+    if (!completed && !userCancelled) {
       this.updateActiveStatementHightlight(false)
     }
   }
@@ -190,10 +207,8 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
               statement={statement}
             />
           )
-        } else if (Statement.duringTime(statement, audioTime)) {
-          this.activeStatement = statement
         } else {
-          console.error('Statement could not be placed: ', statement)
+          this.activeStatement = statement
         }
       })
 

@@ -3,7 +3,7 @@ import { WindowController } from 'utilities/WindowController'
 
 export type IResizeListener = (width?: number, height?: number, scrollHeight?: number) => void
 export type IUserScrollListener = (position?: number, scrollHeight?: number) => void
-export type IScrollCancelledListener = (userCancelled?: boolean) => void
+export type IScrollCompleteListener = (completed: boolean, userCancelled?: boolean) => void
 
 export interface IWindowState {
   height: number
@@ -16,7 +16,7 @@ interface IWindowConsumerProps {
   children?: (windowContext: IWindowState) => React.ReactNode
   onResize?: IResizeListener
   onUserScroll?: IUserScrollListener
-  onScrollCancelled?: IScrollCancelledListener
+  onScrollComplete?: IScrollCompleteListener
   scrollDuration?: number
   scrollPosition?: number
 }
@@ -90,8 +90,8 @@ export class WindowContext extends React.Component<IWindowConsumerProps, IWindow
   }
 
   private onScrollComplete = (completed: boolean, userCancelled: boolean) => {
-    if (this.props.onScrollCancelled && !completed) {
-      this.props.onScrollCancelled(userCancelled)
+    if (this.props.onScrollComplete) {
+      this.props.onScrollComplete(completed, userCancelled)
     }
   }
 }
