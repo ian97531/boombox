@@ -6,10 +6,10 @@ import * as ReactDOM from 'react-dom'
 import { timeAfterStatement, timeBeforeStatement, timeDuringStatement } from 'utilities/statement'
 import './ConversationPanel.css'
 
-const SCROLL_DURATION = 400
 const ELEMENT_NODE = 1
 
 interface IConversationPanelProps {
+  animationDuration: number
   audioTime: number
   onStatementClick: (statement: IStatement) => void
   onUserScroll: () => void
@@ -83,7 +83,7 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
           onResize={this.onResize}
           onScrollComplete={this.onScrollComplete}
           onUserScroll={this.onUserScroll}
-          scrollDuration={this.state.animate ? SCROLL_DURATION : 0}
+          scrollDuration={this.state.animate ? this.props.animationDuration : 0}
           scrollPosition={scrollPosition}
         />
         <div
@@ -126,7 +126,7 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
           this.renderRequested = false
           this.forceUpdate()
         }
-      }, SCROLL_DURATION + 100)
+      }, this.props.animationDuration + 100)
     }
   }
 
@@ -174,7 +174,7 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
         highlightStyle: {
           height: 1,
           transform: `translateY(${top}px) scaleY(${height})`,
-          transitionDuration: animate ? `${SCROLL_DURATION}ms` : '0',
+          transitionDuration: animate ? `${this.props.animationDuration}ms` : '0',
           width,
         },
       })

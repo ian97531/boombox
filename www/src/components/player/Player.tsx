@@ -107,31 +107,21 @@ class Player extends React.Component<IPlayerProps, IPlayerState> {
   }
 
   private onBackButtonClick = () => {
-    if (this.props.status === AudioControllerStatus.Playing) {
-      const fifteenSecondsAgo = this.props.currentTime - 15
-      let skipBackTime: number | void = fifteenSecondsAgo < 0 ? 0 : fifteenSecondsAgo
-      if (this.props.skipBackDelegate) {
-        skipBackTime = this.props.skipBackDelegate(this.props.currentTime)
-      }
+    if (this.props.status === AudioControllerStatus.Playing && this.props.skipBackDelegate) {
+      const skipBackTime = this.props.skipBackDelegate(this.props.currentTime)
       if (skipBackTime) {
-        const time = (skipBackTime / this.props.duration) * this.props.duration
-        this.props.dispatch(playerCurrentTimeSeek(time))
+        const percent = (skipBackTime / this.props.duration) * this.props.duration
+        this.props.dispatch(playerCurrentTimeSeek(percent))
       }
     }
   }
 
   private onForwardButtonClick = () => {
-    if (this.props.status === AudioControllerStatus.Playing) {
-      const fifteenSecondsFuture = this.props.currentTime + 15
-      let skipForwardTime: number | void =
-        fifteenSecondsFuture > this.props.duration ? this.props.duration : fifteenSecondsFuture
-      if (this.props.skipForwardDelegate) {
-        skipForwardTime = this.props.skipForwardDelegate(this.props.currentTime)
-      }
-
+    if (this.props.status === AudioControllerStatus.Playing && this.props.skipForwardDelegate) {
+      const skipForwardTime = this.props.skipForwardDelegate(this.props.currentTime)
       if (skipForwardTime) {
-        const time = (skipForwardTime / this.props.duration) * this.props.duration
-        this.props.dispatch(playerCurrentTimeSeek(time))
+        const percent = (skipForwardTime / this.props.duration) * this.props.duration
+        this.props.dispatch(playerCurrentTimeSeek(percent))
       }
     }
   }
