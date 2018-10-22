@@ -1,13 +1,20 @@
 import { IEpisode } from '@boombox/shared/src/types/models/episode'
+import { IStatement } from '@boombox/shared/src/types/models/transcript'
+import classNames from 'classnames'
 import ConversationPanel from 'components/ConversationPanel'
 import Player from 'components/player/Player'
+import { WindowContext } from 'components/WindowContext'
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import { connect } from 'react-redux'
 import { RouteComponentProps, withRouter } from 'react-router'
 import { Dispatch } from 'redux'
 import { getEpisode } from 'store/actions/episodes'
+import { playerCurrentTimeSeek } from 'store/actions/player'
+import { getStatements } from 'store/actions/statements'
 import { IEpisodesStore } from 'store/reducers/episodes'
+import { IPlayerStore } from 'store/reducers/player'
+import { IStatementsStore } from 'store/reducers/statements'
 import './EpisodePage.css'
 
 interface IEpisodeRouterProps {
@@ -18,13 +25,25 @@ interface IEpisodeRouterProps {
 interface IEpisodePageRouterProps extends RouteComponentProps<IEpisodeRouterProps> {}
 
 interface IEpisodePageProps extends IEpisodePageRouterProps {
-  episode: IEpisode | undefined
-  podcastSlug: string
-  episodeSlug: string
+  audioTime: number
   dispatch: Dispatch
+  episode: IEpisode | undefined
+  episodeSlug: string
+  podcastSlug: string
+  statements: IStatement[] | undefined
 }
 
-class EpisodePage extends React.Component<IEpisodePageProps> {
+interface IEpisodeState {
+  syncToAudio: boolean
+}
+
+const initialState: IEpisodeState = {
+  syncToAudio: true,
+}
+
+class EpisodePage extends React.Component<IEpisodePageProps, IEpisodeState> {
+  public readonly state: IEpisodeState = initialState
+
   public componentDidMount() {
     // HACK(ndrwhr): Fetch the episode if it's not found, this will cause in infinite fetching
     // loop if the id is never found.
@@ -33,39 +52,96 @@ class EpisodePage extends React.Component<IEpisodePageProps> {
       const episodeSlug = this.props.episodeSlug
       this.props.dispatch(getEpisode({ podcastSlug, episodeSlug }))
     }
+
+    if (!this.props.statements) {
+      const podcastSlug = this.props.podcastSlug
+      const episodeSlug = this.props.episodeSlug
+      this.props.dispatch(getStatements({ podcastSlug, episodeSlug }))
+    }
   }
 
   public render() {
     let episodeConversationPanel: React.ReactNode | null = null
     let player: React.ReactNode | null = null
-
-    if (this.props.episode) {
+    if (this.props.episode && this.props.statements) {
       episodeConversationPanel = (
         <ConversationPanel
-          requestedEpisodeSlug={this.props.episode.slug}
-          requestedPodcastSlug={this.props.episode.podcastSlug}
+          audioTime={this.props.audioTime}
+          onStatementClick={this.onStatementClick}
+          onUserScroll={this.onUserScroll}
+          statements={this.props.statements}
+          syncToAudio={this.state.syncToAudio}
         />
       )
       // TODO(ndrwhr): This should be rendered in the App so that the user can keep listening
       // to the current podcast while browsing around. To do this we will have to rework the store
       // so that the currently episode information isn't tightly coupled with the router.
+      const episodeAudioUrl = this.props.episode.mp3URL
+      const syncToAudio = this.state.syncToAudio
       player = ReactDOM.createPortal(
-        <Player audioUrl={this.props.episode.mp3URL} />,
+        <WindowContext>
+          {({ height, scrollHeight, scrollPosition }) => {
+            return (
+              <Player
+                audioUrl={episodeAudioUrl}
+                onSeek={this.onSeek}
+                scrubProgressPercent={
+                  !syncToAudio ? scrollPosition / (scrollHeight - height) : undefined
+                }
+              />
+            )
+          }}
+        </WindowContext>,
         document.querySelector('.App__player') as Element
       )
     }
-
     return (
       <div className="EpisodePage">
         {episodeConversationPanel}
+        <div
+          className={classNames('EpisodePage__sync-button', {
+            'EpisodePage__sync-button--active': !this.state.syncToAudio,
+          })}
+          onClick={this.onClickSyncButton}
+        >
+          Scroll to the current time.
+        </div>
         {player}
       </div>
     )
   }
+
+  private onClickSyncButton = () => {
+    this.setState({
+      syncToAudio: true,
+    })
+  }
+
+  private onSeek = (time: number) => {
+    this.setState({
+      syncToAudio: true,
+    })
+  }
+
+  private onStatementClick = (statement: IStatement) => {
+    this.props.dispatch(playerCurrentTimeSeek(statement.startTime))
+  }
+
+  private onUserScroll = () => {
+    if (this.state.syncToAudio) {
+      this.setState({
+        syncToAudio: false,
+      })
+    }
+  }
 }
 
 const mapStateToProps = (
-  { episodes }: { episodes: IEpisodesStore },
+  {
+    episodes,
+    player,
+    statements,
+  }: { episodes: IEpisodesStore; player: IPlayerStore; statements: IStatementsStore },
   ownProps: IEpisodePageRouterProps
 ) => {
   const podcastSlug = ownProps.match.params.podcastSlug
@@ -73,12 +149,18 @@ const mapStateToProps = (
   const episode = episodes.episodes[podcastSlug]
     ? episodes.episodes[podcastSlug][episodeSlug]
     : undefined
+  const episodeStatements =
+    statements.episodes[podcastSlug] && statements.episodes[podcastSlug][episodeSlug]
+      ? statements.episodes[podcastSlug][episodeSlug].statements
+      : undefined
 
   return {
     // TODO(ndrwhr): Add error handling case (i.e. if the episode id isn't in the episodes store).
+    audioTime: player.currentTime,
     episode,
     episodeSlug,
     podcastSlug,
+    statements: episodeStatements,
   }
 }
 

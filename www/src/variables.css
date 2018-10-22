@@ -7,6 +7,7 @@
 
   --color-smoke: #1d212c;
   --color-smoke-a30: rgba(29, 33, 44, 0.3);
+  --color-smoke-a90: rgba(29, 33, 44, 0.9);
 
   --color-grey: #dddddd;
 }
@@ -65,4 +66,5 @@
   --player-height: 8rem;
 
   --ui-box-shadow: 0 0.1rem 0.1rem 0 var(--color-smoke-a30);
+  --corner-radius: calc(var(--padding-base) * 0.5);
 }

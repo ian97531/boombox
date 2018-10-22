@@ -8,6 +8,7 @@ import './App.css'
 const App: React.SFC = () => (
   <div className="App">
     <SpriteSheet />
+
     <div className="App__header">
       <Link className="App__header-name" to="/">
         BOOMBOX
