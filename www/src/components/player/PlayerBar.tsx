@@ -1,42 +1,27 @@
 import * as React from 'react'
-import { connect } from 'react-redux'
-import { Dispatch } from 'redux'
-import {
-  playerCurrentScrubTimeClear,
-  playerCurrentScrubTimeSet,
-  playerCurrentTimeSeek,
-} from 'store/actions/player'
-import { IPlayerStore } from 'store/reducers/player'
 import './PlayerBar.css'
 
 interface IPlayerBarProps {
-  changeCurrentScrubTime: (newCurrentScrubTime: number) => void
-  changeCurrentTime: (newCurrentTime: number) => void
-  clearCurrentScrubTime: () => void
-  currentScrubTime: number | null
-  currentTime: number
-  duration: number
-  scrollHeight: number
-  scrollPosition: number
-  scrollScrub: boolean
-}
-
-function timeToWidthPercent(time: number, duration: number) {
-  return duration ? `${(time / duration) * 100}%` : '0'
+  audioProgressPercent: number
+  scrubProgressPercent?: number
+  onClick?: (percent: number) => void
+  onScrub?: (percent: number) => void
+  onScrubEnd?: () => void
 }
 
 class PlayerBar extends React.Component<IPlayerBarProps> {
   public render() {
-    const currentScrubTimeWidth =
-      this.props.currentScrubTime !== null
-        ? timeToWidthPercent(this.props.currentScrubTime, this.props.duration)
-        : '0'
-    const currentTimeWidth = timeToWidthPercent(this.props.currentTime, this.props.duration)
-    const playerBarStyle: any = {}
-    const scrubStyle: any = { width: currentScrubTimeWidth }
-    if (this.props.scrollScrub) {
-      playerBarStyle.transform = 'translateY(-50%) scaleY(2)'
-      scrubStyle.opacity = 1
+    const scrubProgress = this.props.scrubProgressPercent
+      ? this.props.scrubProgressPercent * 100
+      : undefined
+    const audioProgress = this.props.audioProgressPercent * 100
+    const scrubbing = this.props.scrubProgressPercent !== undefined
+    const playerBarStyle: React.CSSProperties = {
+      transform: scrubbing ? 'translateY(-50%) scaleY(2)' : undefined,
+    }
+    const scrubStyle: React.CSSProperties = {
+      opacity: scrubbing ? 1 : undefined,
+      width: `${scrubProgress || 0}%`,
     }
     return (
       <div
@@ -48,7 +33,7 @@ class PlayerBar extends React.Component<IPlayerBarProps> {
       >
         <div
           className="PlayerBar__progress PlayerBar__progress--current"
-          style={{ width: currentTimeWidth }}
+          style={{ width: `${audioProgress}%` }}
         />
         <div className="PlayerBar__progress PlayerBar__progress--scrub" style={scrubStyle} />
         <div className="PlayerBar__progress PlayerBar__progress--inactive" />
@@ -56,52 +41,29 @@ class PlayerBar extends React.Component<IPlayerBarProps> {
     )
   }
 
-  public componentDidUpdate(prevProps: IPlayerBarProps) {
-    if (this.props.scrollScrub && this.props.scrollPosition !== prevProps.scrollPosition) {
-      const position = this.props.scrollPosition
-      const scrollHeight = this.props.scrollHeight
-      this.props.changeCurrentScrubTime(this.props.duration * (position / scrollHeight))
-    }
-  }
-
-  private mouseEventToTime(evt: React.MouseEvent<HTMLDivElement>) {
+  private mouseEventToPercent(evt: React.MouseEvent<HTMLDivElement>) {
     const { width, left } = (evt.currentTarget as HTMLElement).getBoundingClientRect()
-    const time = (this.props.duration * (evt.pageX - left)) / width
-    return time
+    const percent = (evt.pageX - left) / width
+    return percent
   }
 
   private onClick = (evt: React.MouseEvent<HTMLDivElement>) => {
-    this.props.changeCurrentTime(this.mouseEventToTime(evt))
+    if (this.props.onClick) {
+      this.props.onClick(this.mouseEventToPercent(evt))
+    }
   }
 
   private onMouseMove = (evt: React.MouseEvent<HTMLDivElement>) => {
-    this.props.changeCurrentScrubTime(this.mouseEventToTime(evt))
+    if (this.props.onScrub) {
+      this.props.onScrub(this.mouseEventToPercent(evt))
+    }
   }
 
-  private onMouseLeave = () => {
-    this.props.clearCurrentScrubTime()
+  private onMouseLeave = (evt: React.MouseEvent<HTMLDivElement>) => {
+    if (this.props.onScrubEnd) {
+      this.props.onScrubEnd()
+    }
   }
 }
 
-const mapStateToProps = ({ player }: { player: IPlayerStore }) => ({
-  currentScrubTime: player.currentScrubTime,
-  currentTime: player.currentTime,
-  duration: player.duration,
-})
-
-const mapDispatchToProps = (dispatch: Dispatch) => ({
-  changeCurrentTime(newCurrentTime: number) {
-    dispatch(playerCurrentTimeSeek(newCurrentTime))
-  },
-  changeCurrentScrubTime(newCurrentScrubTime: number) {
-    dispatch(playerCurrentScrubTimeSet(newCurrentScrubTime))
-  },
-  clearCurrentScrubTime() {
-    dispatch(playerCurrentScrubTimeClear())
-  },
-})
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(PlayerBar)
+export default PlayerBar

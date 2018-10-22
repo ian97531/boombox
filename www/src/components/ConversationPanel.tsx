@@ -1,6 +1,6 @@
 import { IStatement } from '@boombox/shared/src/types/models/transcript'
 import Statement from 'components/Statement'
-import { WindowContext } from 'components/WindowEvents'
+import { WindowContext } from 'components/WindowContext'
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import './ConversationPanel.css'
@@ -39,11 +39,11 @@ const isElementNode = (node?: Element | Text | null): node is Element => {
 class ConversationPanel extends React.Component<IConversationPanelProps, IConversationPanelState> {
   public readonly state: IConversationPanelState = initialState
   private conversationPanelRef = React.createRef<HTMLDivElement>()
+  private activeStatementRef = React.createRef<Statement>()
   private pastStatements: JSX.Element[] = []
   private futureStatements: JSX.Element[] = []
   private activeStatement: IStatement | undefined
   private updateHighlight = false
-  private syncToAudio = true
 
   public render() {
     this.updateStatementsIfNecessary()
@@ -57,7 +57,7 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
           isPast={false}
           key={this.activeStatement.startTime}
           onClick={this.props.onStatementClick}
-          ref={this.activeStatement.startTime.toString()}
+          ref={this.activeStatementRef}
           statement={this.activeStatement}
         />
       )
@@ -72,7 +72,6 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
       }
     }
 
-    console.log(this.state.highlightStyle)
     return (
       <WindowContext
         onResize={this.onResize}
@@ -105,11 +104,10 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
   }
 
   private getActiveStatementBounds = (): ClientRect | void => {
-    if (this.activeStatement) {
-      const activeRef = this.refs[this.activeStatement.startTime.toString()]
-      const activeStatementElement = ReactDOM.findDOMNode(activeRef)
-      if (isElementNode(activeStatementElement)) {
-        return activeStatementElement.getBoundingClientRect()
+    if (this.activeStatementRef.current) {
+      const element = ReactDOM.findDOMNode(this.activeStatementRef.current)
+      if (isElementNode(element)) {
+        return element.getBoundingClientRect()
       }
     }
   }
@@ -125,13 +123,11 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
   }
 
   private onUserScroll = () => {
-    console.log('user scroll')
     this.setSyncToAudio(false)
   }
 
   private onScrollCancelled = (userCancelled: boolean) => {
     if (userCancelled) {
-      console.log('user scroll')
       this.setSyncToAudio(false)
     } else {
       this.updateActiveStatementHightlight(false)
@@ -139,7 +135,7 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
   }
 
   private setSyncToAudio = (enabled: boolean) => {
-    if (this.syncToAudio !== enabled) {
+    if (this.state.syncToAudio !== enabled) {
       this.setState({
         syncToAudio: enabled,
       })
@@ -167,7 +163,6 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
           height: 1,
           transform: `translateY(${top}px) scaleY(${height})`,
           transitionDuration: `${SCROLL_DURATION}ms`,
-          transitionProperty: animate ? 'transform' : 'none',
           width,
         },
       })

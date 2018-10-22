@@ -46,8 +46,33 @@ const initialState: IWindowState = {
   width: window.innerWidth,
 }
 
+const scrollListeners: IUserScrollListener[] = []
+const resizeListeners: IResizeListener[] = []
+
 export class WindowContext extends React.Component<IWindowConsumerProps, IWindowState> {
-  public static cubicEaseInOut = (t: number): number => {
+  public static addUserScrollListener = (listener: IUserScrollListener) => {
+    scrollListeners.push(listener)
+  }
+
+  public static addResizeListener = (listener: IResizeListener) => {
+    resizeListeners.push(listener)
+  }
+
+  public static removeUserScrollListener = (listener: IUserScrollListener) => {
+    const index = scrollListeners.indexOf(listener)
+    if (index !== -1) {
+      scrollListeners.splice(index, 1)
+    }
+  }
+
+  public static removeResizeListener = (listener: IUserScrollListener) => {
+    const index = scrollListeners.indexOf(listener)
+    if (index !== -1) {
+      scrollListeners.splice(index, 1)
+    }
+  }
+
+  private static cubicEaseInOut = (t: number): number => {
     return t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1
   }
 
@@ -62,6 +87,12 @@ export class WindowContext extends React.Component<IWindowConsumerProps, IWindow
     window.addEventListener('wheel', this.mouseWheelEvent, { passive: true })
     window.addEventListener('scroll', this.updateScrollPosition, { passive: true })
     window.addEventListener('resize', this.updateWindowSize, { passive: true })
+    this.setState({
+      height: window.innerHeight,
+      scrollHeight: getScrollHeight(),
+      scrollPosition: window.scrollY,
+      width: window.innerWidth,
+    })
   }
 
   public componentWillUnmount() {
@@ -93,7 +124,6 @@ export class WindowContext extends React.Component<IWindowConsumerProps, IWindow
     if (!this.scrollUpdateRequested) {
       const scrollPosition = window.scrollY
       window.requestAnimationFrame(() => {
-        console.log('scroll')
         const userScrolled = !scrollAnimation && !this.resizeInProgress
         const scrollHeight = getScrollHeight()
         const newState: any = {
@@ -104,8 +134,11 @@ export class WindowContext extends React.Component<IWindowConsumerProps, IWindow
         }
         this.setState(newState)
 
-        if (this.props.onUserScroll && userScrolled) {
-          this.props.onUserScroll(window.scrollY)
+        if (userScrolled) {
+          if (this.props.onUserScroll) {
+            this.props.onUserScroll(window.scrollY)
+          }
+          scrollListeners.forEach(listener => listener(window.scrollY))
         }
 
         this.checkScrollAnimationComplete(scrollPosition)
@@ -130,7 +163,6 @@ export class WindowContext extends React.Component<IWindowConsumerProps, IWindow
       const heightAtRequest = window.innerHeight
       const scrollHeight = getScrollHeight()
       window.requestAnimationFrame(() => {
-        console.log('resize')
         this.setState({
           height: window.innerHeight,
           scrollHeight,
@@ -140,11 +172,13 @@ export class WindowContext extends React.Component<IWindowConsumerProps, IWindow
         if (this.props.onResize) {
           this.props.onResize(window.innerWidth, window.innerHeight, scrollHeight)
         }
+        resizeListeners.forEach(listener =>
+          listener(window.innerWidth, window.innerHeight, scrollHeight)
+        )
 
         this.resizeTimeout = setTimeout(() => {
           if (widthAtRequest === window.innerWidth && heightAtRequest === window.innerHeight) {
             this.resizeInProgress = false
-            console.log('resize complete')
           }
         }, 200)
 

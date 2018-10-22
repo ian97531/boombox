@@ -2,6 +2,7 @@ import { IEpisode } from '@boombox/shared/src/types/models/episode'
 import { IStatement } from '@boombox/shared/src/types/models/transcript'
 import ConversationPanel from 'components/ConversationPanel'
 import Player from 'components/player/Player'
+import { WindowContext } from 'components/WindowContext'
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import { connect } from 'react-redux'
@@ -74,8 +75,21 @@ class EpisodePage extends React.Component<IEpisodePageProps, IEpisodeState> {
       // TODO(ndrwhr): This should be rendered in the App so that the user can keep listening
       // to the current podcast while browsing around. To do this we will have to rework the store
       // so that the currently episode information isn't tightly coupled with the router.
+      const episodeAudioUrl = this.props.episode.mp3URL
+      const scrollScrub = this.state.scrollScrub
       player = ReactDOM.createPortal(
-        <Player audioUrl={this.props.episode.mp3URL} scrollScrub={this.state.scrollScrub} />,
+        <WindowContext>
+          {({ height, scrollHeight, scrollPosition }) => {
+            return (
+              <Player
+                audioUrl={episodeAudioUrl}
+                scrubProgressPercent={
+                  scrollScrub ? scrollPosition / (scrollHeight - height) : undefined
+                }
+              />
+            )
+          }}
+        </WindowContext>,
         document.querySelector('.App__player') as Element
       )
     }
