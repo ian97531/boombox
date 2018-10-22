@@ -34,6 +34,7 @@ export class WindowContext extends React.Component<IWindowConsumerProps, IWindow
   public controller = new WindowController()
 
   public componentDidMount() {
+    this.controller.register()
     this.setState({
       height: this.controller.height,
       scrollHeight: this.controller.scrollHeight,
@@ -45,6 +46,7 @@ export class WindowContext extends React.Component<IWindowConsumerProps, IWindow
   }
 
   public componentWillUnmount() {
+    this.controller.unregister()
     this.controller.onResize = null
     this.controller.onScroll = null
   }
