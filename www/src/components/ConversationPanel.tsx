@@ -3,6 +3,7 @@ import Statement from 'components/Statement'
 import { WindowContext } from 'components/WindowContext'
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
+import { timeAfterStatement, timeBeforeStatement, timeDuringStatement } from 'utilities/statement'
 import './ConversationPanel.css'
 
 const SCROLL_DURATION = 400
@@ -47,6 +48,7 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
 
   private updateHighlight = false
   private delayRenders = false
+  private renderRequested = false
 
   public render() {
     this.updateStatementsIfNecessary()
@@ -96,6 +98,9 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
   }
 
   public shouldComponentUpdate() {
+    if (this.delayRenders) {
+      this.renderRequested = true
+    }
     return !this.delayRenders
   }
 
@@ -117,7 +122,10 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
       this.delayRenders = true
       setTimeout(() => {
         this.delayRenders = false
-        this.forceUpdate()
+        if (this.renderRequested) {
+          this.renderRequested = false
+          this.forceUpdate()
+        }
       }, SCROLL_DURATION + 100)
     }
   }
@@ -178,11 +186,11 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
     let findNewActiveStatement = false
 
     if (this.activeStatement) {
-      findNewActiveStatement = !Statement.duringTime(this.activeStatement, audioTime)
+      findNewActiveStatement = !timeDuringStatement(audioTime, this.activeStatement)
 
       if (findNewActiveStatement && this.nextStatement) {
-        const afterCurrent = Statement.beforeTime(this.activeStatement, audioTime)
-        const beforeNext = Statement.afterTime(this.nextStatement, audioTime)
+        const afterCurrent = timeAfterStatement(audioTime, this.activeStatement)
+        const beforeNext = timeBeforeStatement(audioTime, this.nextStatement)
         findNewActiveStatement = !(afterCurrent && beforeNext)
       }
     } else {
@@ -196,7 +204,7 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
       let lastPastStatement: IStatement | undefined
       let firstFutureStatement: IStatement | undefined
       statements.forEach(statement => {
-        if (Statement.afterTime(statement, audioTime)) {
+        if (timeBeforeStatement(audioTime, statement)) {
           if (!firstFutureStatement) {
             firstFutureStatement = statement
           }
@@ -209,7 +217,7 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
               statement={statement}
             />
           )
-        } else if (Statement.beforeTime(statement, audioTime)) {
+        } else if (timeAfterStatement(audioTime, statement)) {
           lastPastStatement = statement
           this.pastStatements.push(
             <Statement
@@ -220,7 +228,7 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
               statement={statement}
             />
           )
-        } else if (Statement.duringTime(statement, audioTime)) {
+        } else if (timeDuringStatement(audioTime, statement)) {
           this.activeStatement = statement
         }
       })

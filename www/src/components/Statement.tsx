@@ -13,18 +13,6 @@ interface IStatementProps {
 }
 
 class Statement extends React.Component<IStatementProps> {
-  public static duringTime = (statement: IStatement, time: number): boolean => {
-    return statement.startTime <= time && statement.endTime > time
-  }
-
-  public static afterTime = (statement: IStatement, time: number): boolean => {
-    return statement.startTime > time
-  }
-
-  public static beforeTime = (statement: IStatement, time: number): boolean => {
-    return statement.endTime <= time
-  }
-
   public render() {
     const formattedTime = formatTimeMarker(this.props.statement.startTime)
 

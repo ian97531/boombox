@@ -15,6 +15,7 @@ import { getStatements } from 'store/actions/statements'
 import { IEpisodesStore } from 'store/reducers/episodes'
 import { IPlayerStore } from 'store/reducers/player'
 import { IStatementsStore } from 'store/reducers/statements'
+import { timeBeforeStatement, timeDuringStatement } from 'utilities/statement'
 import './EpisodePage.css'
 
 interface IEpisodeRouterProps {
@@ -85,6 +86,8 @@ class EpisodePage extends React.Component<IEpisodePageProps, IEpisodeState> {
               <Player
                 audioUrl={episodeAudioUrl}
                 onSeek={this.onSeek}
+                skipBackDelegate={this.skipBackDelegate}
+                skipForwardDelegate={this.skipForwardDelegate}
                 scrubProgressPercent={
                   !syncToAudio ? scrollPosition / (scrollHeight - height) : undefined
                 }
@@ -132,6 +135,44 @@ class EpisodePage extends React.Component<IEpisodePageProps, IEpisodeState> {
       this.setState({
         syncToAudio: false,
       })
+    }
+  }
+
+  private skipBackDelegate = (currentTime: number): number | void => {
+    if (this.props.statements) {
+      let previousStatement: IStatement | undefined
+      const currentStatement = this.props.statements.find(statement => {
+        const found =
+          timeDuringStatement(currentTime, statement) || timeBeforeStatement(currentTime, statement)
+        if (!found) {
+          previousStatement = statement
+        }
+        return found
+      })
+      if (currentStatement && previousStatement) {
+        if (currentTime - currentStatement.startTime > 2) {
+          return currentStatement.startTime
+        } else {
+          return previousStatement.startTime
+        }
+      } else if (previousStatement) {
+        return previousStatement.startTime
+      }
+    }
+  }
+
+  private skipForwardDelegate = (currentTime: number): number | void => {
+    if (this.props.statements) {
+      let foundCurrentStatement = false
+      const nextStatement = this.props.statements.find(statement => {
+        const done = foundCurrentStatement
+        foundCurrentStatement =
+          timeDuringStatement(currentTime, statement) || timeBeforeStatement(currentTime, statement)
+        return done
+      })
+      if (nextStatement) {
+        return nextStatement.startTime
+      }
     }
   }
 }
