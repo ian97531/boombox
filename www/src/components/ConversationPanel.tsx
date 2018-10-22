@@ -43,6 +43,7 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
   private pastStatements: JSX.Element[] = []
   private futureStatements: JSX.Element[] = []
   private activeStatement: IStatement | undefined
+  private nextStatement: IStatement | undefined
 
   private updateHighlight = false
   private delayRenders = false
@@ -178,6 +179,12 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
 
     if (this.activeStatement) {
       findNewActiveStatement = !Statement.duringTime(this.activeStatement, audioTime)
+
+      if (findNewActiveStatement && this.nextStatement) {
+        const afterCurrent = Statement.beforeTime(this.activeStatement, audioTime)
+        const beforeNext = Statement.afterTime(this.nextStatement, audioTime)
+        findNewActiveStatement = !(afterCurrent && beforeNext)
+      }
     } else {
       findNewActiveStatement = true
     }
@@ -186,8 +193,13 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
       this.pastStatements = []
       this.futureStatements = []
       this.activeStatement = undefined
+      let lastPastStatement: IStatement | undefined
+      let firstFutureStatement: IStatement | undefined
       statements.forEach(statement => {
         if (Statement.afterTime(statement, audioTime)) {
+          if (!firstFutureStatement) {
+            firstFutureStatement = statement
+          }
           this.futureStatements.push(
             <Statement
               isActive={false}
@@ -198,6 +210,7 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
             />
           )
         } else if (Statement.beforeTime(statement, audioTime)) {
+          lastPastStatement = statement
           this.pastStatements.push(
             <Statement
               isActive={false}
@@ -207,10 +220,19 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
               statement={statement}
             />
           )
-        } else {
+        } else if (Statement.duringTime(statement, audioTime)) {
           this.activeStatement = statement
         }
       })
+
+      if (!this.activeStatement && lastPastStatement) {
+        this.activeStatement = lastPastStatement
+        this.pastStatements.pop()
+      }
+
+      if (firstFutureStatement) {
+        this.nextStatement = firstFutureStatement
+      }
 
       if (this.activeStatement) {
         this.updateHighlight = true
