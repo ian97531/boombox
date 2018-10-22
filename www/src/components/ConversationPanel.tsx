@@ -5,22 +5,21 @@ import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import './ConversationPanel.css'
 
-const SCROLL_DURATION = 300
+const SCROLL_DURATION = 400
 const ELEMENT_NODE = 1
 
 interface IConversationPanelProps {
   audioTime: number
-  onEnableSyncToAudio: () => void
-  onDisableSyncToAudio: () => void
   onStatementClick: (statement: IStatement) => void
+  onUserScroll: () => void
   statements: IStatement[]
+  syncToAudio: boolean
 }
 
 interface IConversationPanelState {
-  activeStatementTopPosition?: number
+  activeStatementTop?: number
   animate: boolean
   highlightStyle: React.CSSProperties
-  syncToAudio: boolean
 }
 
 const initialState: IConversationPanelState = {
@@ -29,7 +28,6 @@ const initialState: IConversationPanelState = {
     height: 0,
     width: '100%',
   },
-  syncToAudio: true,
 }
 
 const isElementNode = (node?: Element | Text | null): node is Element => {
@@ -38,11 +36,14 @@ const isElementNode = (node?: Element | Text | null): node is Element => {
 
 class ConversationPanel extends React.Component<IConversationPanelProps, IConversationPanelState> {
   public readonly state: IConversationPanelState = initialState
+
   private conversationPanelRef = React.createRef<HTMLDivElement>()
   private activeStatementRef = React.createRef<Statement>()
+
   private pastStatements: JSX.Element[] = []
   private futureStatements: JSX.Element[] = []
   private activeStatement: IStatement | undefined
+
   private updateHighlight = false
 
   public render() {
@@ -64,40 +65,40 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
     }
 
     let scrollPosition: number | undefined
-    if (this.state.syncToAudio) {
-      if (this.activeStatement && this.state.activeStatementTopPosition !== undefined) {
-        scrollPosition = this.state.activeStatementTopPosition
-      } else if (this.state.syncToAudio && this.props.audioTime === 0) {
+    if (this.props.syncToAudio) {
+      if (this.activeStatement && this.state.activeStatementTop !== undefined) {
+        scrollPosition = this.state.activeStatementTop
+      } else if (this.props.syncToAudio && this.props.audioTime === 0) {
         scrollPosition = 0
       }
     }
 
     return (
-      <WindowContext
-        onResize={this.onResize}
-        onUserScroll={this.onUserScroll}
-        onScrollCancelled={this.onScrollCancelled}
-        scrollPosition={scrollPosition}
-        scrollDuration={this.state.animate ? SCROLL_DURATION : 0}
-      >
-        {() => {
-          return (
-            <div className="ConversationPanel" ref={this.conversationPanelRef}>
-              <div
-                className="ConversationPanel__statement-hightlight"
-                style={this.state.highlightStyle}
-              />
-              <div className="ConversationPanel__statement-list">
-                {[...this.pastStatements, activeStatement, ...this.futureStatements]}
-              </div>
-            </div>
-          )
-        }}
-      </WindowContext>
+      <div className="ConversationPanel" ref={this.conversationPanelRef}>
+        <WindowContext
+          onResize={this.onResize}
+          onScrollCancelled={this.onScrollCancelled}
+          onUserScroll={this.onUserScroll}
+          scrollDuration={this.state.animate ? SCROLL_DURATION : 0}
+          scrollPosition={scrollPosition}
+        />
+        <div
+          className="ConversationPanel__statement-hightlight"
+          style={this.state.highlightStyle}
+        />
+        <div className="ConversationPanel__statement-list">
+          {[...this.pastStatements, activeStatement, ...this.futureStatements]}
+        </div>
+      </div>
     )
   }
 
   public componentDidUpdate() {
+    if (!this.state.animate) {
+      this.setState({
+        animate: true,
+      })
+    }
     if (this.updateHighlight) {
       this.updateActiveStatementHightlight()
     }
@@ -123,27 +124,12 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
   }
 
   private onUserScroll = () => {
-    this.setSyncToAudio(false)
+    this.props.onUserScroll()
   }
 
   private onScrollCancelled = (userCancelled: boolean) => {
-    if (userCancelled) {
-      this.setSyncToAudio(false)
-    } else {
+    if (!userCancelled) {
       this.updateActiveStatementHightlight(false)
-    }
-  }
-
-  private setSyncToAudio = (enabled: boolean) => {
-    if (this.state.syncToAudio !== enabled) {
-      this.setState({
-        syncToAudio: enabled,
-      })
-      if (enabled) {
-        this.props.onEnableSyncToAudio()
-      } else {
-        this.props.onDisableSyncToAudio()
-      }
     }
   }
 
@@ -152,17 +138,17 @@ class ConversationPanel extends React.Component<IConversationPanelProps, IConver
     const activeStatement = this.getActiveStatementBounds()
     const conversationPanel = this.getConversationPanelBounds()
     if (activeStatement && conversationPanel) {
-      const activeStatementTopPosition = activeStatement.top - conversationPanel.top
-      const top = activeStatementTopPosition + activeStatement.height / 2
+      const activeStatementTop = activeStatement.top - conversationPanel.top
+      const top = activeStatementTop + activeStatement.height / 2
       const height = activeStatement.height
       const width = activeStatement.width
       this.setState({
-        activeStatementTopPosition,
+        activeStatementTop,
         animate,
         highlightStyle: {
           height: 1,
           transform: `translateY(${top}px) scaleY(${height})`,
-          transitionDuration: `${SCROLL_DURATION}ms`,
+          transitionDuration: animate ? `${SCROLL_DURATION}ms` : '0',
           width,
         },
       })

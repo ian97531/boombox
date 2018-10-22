@@ -8,6 +8,10 @@
   opacity: 1;
 }
 
+.Statement--past {
+  opacity: 0.4;
+}
+
 .Statement__speaker {
   display: flex;
   align-items: flex-end;

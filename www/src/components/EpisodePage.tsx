@@ -1,5 +1,6 @@
 import { IEpisode } from '@boombox/shared/src/types/models/episode'
 import { IStatement } from '@boombox/shared/src/types/models/transcript'
+import classNames from 'classnames'
 import ConversationPanel from 'components/ConversationPanel'
 import Player from 'components/player/Player'
 import { WindowContext } from 'components/WindowContext'
@@ -33,11 +34,11 @@ interface IEpisodePageProps extends IEpisodePageRouterProps {
 }
 
 interface IEpisodeState {
-  scrollScrub: boolean
+  syncToAudio: boolean
 }
 
 const initialState: IEpisodeState = {
-  scrollScrub: false,
+  syncToAudio: true,
 }
 
 class EpisodePage extends React.Component<IEpisodePageProps, IEpisodeState> {
@@ -66,25 +67,26 @@ class EpisodePage extends React.Component<IEpisodePageProps, IEpisodeState> {
       episodeConversationPanel = (
         <ConversationPanel
           audioTime={this.props.audioTime}
-          onDisableSyncToAudio={this.onDisableSyncToAudio}
-          onEnableSyncToAudio={this.onEnableSyncToAudio}
           onStatementClick={this.onStatementClick}
+          onUserScroll={this.onUserScroll}
           statements={this.props.statements}
+          syncToAudio={this.state.syncToAudio}
         />
       )
       // TODO(ndrwhr): This should be rendered in the App so that the user can keep listening
       // to the current podcast while browsing around. To do this we will have to rework the store
       // so that the currently episode information isn't tightly coupled with the router.
       const episodeAudioUrl = this.props.episode.mp3URL
-      const scrollScrub = this.state.scrollScrub
+      const syncToAudio = this.state.syncToAudio
       player = ReactDOM.createPortal(
         <WindowContext>
           {({ height, scrollHeight, scrollPosition }) => {
             return (
               <Player
                 audioUrl={episodeAudioUrl}
+                onSeek={this.onSeek}
                 scrubProgressPercent={
-                  scrollScrub ? scrollPosition / (scrollHeight - height) : undefined
+                  !syncToAudio ? scrollPosition / (scrollHeight - height) : undefined
                 }
               />
             )
@@ -96,25 +98,41 @@ class EpisodePage extends React.Component<IEpisodePageProps, IEpisodeState> {
     return (
       <div className="EpisodePage">
         {episodeConversationPanel}
+        <div
+          className={classNames('EpisodePage__sync-button', {
+            'EpisodePage__sync-button--active': !this.state.syncToAudio,
+          })}
+          onClick={this.onClickSyncButton}
+        >
+          Scroll to the current time.
+        </div>
         {player}
       </div>
     )
   }
 
-  private onDisableSyncToAudio = () => {
+  private onClickSyncButton = () => {
     this.setState({
-      scrollScrub: true,
+      syncToAudio: true,
     })
   }
 
-  private onEnableSyncToAudio = () => {
+  private onSeek = (time: number) => {
     this.setState({
-      scrollScrub: false,
+      syncToAudio: true,
     })
   }
 
   private onStatementClick = (statement: IStatement) => {
     this.props.dispatch(playerCurrentTimeSeek(statement.startTime))
+  }
+
+  private onUserScroll = () => {
+    if (this.state.syncToAudio) {
+      this.setState({
+        syncToAudio: false,
+      })
+    }
   }
 }
 

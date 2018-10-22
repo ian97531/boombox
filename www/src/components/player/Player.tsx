@@ -12,6 +12,7 @@ import './Player.css'
 interface IPlayerProps extends IPlayerStore {
   audioUrl: string
   dispatch: Dispatch
+  onSeek: (time: number) => void
   scrubProgressPercent: number | undefined
 }
 
@@ -85,6 +86,7 @@ class Player extends React.Component<IPlayerProps, IPlayerState> {
 
   private onClick = (percentage: number) => {
     this.props.dispatch(playerCurrentTimeSeek(percentage * this.props.duration))
+    this.props.onSeek(percentage * this.props.duration)
   }
 
   private onScrub = (percentage: number) => {

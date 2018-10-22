@@ -2,3 +2,21 @@
   display: flex;
   padding: var(--padding-double);
 }
+
+.EpisodePage__sync-button {
+  background-color: var(--color-smoke-a90);
+  border-radius: var(--corner-radius);
+  box-shadow: var(--ui-box-shadow);
+  color: var(--color-white);
+  cursor: pointer;
+  left: 50%;
+  padding: var(--padding-base);
+  position: fixed;
+  transform: translate(-50%, -200%);
+  transition-property: 'transform';
+  transition-duration: 250ms;
+}
+
+.EpisodePage__sync-button--active {
+  transform: translate(-50%, 0);
+}

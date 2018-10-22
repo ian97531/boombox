@@ -16,7 +16,7 @@ body {
   min-height: 100%;
   font-family: var(--font-family);
   font-weight: var(--font-weight-regular);
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   color: var(--color-smoke);
 }
 

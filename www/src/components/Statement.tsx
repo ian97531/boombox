@@ -1,4 +1,5 @@
 import { IStatement } from '@boombox/shared/src/types/models/transcript'
+import classNames from 'classnames'
 import * as React from 'react'
 import { formatTimeMarker } from 'utilities/Time'
 import './Statement.css'
@@ -28,7 +29,12 @@ class Statement extends React.Component<IStatementProps> {
     const formattedTime = formatTimeMarker(this.props.statement.startTime)
 
     return (
-      <div className="Statement">
+      <div
+        className={classNames('Statement', {
+          'Statement--active': this.props.isActive,
+          'Statement--past': this.props.isPast,
+        })}
+      >
         <div className="Statement__speaker">
           <div className="Statement__speaker-name">{this.props.statement.speaker.name}</div>
           <div
