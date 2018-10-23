@@ -15,7 +15,11 @@ import { getStatements } from 'store/actions/statements'
 import { IEpisodesStore } from 'store/reducers/episodes'
 import { IPlayerStore } from 'store/reducers/player'
 import { IStatementsStore } from 'store/reducers/statements'
+import { timeBeforeStatement, timeDuringStatement } from 'utilities/statement'
 import './EpisodePage.css'
+
+const DEFAULT_ANIMATION_DURATION = 300
+const FAST_ANIMATION_DURATION = 0
 
 interface IEpisodeRouterProps {
   episodeSlug: string
@@ -34,15 +38,20 @@ interface IEpisodePageProps extends IEpisodePageRouterProps {
 }
 
 interface IEpisodeState {
+  animationDuration: number
   syncToAudio: boolean
 }
 
 const initialState: IEpisodeState = {
+  animationDuration: DEFAULT_ANIMATION_DURATION,
   syncToAudio: true,
 }
 
 class EpisodePage extends React.Component<IEpisodePageProps, IEpisodeState> {
   public readonly state: IEpisodeState = initialState
+
+  private lastSkip?: number
+  private skipCountResetTimeout?: NodeJS.Timeout
 
   public componentDidMount() {
     // HACK(ndrwhr): Fetch the episode if it's not found, this will cause in infinite fetching
@@ -66,6 +75,7 @@ class EpisodePage extends React.Component<IEpisodePageProps, IEpisodeState> {
     if (this.props.episode && this.props.statements) {
       episodeConversationPanel = (
         <ConversationPanel
+          animationDuration={this.state.animationDuration}
           audioTime={this.props.audioTime}
           onStatementClick={this.onStatementClick}
           onUserScroll={this.onUserScroll}
@@ -85,6 +95,8 @@ class EpisodePage extends React.Component<IEpisodePageProps, IEpisodeState> {
               <Player
                 audioUrl={episodeAudioUrl}
                 onSeek={this.onSeek}
+                skipBackDelegate={this.skipBackDelegate}
+                skipForwardDelegate={this.skipForwardDelegate}
                 scrubProgressPercent={
                   !syncToAudio ? scrollPosition / (scrollHeight - height) : undefined
                 }
@@ -132,6 +144,75 @@ class EpisodePage extends React.Component<IEpisodePageProps, IEpisodeState> {
       this.setState({
         syncToAudio: false,
       })
+    }
+  }
+
+  private resetSpeedSkip = () => {
+    this.lastSkip = undefined
+    this.skipCountResetTimeout = undefined
+    this.setState({
+      animationDuration: DEFAULT_ANIMATION_DURATION,
+    })
+  }
+
+  // If the user is quickly skipping forward or back, reduce the scroll animation to make
+  // the seek faster and easier.
+  private checkSpeedSkip() {
+    const now = Date.now()
+    if (this.skipCountResetTimeout !== undefined) {
+      clearTimeout(this.skipCountResetTimeout)
+    }
+    if (this.lastSkip && now - this.lastSkip < 200) {
+      if (this.state.animationDuration !== FAST_ANIMATION_DURATION) {
+        this.setState({
+          animationDuration: FAST_ANIMATION_DURATION,
+        })
+      }
+      this.skipCountResetTimeout = setTimeout(this.resetSpeedSkip, 400)
+    } else {
+      this.resetSpeedSkip()
+    }
+
+    this.lastSkip = now
+  }
+
+  private skipBackDelegate = (currentTime: number): number | void => {
+    if (this.props.statements) {
+      this.checkSpeedSkip()
+      let previousStatement: IStatement | undefined
+      const currentStatement = this.props.statements.find(statement => {
+        const found =
+          timeDuringStatement(currentTime, statement) || timeBeforeStatement(currentTime, statement)
+        if (!found) {
+          previousStatement = statement
+        }
+        return found
+      })
+      if (currentStatement && previousStatement) {
+        if (currentTime - currentStatement.startTime > 2) {
+          return currentStatement.startTime
+        } else {
+          return previousStatement.startTime
+        }
+      } else if (previousStatement) {
+        return previousStatement.startTime
+      }
+    }
+  }
+
+  private skipForwardDelegate = (currentTime: number): number | void => {
+    if (this.props.statements) {
+      this.checkSpeedSkip()
+      let foundCurrentStatement = false
+      const nextStatement = this.props.statements.find(statement => {
+        const done = foundCurrentStatement
+        foundCurrentStatement =
+          timeDuringStatement(currentTime, statement) || timeBeforeStatement(currentTime, statement)
+        return done
+      })
+      if (nextStatement) {
+        return nextStatement.startTime
+      }
     }
   }
 }

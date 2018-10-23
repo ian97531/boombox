@@ -9,11 +9,15 @@ import { IPlayerStore } from 'store/reducers/player'
 import { AudioControllerStatus, default as AudioController } from 'utilities/AudioController'
 import './Player.css'
 
+type ISkipDelegate = (currentTime: number) => number | void
+
 interface IPlayerProps extends IPlayerStore {
   audioUrl: string
   dispatch: Dispatch
   onSeek: (time: number) => void
   scrubProgressPercent: number | undefined
+  skipBackDelegate?: ISkipDelegate
+  skipForwardDelegate?: ISkipDelegate
 }
 
 interface IPlayerState {
@@ -85,8 +89,9 @@ class Player extends React.Component<IPlayerProps, IPlayerState> {
   }
 
   private onClick = (percentage: number) => {
-    this.props.dispatch(playerCurrentTimeSeek(percentage * this.props.duration))
-    this.props.onSeek(percentage * this.props.duration)
+    const time = percentage * this.props.duration
+    this.props.dispatch(playerCurrentTimeSeek(time))
+    this.props.onSeek(time)
   }
 
   private onScrub = (percentage: number) => {
@@ -102,11 +107,23 @@ class Player extends React.Component<IPlayerProps, IPlayerState> {
   }
 
   private onBackButtonClick = () => {
-    // Dispatch a move back a statement action.
+    if (this.props.status === AudioControllerStatus.Playing && this.props.skipBackDelegate) {
+      const skipBackTime = this.props.skipBackDelegate(this.props.currentTime)
+      if (skipBackTime) {
+        const percent = (skipBackTime / this.props.duration) * this.props.duration
+        this.props.dispatch(playerCurrentTimeSeek(percent))
+      }
+    }
   }
 
   private onForwardButtonClick = () => {
-    // Dispatch a move forward a statement action.
+    if (this.props.status === AudioControllerStatus.Playing && this.props.skipForwardDelegate) {
+      const skipForwardTime = this.props.skipForwardDelegate(this.props.currentTime)
+      if (skipForwardTime) {
+        const percent = (skipForwardTime / this.props.duration) * this.props.duration
+        this.props.dispatch(playerCurrentTimeSeek(percent))
+      }
+    }
   }
 }
 

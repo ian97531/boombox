@@ -114,7 +114,7 @@ export class WindowController {
         const samePositionAsLastScroll =
           scrollAnimation &&
           scrollAnimation.complete &&
-          scrollAnimation.endPosition !== scrollPosition
+          scrollAnimation.lastScrollPosition !== scrollPosition
         const userScrolled = !scrollAnimation && !this.resizeInProgress && !samePositionAsLastScroll
 
         if (this.onScroll) {
