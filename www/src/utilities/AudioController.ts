@@ -1,3 +1,5 @@
+import { audio } from 'utilities/axios'
+
 export enum AudioControllerEventName {
   StatusChange,
   CurrentTimeUpdated,
@@ -12,36 +14,15 @@ export enum AudioControllerStatus {
 
 type AudioControllerCallback = (eventName: AudioControllerEventName) => void
 
-/**
- * An AudioController is a singleton class that is used to control the audio that the page
- * is playing. It is responsible for creating, listening to, and destroying an underlying HTML5
- * audio element.
- *
- * Below is a basic overview of how this class should be used:
- *
- *   +-----------------+
- *   |                 |
- *   | HTML5 Audio El  |
- *   |                 |
- *   +--^---------+----+
- *      |         |
- *   +--+---------v----+    +-------+    +------------+
- *   |                 +---->       +---->            |
- *   | AudioController |    | Redux |    | Components |
- *   |                 <----+       <----+            |
- *   +-----------------+    +-------+    +------------+
- *
- * The gist is that the AudioController listens to changes from its underlying HTML5 Audio element
- * and forwards that information along to any listeners. When a component wishes to update the
- * playing audio it should only ever dispatch actions which will under the hood update the
- * AudioController.
- */
 class AudioController {
   public status: AudioControllerStatus
-  public currentTime: number
+  public currentTime = 0
   public duration: number
+  public src: string
 
-  private audioEl: HTMLAudioElement | null
+  private audioData: AudioBuffer
+  private source: AudioBufferSourceNode
+  private context = new AudioContext()
   private listeners: AudioControllerCallback[]
 
   constructor() {
@@ -54,78 +35,93 @@ class AudioController {
     this.listeners.push(callback)
   }
 
-  public setSrc(src: string) {
-    this.createAndLoadAudioElement(src)
+  public setSrc = (src: string) => {
+    this.src = src
+    this.requestAudioBuffer()
   }
 
-  public play() {
-    if (this.audioEl) {
-      this.audioEl.play()
+  public play(event = true) {
+    if (this.status === AudioControllerStatus.Idle) {
+      this.source = this.context.createBufferSource()
+      this.source.buffer = this.audioData
+      this.source.connect(this.context.destination)
+      this.source.start(0, this.currentTime)
+      if (event) {
+        this.status = AudioControllerStatus.Playing
+        this.callListeners(AudioControllerEventName.StatusChange)
+      }
+
+      console.log('play')
     }
   }
 
-  public pause() {
-    if (this.audioEl) {
-      this.audioEl.pause()
+  public pause(event = true) {
+    if (this.status === AudioControllerStatus.Playing) {
+      this.source.stop(0)
+      if (event) {
+        this.status = AudioControllerStatus.Idle
+        this.callListeners(AudioControllerEventName.StatusChange)
+      }
+      console.log('pause')
     }
   }
 
   public seek(newTime: number) {
-    if (this.audioEl) {
-      this.audioEl.currentTime = newTime
-      this.play()
+    this.currentTime = newTime
+
+    if (this.status === AudioControllerStatus.Playing) {
+      this.pause(false)
+      this.play(false)
+      this.callListeners(AudioControllerEventName.CurrentTimeUpdated)
+      console.log('seek')
     }
   }
 
-  private createAndLoadAudioElement(src: string) {
-    if (this.audioEl) {
-      this.audioEl.pause()
-      this.audioEl.removeEventListener('timeupdate', this.onTimeUpdated)
-      this.audioEl.removeEventListener('loadedmetadata', this.onLoadedMetadata)
-      this.audioEl.removeEventListener('play', this.onPlay)
-      this.audioEl.removeEventListener('pause', this.onPause)
-      this.audioEl = null
+  private requestAudioBuffer = () => {
+    if (!this.src) {
+      throw Error('Buffer could not be loaded. No source has been set for the AudioController.')
     }
+    audio.get(this.src).then(response => this.decodeAudioBuffer(response.data))
+  }
 
-    this.status = AudioControllerStatus.Loading
-    this.callListeners(AudioControllerEventName.StatusChange)
+  private decodeAudioBuffer = (data: ArrayBuffer) => {
+    this.context.decodeAudioData(data).then(this.addAudioDataToSource)
+  }
 
-    this.audioEl = document.createElement('audio')
-    this.audioEl.addEventListener('timeupdate', this.onTimeUpdated)
-    this.audioEl.addEventListener('loadedmetadata', this.onLoadedMetadata)
-    this.audioEl.addEventListener('play', this.onPlay)
-    this.audioEl.addEventListener('pause', this.onPause)
-    this.audioEl.src = src
+  private addAudioDataToSource = (audioData: AudioBuffer) => {
+    this.audioData = audioData
+    this.duration = audioData.duration
+    console.log('ready')
   }
 
   private callListeners(eventName: AudioControllerEventName) {
     this.listeners.forEach(cb => cb(eventName))
   }
 
-  private onTimeUpdated = (evt: Event) => {
-    if (this.audioEl) {
-      this.currentTime = this.audioEl.currentTime
-      this.callListeners(AudioControllerEventName.CurrentTimeUpdated)
-    }
-  }
+  // private onTimeUpdated = (evt: Event) => {
+  //   if (this.audioEl) {
+  //     this.currentTime = this.audioEl.currentTime
+  //     this.callListeners(AudioControllerEventName.CurrentTimeUpdated)
+  //   }
+  // }
 
-  private onLoadedMetadata = (evt: Event) => {
-    if (this.audioEl) {
-      this.status = AudioControllerStatus.Idle
-      this.duration = this.audioEl.duration
-      this.callListeners(AudioControllerEventName.StatusChange)
-    }
-  }
+  // private onLoadedMetadata = (evt: Event) => {
+  //   if (this.audioEl) {
+  //     this.status = AudioControllerStatus.Idle
+  //     this.duration = this.audioEl.duration
+  //     this.callListeners(AudioControllerEventName.StatusChange)
+  //   }
+  // }
 
-  private onPlay = () => {
-    this.status = AudioControllerStatus.Playing
-    this.callListeners(AudioControllerEventName.StatusChange)
-  }
+  // private onPlay = () => {
+  //   this.status = AudioControllerStatus.Playing
+  //   this.callListeners(AudioControllerEventName.StatusChange)
+  // }
 
-  private onPause = () => {
-    this.status = AudioControllerStatus.Idle
-    this.callListeners(AudioControllerEventName.StatusChange)
-  }
+  // private onPause = () => {
+  //   this.status = AudioControllerStatus.Idle
+  //   this.callListeners(AudioControllerEventName.StatusChange)
+  // }
 }
 
 export default new AudioController()

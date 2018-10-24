@@ -34,5 +34,10 @@ const apiHost = queryStringApiHost || originApiHost || defaultApiHost
 
 export const api = Axios.create({
   baseURL: 'https://' + apiHost + DOMAIN + '/',
-  timeout: 3000,
+  timeout: 5000,
+})
+
+export const audio = Axios.create({
+  method: 'get',
+  responseType: 'arraybuffer',
 })
