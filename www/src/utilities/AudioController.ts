@@ -1,4 +1,4 @@
-import { audio } from 'utilities/axios'
+import { GetMp3 } from 'utilities/GetMp3'
 
 export enum AudioControllerEventName {
   StatusChange,
@@ -24,6 +24,7 @@ class AudioController {
   private source: AudioBufferSourceNode
   private context = new AudioContext()
   private listeners: AudioControllerCallback[]
+  private audioStream: GetMp3
 
   constructor() {
     this.status = AudioControllerStatus.Idle
@@ -81,18 +82,35 @@ class AudioController {
     if (!this.src) {
       throw Error('Buffer could not be loaded. No source has been set for the AudioController.')
     }
-    audio.get(this.src).then(response => this.decodeAudioBuffer(response.data))
+
+    this.audioStream = new GetMp3(this.src)
+    this.audioStream.onStart = this.onStreamStart
+    this.audioStream.onNewFrames = this.onNewFrames
+    this.audioStream.onComplete = this.onComplete
+    this.audioStream.get()
   }
 
-  private decodeAudioBuffer = (data: ArrayBuffer) => {
-    this.context.decodeAudioData(data).then(this.addAudioDataToSource)
+  private onStreamStart = (contentLength: number) => {
+    console.log(`Content Length is: ${contentLength}`)
   }
 
-  private addAudioDataToSource = (audioData: AudioBuffer) => {
-    this.audioData = audioData
-    this.duration = audioData.duration
-    console.log('ready')
+  private onNewFrames = (data: ArrayBuffer, numFrames: number, numBytes: number) => {
+    console.log(`${numBytes} bytes read`)
   }
+
+  private onComplete = (duration: number) => {
+    console.log(`Done! Duration is ${duration} seconds`)
+  }
+
+  // private decodeAudioBuffer = (data: ArrayBuffer) => {
+  //   this.context.decodeAudioData(data).then(this.addAudioDataToSource)
+  // }
+
+  // private addAudioDataToSource = (audioData: AudioBuffer) => {
+  //   this.audioData = audioData
+  //   this.duration = audioData.duration
+  //   console.log('ready')
+  // }
 
   private callListeners(eventName: AudioControllerEventName) {
     this.listeners.forEach(cb => cb(eventName))
