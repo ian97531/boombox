@@ -3,6 +3,7 @@ import classNames from 'classnames'
 import * as React from 'react'
 import { formatTimeMarker } from 'utilities/Time'
 import './Statement.css'
+import Words from './Words'
 
 interface IStatementProps {
   audioTime?: number
@@ -35,7 +36,7 @@ class Statement extends React.Component<IStatementProps> {
         </div>
         <div className="Statement__content-wrapper">
           <div className="Statement__content">
-            {this.props.statement.words.map((word, index) => word.content.toLowerCase()).join(' ')}
+            <Words isActive={this.props.isActive} words={this.props.statement.words} />
           </div>
         </div>
       </div>

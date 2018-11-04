@@ -1,5 +1,5 @@
 import { IStatement } from '@boombox/shared/src/types/models/transcript'
-import Statement from 'components/Statement'
+import Statement from 'components/statement/Statement'
 import { WindowContext } from 'components/WindowContext'
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
