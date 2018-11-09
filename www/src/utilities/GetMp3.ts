@@ -26,14 +26,14 @@ interface IReadableStreamClosed {
 type IReadableStreamChunk = IReadableStreamChunkAvailable | IReadableStreamClosed
 
 enum MASKS {
-  FRAME_HEADER = Number(0b11111111111000000000000000000000),
-  ID3 = Number(0b11111111111111111111111100000000),
-  VERSION = Number(0b00000000000110000000000000000000),
-  LAYER = Number(0b00000000000001100000000000000000),
-  PROTECTED = Number(0b00000000000000010000000000000000),
-  BIT_RATE = Number(0b00000000000000001111000000000000),
-  SAMPLE_RATE = Number(0b0000000000000000000011000000000),
-  PADDING_BIT = Number(0b00000000000000000000001000000000),
+  FRAME_HEADER = 0b1111111111100000,
+  ID3 = 0b11111111111111111111111100000000,
+  VERSION = 0b00000000000110000000000000000000,
+  LAYER = 0b00000000000001100000000000000000,
+  PROTECTED = 0b00000000000000010000000000000000,
+  BIT_RATE = 0b00000000000000001111000000000000,
+  SAMPLE_RATE = 0b0000000000000000000011000000000,
+  PADDING_BIT = 0b00000000000000000000001000000000,
 }
 
 enum BIT_SHIFT {
@@ -43,21 +43,21 @@ enum BIT_SHIFT {
 }
 
 enum FRAME_HEADERS {
-  MP3 = Number(0b11111111111000000000000000000000),
-  ID3_V1 = Number(0b01010100010000010100011100000000), // TAG
-  ID3_V2 = Number(0b01001001010001000011001100000000), // ID3
+  MP3 = 0b1111111111100000,
+  ID3_V1 = 0b01010100010000010100011100000000, // TAG
+  ID3_V2 = 0b01001001010001000011001100000000, // ID3
 }
 
 enum VERSION {
-  ONE = Number(0b00000000000110000000000000000000),
-  TWO = Number(0b00000000000100000000000000000000),
-  TWO_FIVE = Number(0b00000000000000000000000000000000),
+  ONE = 0b00000000000110000000000000000000,
+  TWO = 0b00000000000100000000000000000000,
+  TWO_FIVE = 0b00000000000000000000000000000000,
 }
 
 enum LAYER {
-  ONE = Number(0b00000000000001100000000000000000),
-  TWO = Number(0b00000000000001000000000000000000),
-  THREE = Number(0b00000000000000100000000000000000),
+  ONE = 0b00000000000001100000000000000000,
+  TWO = 0b00000000000001000000000000000000,
+  THREE = 0b00000000000000100000000000000000,
 }
 
 const ID3_V1_FRAME_SIZE = 128
@@ -111,13 +111,12 @@ export class GetMp3 {
 
   private url: string
   private fileMetaData: IFileMetadata
-  private chunkDuration: number
-  private overlapDuration: number
+  private frames: number[] = []
+  private chunks: Uint8Array[] = []
+  private data: Uint8Array
 
   constructor(url: string, chunkDuration: number = 5, overlapDuration: number = 0.2) {
     this.url = url
-    this.chunkDuration = chunkDuration
-    this.overlapDuration = overlapDuration
   }
 
   public get() {
@@ -153,69 +152,90 @@ export class GetMp3 {
     })
   }
 
+  public getByteForTime(time: number): number {
+    const frame = Math.ceil(time / this.fileMetaData.frameDuration)
+    if (frame < this.frames.length) {
+      const startByte = this.frames[frame]
+      return startByte
+    } else {
+      throw Error('Time is out of range.')
+    }
+  }
+
+  public getLastByte() {
+    return this.frames[this.frames.length - 1]
+  }
+
+  public getChunkAt(startByte: number, endByte: number): ArrayBuffer {
+    if (startByte < this.data.length && endByte < this.data.length) {
+      const byteLength = endByte - startByte
+      const newBuffer = new ArrayBuffer(byteLength)
+      const newArray = new Uint8Array(newBuffer)
+      newArray.set(this.data.slice(startByte, endByte))
+      return newBuffer
+    } else {
+      throw Error('Start byte or end byte is out of range.')
+    }
+  }
+
   private parseStream(reader: ReadableStreamReader) {
-    let currentBytesBuffer: ArrayBuffer | undefined
-    let currentBytesArray: Uint8Array | undefined
-
     let frameBoundary = 0
-    let chunkFrames: number | undefined
-    let overlapFrames: number | undefined
-
-    let frames: number[] = []
+    let totalFrameBoundary = 0
+    let currentChunk: Uint8Array
+    let leftOverChunk: Uint8Array | undefined
 
     const readStream = () => {
+      // tslint:disable-next-line:no-debugger
       reader.read().then((chunk: IReadableStreamChunk) => {
         if (!chunk.done) {
-          currentBytesBuffer = this.appendIntArrays(currentBytesArray, chunk.value)
-          currentBytesArray = new Uint8Array(currentBytesBuffer)
-          while (frameBoundary + 9 < currentBytesArray.byteLength) {
-            // The ID3v2 check requires 9 bytes.
-            if (this.isFrameHeader(currentBytesArray, frameBoundary)) {
+          if (leftOverChunk) {
+            currentChunk = this.appendIntArrays(leftOverChunk, chunk.value)
+            leftOverChunk = undefined
+          } else {
+            currentChunk = chunk.value
+          }
+          while (frameBoundary + 2 < currentChunk.byteLength) {
+            if (this.isFrameHeader(currentChunk, frameBoundary)) {
               if (this.fileMetaData === undefined) {
-                this.fileMetaData = this.getFileMetadata(currentBytesArray, frameBoundary)
-                chunkFrames = Math.ceil(this.chunkDuration / this.fileMetaData.frameDuration)
-                overlapFrames = Math.ceil(this.overlapDuration / this.fileMetaData.frameDuration)
+                this.fileMetaData = this.getFileMetadata(currentChunk, frameBoundary)
               }
-
-              frameBoundary += this.getFrameSize(
-                currentBytesArray,
-                this.fileMetaData,
-                frameBoundary
-              )
-              frames.push(frameBoundary)
-            } else if (this.isID3v1Tag(currentBytesArray, frameBoundary)) {
+              frameBoundary += this.getFrameSize(currentChunk, this.fileMetaData, frameBoundary)
+              if (frameBoundary < currentChunk.byteLength) {
+                this.frames.push(frameBoundary + totalFrameBoundary)
+              } else {
+                break
+              }
+            } else if (this.isID3v1Tag(currentChunk, frameBoundary)) {
               frameBoundary += ID3_V1_FRAME_SIZE
-            } else if (this.isID3v2Tag(currentBytesArray, frameBoundary)) {
-              frameBoundary += this.getID3v2TagSize(currentBytesArray, frameBoundary)
+            } else if (this.isID3v2Tag(currentChunk, frameBoundary)) {
+              frameBoundary += this.getID3v2TagSize(currentChunk, frameBoundary)
             } else {
               throw Error(`Error parsing ${this.url}`)
             }
+          }
 
-            if (this.onNewFrames && overlapFrames && chunkFrames && frames.length === chunkFrames) {
-              const endOffset = frames[chunkFrames - 1]
-              const overlapStartOffset = frames[chunkFrames - overlapFrames]
-              if (endOffset <= currentBytesArray.byteLength) {
-                const bytesToSend = this.appendIntArrays(currentBytesArray.slice(0, endOffset))
-                this.onNewFrames(bytesToSend)
-
-                frames = []
-                currentBytesArray = currentBytesArray.slice(overlapStartOffset)
-                frameBoundary = frameBoundary - endOffset
-              }
-            }
+          if (frameBoundary < currentChunk.byteLength) {
+            this.chunks.push(currentChunk.slice(0, frameBoundary))
+            leftOverChunk = currentChunk.slice(frameBoundary)
+            totalFrameBoundary += frameBoundary
+            frameBoundary = 0
+          } else {
+            this.chunks.push(currentChunk)
+            totalFrameBoundary += currentChunk.byteLength
+            frameBoundary -= currentChunk.byteLength
           }
 
           readStream()
         } else {
           if (this.onComplete) {
-            console.log('done decoding!')
-            if (
-              currentBytesBuffer &&
-              this.onNewFrames &&
-              frameBoundary < currentBytesBuffer.byteLength
-            ) {
-              this.onNewFrames(currentBytesBuffer.slice(frameBoundary))
-            }
+            console.log(Date.now())
+            this.data = this.appendIntArrays(...this.chunks)
+            // this.frames.forEach((value, index) => {
+            //   if (this.data[value] !== 255) {
+            //     console.log(`error at index ${index}`)
+            //   }
+            // })
+            console.log(Date.now())
             this.onComplete()
           }
         }
@@ -225,7 +245,7 @@ export class GetMp3 {
     readStream()
   }
 
-  private appendIntArrays(...arrays: Array<Uint8Array | ArrayBuffer | undefined>): ArrayBuffer {
+  private appendIntArrays(...arrays: Array<Uint8Array | undefined>): Uint8Array {
     const size = arrays.reduce<number>((prev, item) => {
       return item ? prev + item.byteLength : prev
     }, 0)
@@ -240,63 +260,71 @@ export class GetMp3 {
       }
       return item ? prev + item.byteLength : prev
     }, 0)
-    return newBuffer
+    return newArray
   }
 
   private getUint32(data: Uint8Array, offset: number): number {
     // tslint:disable:no-bitwise
-    const byte1 = Number((data[offset + 0] << 24) >>> 0)
-    const byte2 = Number((data[offset + 1] << 16) >>> 0)
-    const byte3 = Number((data[offset + 2] << 8) >>> 0)
-    const byte4 = Number(data[offset + 3])
-    return Number((byte1 | byte2 | byte3 | byte4) >>> 0)
+    const byte1 = (data[offset + 0] << 24) >>> 0
+    const byte2 = (data[offset + 1] << 16) >>> 0
+    const byte3 = (data[offset + 2] << 8) >>> 0
+    const byte4 = data[offset + 3]
+    return (byte1 | byte2 | byte3 | byte4) >>> 0
+    // tslint:enable:no-bitwise
+  }
+
+  private getUint16(data: Uint8Array, offset: number): number {
+    // tslint:disable:no-bitwise
+    const byte1 = (data[offset + 0] << 8) >>> 0
+    const byte2 = data[offset + 1] >>> 0
+    return (byte1 | byte2) >>> 0
     // tslint:enable:no-bitwise
   }
 
   private isFrameHeader(data: Uint8Array, offset: number): boolean {
     // tslint:disable-next-line:no-bitwise
-    return Number((this.getUint32(data, offset) & MASKS.FRAME_HEADER) >>> 0) === FRAME_HEADERS.MP3
+    return (this.getUint16(data, offset) & MASKS.FRAME_HEADER) >>> 0 === FRAME_HEADERS.MP3
   }
 
   private isID3v1Tag(data: Uint8Array, offset: number): boolean {
     // tslint:disable-next-line:no-bitwise
-    return Number((this.getUint32(data, offset) & MASKS.ID3) >>> 0) === FRAME_HEADERS.ID3_V1
+    return (this.getUint32(data, offset) & MASKS.ID3) >>> 0 === FRAME_HEADERS.ID3_V1
   }
 
   private isID3v2Tag(data: Uint8Array, offset: number): boolean {
     // tslint:disable-next-line:no-bitwise
-    return Number((this.getUint32(data, offset) & MASKS.ID3) >>> 0) === FRAME_HEADERS.ID3_V2
+    return (this.getUint32(data, offset) & MASKS.ID3) >>> 0 === FRAME_HEADERS.ID3_V2
   }
 
   private getID3v2TagSize(data: Uint8Array, offset: number): number {
     // tslint:disable:no-bitwise
-    const byte1 = Number((data[offset + 6] << 21) >>> 0)
-    const byte2 = Number((data[offset + 7] << 14) >>> 0)
-    const byte3 = Number((data[offset + 8] << 7) >>> 0)
-    const byte4 = Number(data[offset + 9])
-    return Number((byte1 | byte2 | byte3 | byte4) >>> 0) + 10
+    const byte1 = (data[offset + 6] << 21) >>> 0
+    const byte2 = (data[offset + 7] << 14) >>> 0
+    const byte3 = (data[offset + 8] << 7) >>> 0
+    const byte4 = data[offset + 9]
+    return ((byte1 | byte2 | byte3 | byte4) >>> 0) + 10
     // tslint:enable:no-bitwise
   }
 
   private getVersion(header: number): number {
     // tslint:disable-next-line:no-bitwise
-    return Number((header & MASKS.VERSION) >>> 0)
+    return (header & MASKS.VERSION) >>> 0
   }
 
   private getLayer(header: number): number {
     // tslint:disable-next-line:no-bitwise
-    return Number((header & MASKS.LAYER) >>> 0)
+    return (header & MASKS.LAYER) >>> 0
   }
 
   private getBitRate(header: number, version: number, layer: number): number {
     // tslint:disable-next-line:no-bitwise
-    const bitRateIndex = Number((header & MASKS.BIT_RATE) >>> BIT_SHIFT.BIT_RATE)
+    const bitRateIndex = (header & MASKS.BIT_RATE) >>> BIT_SHIFT.BIT_RATE
     return BIT_RATES[version][layer][bitRateIndex]
   }
 
   private getSampleRate(header: number, version: number): number {
     // tslint:disable-next-line:no-bitwise
-    const sampleRateIndex = Number((header & MASKS.SAMPLE_RATE) >>> BIT_SHIFT.SAMPLE_RATE)
+    const sampleRateIndex = (header & MASKS.SAMPLE_RATE) >>> BIT_SHIFT.SAMPLE_RATE
     return SAMPLE_RATES[version][sampleRateIndex]
   }
 
@@ -306,7 +334,7 @@ export class GetMp3 {
 
   private getPadding(header: number) {
     // tslint:disable-next-line:no-bitwise
-    return Number((header & MASKS.PADDING_BIT) >>> BIT_SHIFT.PADDING_BIT)
+    return (header & MASKS.PADDING_BIT) >>> BIT_SHIFT.PADDING_BIT
   }
 
   private getFileMetadata(data: Uint8Array, offset: number): IFileMetadata {

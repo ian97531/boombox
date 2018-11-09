@@ -23,16 +23,16 @@ class AudioController {
   public duration: number
   public src: string
 
-  private context = new AudioContext()
+  private context: AudioContext
   private listeners: AudioControllerCallback[]
   private audioStream: GetMp3
   private sources: AudioBufferSourceNode[] = []
   private durations: number[] = []
-  private currentIndex = 0
   private currentStart = 0
   private currentEnd = 0
   private currentVolumeStart = 0
   private currentVolumeEnd = 0
+  private nextQueuedStart = 0
 
   constructor() {
     this.status = AudioControllerStatus.Idle
@@ -51,6 +51,7 @@ class AudioController {
 
   public play(event = true) {
     if (this.status === AudioControllerStatus.Idle) {
+      this.context = new AudioContext()
       this.scheduleNextSource()
       setInterval(() => {
         this.scheduleNextSource()
@@ -85,31 +86,46 @@ class AudioController {
   }
 
   private scheduleNextSource = () => {
+    if (this.sources.length < 2) {
+      const startByte = this.audioStream.getByteForTime(this.nextQueuedStart)
+      const endByte = this.audioStream.getByteForTime(this.nextQueuedStart + 5)
+      const chunk = this.audioStream.getChunkAt(startByte, endByte)
+      this.nextQueuedStart += 5
+      this.context.decodeAudioData(chunk).then((audioData: AudioBuffer) => {
+        const source = this.context.createBufferSource()
+        source.buffer = audioData
+        this.sources.push(source)
+        this.durations.push(audioData.duration)
+      })
+    }
+
     if (this.currentEnd === 0 || this.currentEnd - this.context.currentTime < 2) {
-      const duration = this.durations[this.currentIndex]
+      const source = this.sources.shift()
+      const duration = this.durations.shift()
 
-      if (this.currentIndex === 0) {
-        this.currentStart = this.context.currentTime
-        this.currentVolumeStart = this.context.currentTime
-      } else {
-        this.currentStart = this.currentEnd - CHUNK_OVERLAP
-        this.currentVolumeStart = this.currentStart + CHUNK_OVERLAP / 2
+      if (source && duration) {
+        if (this.currentEnd) {
+          this.currentStart = this.currentEnd - CHUNK_OVERLAP
+          this.currentVolumeStart = this.currentStart + CHUNK_OVERLAP / 2
+        } else {
+          this.currentStart = this.context.currentTime
+          this.currentVolumeStart = this.context.currentTime
+        }
+
+        this.currentEnd = this.currentStart + duration
+        this.currentVolumeEnd = this.currentEnd - CHUNK_OVERLAP / 2
+
+        const gainNode = this.context.createGain()
+        source.connect(gainNode)
+
+        gainNode.gain.setValueAtTime(0, this.currentStart)
+        gainNode.gain.setValueAtTime(1, this.currentVolumeStart)
+        gainNode.gain.setValueAtTime(0, this.currentVolumeEnd)
+
+        source.connect(gainNode)
+        gainNode.connect(this.context.destination)
+        source.start(this.currentStart)
       }
-
-      this.currentEnd = this.currentStart + duration
-      this.currentVolumeEnd = this.currentEnd - CHUNK_OVERLAP / 2
-
-      const gainNode = this.context.createGain()
-      this.sources[this.currentIndex].connect(gainNode)
-
-      gainNode.gain.setValueAtTime(0, this.currentStart)
-      gainNode.gain.setValueAtTime(1, this.currentVolumeStart)
-      gainNode.gain.setValueAtTime(0, this.currentVolumeEnd)
-
-      this.sources[this.currentIndex].connect(gainNode)
-      gainNode.connect(this.context.destination)
-      this.sources[this.currentIndex].start(this.currentStart)
-      this.currentIndex += 1
     }
   }
 
@@ -119,28 +135,12 @@ class AudioController {
     }
 
     this.audioStream = new GetMp3(this.src, CHUNK_DURATION, CHUNK_OVERLAP)
-    this.audioStream.onNewFrames = this.onNewFrames
     this.audioStream.onComplete = this.onComplete
     this.audioStream.get()
   }
 
-  private onNewFrames = (data: ArrayBuffer) => {
-    this.decodeAudioBuffer(data)
-  }
-
   private onComplete = () => {
-    console.log('Done!')
-  }
-
-  private decodeAudioBuffer = (data: ArrayBuffer) => {
-    this.context.decodeAudioData(data).then(this.addAudioDataToSource)
-  }
-
-  private addAudioDataToSource = (audioData: AudioBuffer) => {
-    const source = this.context.createBufferSource()
-    source.buffer = audioData
-    this.sources.push(source)
-    this.durations.push(audioData.duration)
+    console.log('Ready!')
   }
 
   private callListeners(eventName: AudioControllerEventName) {
