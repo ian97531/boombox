@@ -163,9 +163,9 @@ export class EpisodeJob {
     }
   }
 
-  public createSegments(episodeDuration: number) {
-    const numSegments = Math.ceil(episodeDuration / MAX_SEGMENT_LENGTH)
-    const segmentDuration = Math.ceil(episodeDuration / numSegments)
+  public createSegments() {
+    const numSegments = Math.ceil(this.duration / MAX_SEGMENT_LENGTH)
+    const segmentDuration = Math.ceil(this.duration / numSegments)
     let startTime = 0
     let index = 0
 
@@ -179,13 +179,13 @@ export class EpisodeJob {
     }
 
     // Create the last segment to the end of the episode.
-    const finalDuration = Math.ceil(episodeDuration - startTime)
+    const finalDuration = Math.ceil(this.duration - startTime)
     this.segments.push(this.createSegment(startTime, finalDuration))
 
     this.audio = {
-      duration: episodeDuration,
+      duration: this.duration,
       filename: this.buildFilename(DESIGNATIONS.ORIGINAL_AUDIO, 'mp3', {
-        duration: episodeDuration,
+        duration: this.duration,
         startTime: 0,
       }),
       startTime: 0,

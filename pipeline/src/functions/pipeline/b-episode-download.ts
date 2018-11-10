@@ -35,7 +35,8 @@ const episodeDownloadHandler = async (lambda: Lambda, job: Job, episode: Episode
   const episodeDuration = await findDuration(response.data)
   await job.log(`Episode duration is ${episodeDuration} seconds.`)
 
-  episode.createSegments(episodeDuration)
+  episode.duration = episodeDuration
+  episode.createSegments()
 
   if (episode.audio) {
     const params = { Bucket: episode.bucket, Key: episode.audio.filename, Body: response.data }
