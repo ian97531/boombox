@@ -81,8 +81,8 @@ export class EpisodeJob {
 
     const episode = {
       bucket: buckets.episode,
-      imageURL: item.itunes.image,
-      mp3URL: item.enclosure.url,
+      imageURL: item.itunes.image.replace(/^http:/i, 'https:'),
+      mp3URL: item.enclosure.url.replace(/^http:/i, 'https:'),
       podcastSlug: podcast.slug,
       publishedAt: publishedAt.toISOString(),
       segments: [],

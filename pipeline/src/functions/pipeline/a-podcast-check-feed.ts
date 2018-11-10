@@ -20,7 +20,7 @@ function createPodcastFromFeed(podcastSlug: string, feed: any): IPodcast {
     createdAt: currentTime,
     episodes: {},
     feedURL: FEED_URL,
-    imageURL: feed.itunes.image,
+    imageURL: feed.itunes.image.replace(/^http:/i, 'https:'),
     language: feed.language,
     lastCheckedAt: currentTime,
     lastPublishedAt: publishDate,
