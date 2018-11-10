@@ -83,6 +83,8 @@ const findStatements = async (req: IListRequest, res: Response, next: NextFuncti
   if (statements.length === pageSize + 1) {
     req.nextItem = statements[pageSize].endTime
     req.items = statements.slice(0, pageSize)
+  } else {
+    req.items = statements
   }
 
   req.totalItems = episode.totalStatements || 0
