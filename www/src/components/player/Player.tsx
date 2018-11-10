@@ -12,6 +12,7 @@ import './Player.css'
 type ISkipDelegate = (currentTime: number) => number | void
 
 interface IPlayerProps extends IPlayerStore {
+  audioDuration: number
   audioUrl: string
   dispatch: Dispatch
   onSeek: (time: number) => void
@@ -28,7 +29,7 @@ class Player extends React.Component<IPlayerProps, IPlayerState> {
   public readonly state: IPlayerState = {}
 
   public componentDidMount() {
-    AudioController.setSrc(this.props.audioUrl)
+    AudioController.setAudio(this.props.audioUrl, this.props.audioDuration)
   }
 
   public render() {
@@ -70,6 +71,7 @@ class Player extends React.Component<IPlayerProps, IPlayerState> {
         <div className="Player__bar-wrapper">
           <PlayerBar
             audioProgressPercent={this.props.currentTime / this.props.duration}
+            loadingProgressPercent={this.props.loadingProgress}
             onClick={this.onClick}
             onScrub={this.onScrub}
             onScrubEnd={this.onScrubEnd}
