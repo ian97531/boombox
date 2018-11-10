@@ -1,4 +1,4 @@
-import { GetMp3 } from 'utilities/GetMp3'
+import { Mp3Loader } from 'utilities/Mp3Loader'
 
 export enum AudioControllerEventName {
   StatusChange,
@@ -12,6 +12,11 @@ export enum AudioControllerStatus {
   Error = 'ERROR',
 }
 
+interface IAudioChunk {
+  source: AudioBufferSourceNode
+  duration: number
+}
+
 const CHUNK_DURATION = 5
 const CHUNK_OVERLAP = 0.5
 
@@ -22,155 +27,187 @@ class AudioController {
   public currentTime = 0
   public duration: number
   public src: string
+  public progress: number = 0
 
   private context: AudioContext
-  private listeners: AudioControllerCallback[]
-  private audioStream: GetMp3
-  private sources: AudioBufferSourceNode[] = []
-  private durations: number[] = []
-  private currentStart = 0
-  private currentEnd = 0
-  private currentVolumeStart = 0
-  private currentVolumeEnd = 0
-  private nextQueuedStart = 0
+  private listeners: AudioControllerCallback[] = []
 
-  constructor() {
-    this.status = AudioControllerStatus.Idle
+  private audioStream: Mp3Loader
+  private chunks: IAudioChunk[] = []
+  private currentPlayingChunkEndTime = 0
+  private nextChunkStartTime = 0
+
+  private playLoop: NodeJS.Timeout
+  private scheduledSources = new Set<AudioBufferSourceNode>()
+
+  public setAudio(src: string, duration: number = 0) {
+    if (this.status === AudioControllerStatus.Playing) {
+      this.pause()
+    }
+
+    if (this.context) {
+      this.context.close()
+    }
+
+    const AudioContextSafe = (window as any).AudioContext || (window as any).webkitAudioContext
+    this.context = new AudioContextSafe()
     this.currentTime = 0
-    this.listeners = []
+    this.duration = duration
+    this.status = AudioControllerStatus.Loading
+    this.callListeners(AudioControllerEventName.StatusChange)
+    this.audioStream = new Mp3Loader(src)
+    this.audioStream.onComplete = this.onLoadComplete
+    this.audioStream.onProgress = this.onLoadProgress
+    this.audioStream.get()
   }
 
   public addListener(callback: AudioControllerCallback) {
     this.listeners.push(callback)
   }
 
-  public setSrc = (src: string) => {
-    this.src = src
-    this.requestAudioBuffer()
-  }
-
-  public play(event = true) {
+  public play() {
     if (this.status === AudioControllerStatus.Idle) {
-      this.context = new AudioContext()
+      this.status = AudioControllerStatus.Playing
+      const startContextTime = this.context.currentTime
+      const startTime = this.currentTime
+
+      this.fetchNextChunk()
       this.scheduleNextSource()
-      setInterval(() => {
-        this.scheduleNextSource()
-      }, 100)
-      if (event) {
-        status = AudioControllerStatus.Playing
-        this.callListeners(AudioControllerEventName.StatusChange)
-      }
-      console.log('play')
+
+      this.playLoop = setInterval(() => {
+        if (this.chunks.length < 2) {
+          this.fetchNextChunk()
+        }
+
+        if (this.scheduledSources.size < 2) {
+          this.scheduleNextSource()
+        }
+
+        const playTime = this.context.currentTime - startContextTime
+        this.currentTime = startTime + playTime
+        this.callListeners(AudioControllerEventName.CurrentTimeUpdated)
+      }, 500)
+
+      this.callListeners(AudioControllerEventName.StatusChange)
     }
   }
 
-  public pause(event = true) {
+  public pause() {
     if (this.status === AudioControllerStatus.Playing) {
-      if (event) {
-        this.status = AudioControllerStatus.Idle
-        this.callListeners(AudioControllerEventName.StatusChange)
-      }
-      console.log('pause')
+      this.reset()
+      this.callListeners(AudioControllerEventName.StatusChange)
     }
   }
 
   public seek(newTime: number) {
     this.currentTime = newTime
+    this.reset()
+    this.play()
+    this.callListeners(AudioControllerEventName.CurrentTimeUpdated)
+  }
 
-    if (this.status === AudioControllerStatus.Playing) {
-      this.pause(false)
-      this.play(false)
-      this.callListeners(AudioControllerEventName.CurrentTimeUpdated)
-      console.log('seek')
+  private reset() {
+    this.status = AudioControllerStatus.Idle
+    if (this.playLoop !== undefined) {
+      clearInterval(this.playLoop)
     }
+
+    for (const source of this.scheduledSources.values()) {
+      source.stop()
+      this.scheduledSources.delete(source)
+    }
+
+    this.chunks = []
+    this.currentPlayingChunkEndTime = 0
+    this.nextChunkStartTime = this.currentTime
+    this.fetchNextChunk()
+  }
+
+  private fetchNextChunk() {
+    const startTime = this.nextChunkStartTime
+    const endTime = this.nextChunkStartTime + CHUNK_DURATION
+
+    const startByte = this.audioStream.getByteForTime(startTime)
+    const endByte = this.audioStream.getByteForTime(endTime + CHUNK_OVERLAP)
+    const chunk = this.audioStream.getChunkAt(startByte, endByte)
+
+    this.nextChunkStartTime += CHUNK_DURATION
+
+    this.context.decodeAudioData(chunk, this.processDecodedAudio, this.handleDecodeError)
+  }
+
+  private processDecodedAudio = (audioData: AudioBuffer) => {
+    const source = this.context.createBufferSource()
+    source.buffer = audioData
+    this.chunks.push({
+      duration: audioData.duration,
+      source,
+    })
+  }
+
+  private handleDecodeError = (err: Error) => {
+    console.log(err)
   }
 
   private scheduleNextSource = () => {
-    if (this.sources.length < 2) {
-      const startByte = this.audioStream.getByteForTime(this.nextQueuedStart)
-      const endByte = this.audioStream.getByteForTime(this.nextQueuedStart + 5)
-      const chunk = this.audioStream.getChunkAt(startByte, endByte)
-      this.nextQueuedStart += 5
-      this.context.decodeAudioData(chunk).then((audioData: AudioBuffer) => {
-        const source = this.context.createBufferSource()
-        source.buffer = audioData
-        this.sources.push(source)
-        this.durations.push(audioData.duration)
-      })
-    }
+    const chunk = this.chunks.shift()
 
-    if (this.currentEnd === 0 || this.currentEnd - this.context.currentTime < 2) {
-      const source = this.sources.shift()
-      const duration = this.durations.shift()
+    if (chunk && this.status === AudioControllerStatus.Playing) {
+      let startTime: number | undefined
+      let volumeStartTime: number | undefined
+      let volumeEndTime: number | undefined
+      if (this.currentPlayingChunkEndTime) {
+        startTime = this.currentPlayingChunkEndTime - CHUNK_OVERLAP
+        volumeStartTime = startTime + CHUNK_OVERLAP / 2
+      } else {
+        startTime = this.context.currentTime
+        volumeStartTime = this.context.currentTime
+      }
 
-      if (source && duration) {
-        if (this.currentEnd) {
-          this.currentStart = this.currentEnd - CHUNK_OVERLAP
-          this.currentVolumeStart = this.currentStart + CHUNK_OVERLAP / 2
-        } else {
-          this.currentStart = this.context.currentTime
-          this.currentVolumeStart = this.context.currentTime
-        }
+      this.currentPlayingChunkEndTime = startTime + chunk.duration
+      volumeEndTime = this.currentPlayingChunkEndTime - CHUNK_OVERLAP / 2
 
-        this.currentEnd = this.currentStart + duration
-        this.currentVolumeEnd = this.currentEnd - CHUNK_OVERLAP / 2
+      const gainNode = this.context.createGain()
+      chunk.source.connect(gainNode)
 
-        const gainNode = this.context.createGain()
-        source.connect(gainNode)
+      gainNode.gain.setValueAtTime(0, startTime)
+      gainNode.gain.setTargetAtTime(1, volumeStartTime, 0.03)
+      gainNode.gain.setTargetAtTime(0, volumeEndTime, 0.03)
 
-        gainNode.gain.setValueAtTime(0, this.currentStart)
-        gainNode.gain.setValueAtTime(1, this.currentVolumeStart)
-        gainNode.gain.setValueAtTime(0, this.currentVolumeEnd)
-
-        source.connect(gainNode)
-        gainNode.connect(this.context.destination)
-        source.start(this.currentStart)
+      chunk.source.connect(gainNode)
+      gainNode.connect(this.context.destination)
+      chunk.source.start(startTime)
+      this.scheduledSources.add(chunk.source)
+      chunk.source.onended = (ev: Event) => {
+        this.scheduledSources.delete(chunk.source)
       }
     }
   }
 
-  private requestAudioBuffer = () => {
-    if (!this.src) {
-      throw Error('Buffer could not be loaded. No source has been set for the AudioController.')
+  private onLoadComplete = (duration: number) => {
+    if (this.duration === 0) {
+      this.duration = 0
+      this.reset()
     }
-
-    this.audioStream = new GetMp3(this.src, CHUNK_DURATION, CHUNK_OVERLAP)
-    this.audioStream.onComplete = this.onComplete
-    this.audioStream.get()
+    this.progress = 1
+    this.callListeners(AudioControllerEventName.StatusChange)
   }
 
-  private onComplete = () => {
-    console.log('Ready!')
+  private onLoadProgress = (duration: number) => {
+    if (this.duration) {
+      this.progress = duration / this.duration
+    }
+
+    if (duration > 10 && this.status === AudioControllerStatus.Loading) {
+      this.reset()
+    }
+
+    this.callListeners(AudioControllerEventName.StatusChange)
   }
 
   private callListeners(eventName: AudioControllerEventName) {
     this.listeners.forEach(cb => cb(eventName))
   }
-
-  // private onTimeUpdated = (evt: Event) => {
-  //   if (this.audioEl) {
-  //     this.currentTime = this.audioEl.currentTime
-  //     this.callListeners(AudioControllerEventName.CurrentTimeUpdated)
-  //   }
-  // }
-
-  // private onLoadedMetadata = (evt: Event) => {
-  //   if (this.audioEl) {
-  //     this.status = AudioControllerStatus.Idle
-  //     this.duration = this.audioEl.duration
-  //     this.callListeners(AudioControllerEventName.StatusChange)
-  //   }
-  // }
-
-  // private onPlay = () => {
-  //   this.status = AudioControllerStatus.Playing
-  //   this.callListeners(AudioControllerEventName.StatusChange)
-  // }
-
-  // private onPause = () => {
-  //   this.status = AudioControllerStatus.Idle
-  //   this.callListeners(AudioControllerEventName.StatusChange)
-  // }
 }
 
 export default new AudioController()

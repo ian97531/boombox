@@ -1,8 +1,7 @@
 import Axios, { AxiosResponse } from 'axios'
 
-export type IOnNewFramesCallback = (frames: ArrayBuffer) => void
-export type IOnCompleteCallback = () => void
-export type IOnStartCallback = () => void
+export type IOnCompleteCallback = (duration: number) => void
+export type IOnProgressCallback = (duration: number) => void
 
 interface IFileMetadata {
   frameDuration: number
@@ -104,18 +103,18 @@ const FRAME_SAMPLES = {
   },
 }
 
-export class GetMp3 {
+export class Mp3Loader {
   public onComplete: IOnCompleteCallback | undefined
-  public onNewFrames: IOnNewFramesCallback | undefined
-  public onStart: IOnStartCallback | undefined
+  public onProgress: IOnProgressCallback | undefined
 
   private url: string
   private fileMetaData: IFileMetadata
   private frames: number[] = []
   private chunks: Uint8Array[] = []
-  private data: Uint8Array
+  private bytes: number[] = []
+  private totalBytes = 0
 
-  constructor(url: string, chunkDuration: number = 5, overlapDuration: number = 0.2) {
+  constructor(url: string) {
     this.url = url
   }
 
@@ -124,25 +123,17 @@ export class GetMp3 {
       if (redirect.request) {
         const url = redirect.request.responseURL
         if (!(window.fetch || ReadableStream)) {
-          console.log('doing a lame array buffer')
           Axios.get(url, { responseType: 'arraybuffer' }).then(
             (response: AxiosResponse<ArrayBuffer>) => {
-              if (this.onNewFrames) {
-                this.onNewFrames(response.data)
-              }
-              if (this.onComplete) {
-                this.onComplete()
-              }
+              this.parseFile(response.data)
             }
           )
         } else {
-          console.log('trying streams...')
           fetch(url)
             .then(response => response.body)
             .then(body => {
               if (body) {
-                const reader = body.getReader()
-                this.parseStream(reader)
+                this.parseStream(body)
               } else {
                 throw Error('Got null response.body instead of a readable stream.')
               }
@@ -167,25 +158,64 @@ export class GetMp3 {
   }
 
   public getChunkAt(startByte: number, endByte: number): ArrayBuffer {
-    if (startByte < this.data.length && endByte < this.data.length) {
+    if (startByte < this.totalBytes && endByte < this.totalBytes) {
+      const foundChunks: Uint8Array[] = []
+      let started = false
+      let done = false
+      let previousValue = 0
+      this.bytes.find((value, index) => {
+        if (!started && startByte < value) {
+          started = true
+          const start = startByte - previousValue
+          if (endByte < value) {
+            const end = endByte - previousValue
+            foundChunks.push(this.chunks[index].slice(start, end))
+            done = true
+          } else {
+            foundChunks.push(this.chunks[index].slice(start))
+            done = false
+          }
+        } else if (started) {
+          if (endByte < value) {
+            const end = endByte - previousValue
+            foundChunks.push(this.chunks[index].slice(0, end))
+            done = true
+          } else {
+            foundChunks.push(this.chunks[index])
+            done = false
+          }
+        }
+        previousValue = value
+        return done
+      })
+
       const byteLength = endByte - startByte
       const newBuffer = new ArrayBuffer(byteLength)
       const newArray = new Uint8Array(newBuffer)
-      newArray.set(this.data.slice(startByte, endByte))
+      foundChunks.reduce<number>((prev, item) => {
+        if (item && item.byteLength) {
+          if (item instanceof ArrayBuffer) {
+            item = new Uint8Array(item)
+          }
+          newArray.set(item, prev)
+        }
+        return item ? prev + item.byteLength : prev
+      }, 0)
       return newBuffer
     } else {
       throw Error('Start byte or end byte is out of range.')
     }
   }
 
-  private parseStream(reader: ReadableStreamReader) {
-    let frameBoundary = 0
-    let totalFrameBoundary = 0
+  private parseStream(stream: ReadableStream) {
+    const reader = stream.getReader()
+    let frameBoundary: number | undefined = 0
     let currentChunk: Uint8Array
     let leftOverChunk: Uint8Array | undefined
+    let reads = 0
 
     const readStream = () => {
-      // tslint:disable-next-line:no-debugger
+      reads += 1
       reader.read().then((chunk: IReadableStreamChunk) => {
         if (!chunk.done) {
           if (leftOverChunk) {
@@ -194,55 +224,77 @@ export class GetMp3 {
           } else {
             currentChunk = chunk.value
           }
-          while (frameBoundary + 2 < currentChunk.byteLength) {
-            if (this.isFrameHeader(currentChunk, frameBoundary)) {
-              if (this.fileMetaData === undefined) {
-                this.fileMetaData = this.getFileMetadata(currentChunk, frameBoundary)
-              }
-              frameBoundary += this.getFrameSize(currentChunk, this.fileMetaData, frameBoundary)
-              if (frameBoundary < currentChunk.byteLength) {
-                this.frames.push(frameBoundary + totalFrameBoundary)
-              } else {
-                break
-              }
-            } else if (this.isID3v1Tag(currentChunk, frameBoundary)) {
-              frameBoundary += ID3_V1_FRAME_SIZE
-            } else if (this.isID3v2Tag(currentChunk, frameBoundary)) {
-              frameBoundary += this.getID3v2TagSize(currentChunk, frameBoundary)
+
+          const frames = this.parseFrames(currentChunk, frameBoundary, this.totalBytes)
+          this.frames = [...this.frames, ...frames]
+          const lastFrame = frames.pop()
+
+          if (lastFrame !== undefined) {
+            frameBoundary = lastFrame - this.totalBytes
+            if (frameBoundary < currentChunk.byteLength) {
+              this.chunks.push(currentChunk.slice(0, frameBoundary))
+              leftOverChunk = currentChunk.slice(frameBoundary)
+              this.totalBytes += frameBoundary
+              frameBoundary = 0
             } else {
-              throw Error(`Error parsing ${this.url}`)
+              this.chunks.push(currentChunk)
+              this.totalBytes += currentChunk.byteLength
+              frameBoundary -= currentChunk.byteLength
             }
-          }
-
-          if (frameBoundary < currentChunk.byteLength) {
-            this.chunks.push(currentChunk.slice(0, frameBoundary))
-            leftOverChunk = currentChunk.slice(frameBoundary)
-            totalFrameBoundary += frameBoundary
-            frameBoundary = 0
+            this.bytes.push(this.totalBytes)
           } else {
-            this.chunks.push(currentChunk)
-            totalFrameBoundary += currentChunk.byteLength
-            frameBoundary -= currentChunk.byteLength
+            throw new Error('got no frames.')
           }
 
+          if (this.onProgress && reads % 50 === 0) {
+            const duration = this.frames.length * this.fileMetaData.frameDuration
+            this.onProgress(duration)
+          }
           readStream()
         } else {
           if (this.onComplete) {
-            console.log(Date.now())
-            this.data = this.appendIntArrays(...this.chunks)
-            // this.frames.forEach((value, index) => {
-            //   if (this.data[value] !== 255) {
-            //     console.log(`error at index ${index}`)
-            //   }
-            // })
-            console.log(Date.now())
-            this.onComplete()
+            const duration = this.frames.length * this.fileMetaData.frameDuration
+            this.onComplete(duration)
           }
         }
       })
     }
-
     readStream()
+  }
+
+  private parseFile(buffer: ArrayBuffer) {
+    const data = new Uint8Array(buffer)
+    this.chunks.push(data)
+    this.bytes.push(data.byteLength)
+    this.frames = this.parseFrames(data)
+    this.totalBytes = data.byteLength
+    if (this.onComplete) {
+      const duration = this.frames.length * this.fileMetaData.frameDuration
+      this.onComplete(duration)
+    }
+  }
+
+  private parseFrames(data: Uint8Array, firstFrameBoundary = 0, frameOffset = 0): number[] {
+    const frames: number[] = []
+    let frameBoundary = firstFrameBoundary
+    while (frameBoundary + 2 < data.byteLength) {
+      if (this.isFrameHeader(data, frameBoundary)) {
+        if (this.fileMetaData === undefined) {
+          this.fileMetaData = this.getFileMetadata(data, frameBoundary)
+        }
+        frameBoundary += this.getFrameSize(data, this.fileMetaData, frameBoundary)
+        frames.push(frameBoundary + frameOffset)
+      } else if (this.isID3v1Tag(data, frameBoundary)) {
+        frameBoundary += ID3_V1_FRAME_SIZE
+      } else if (this.isID3v2Tag(data, frameBoundary)) {
+        frameBoundary += this.getID3v2TagSize(data, frameBoundary)
+      } else {
+        // Ignore and keep looking for the next frame header.
+        frameBoundary++
+        throw new Error('manged audio file.')
+      }
+    }
+    return frames
   }
 
   private appendIntArrays(...arrays: Array<Uint8Array | undefined>): Uint8Array {
