@@ -1,12 +1,9 @@
-import Axios, { AxiosResponse } from 'axios'
-
 export type IOnCompleteCallback = (duration: number) => void
 export type IOnProgressCallback = (duration: number) => void
 
 interface IFileMetadata {
   frameDuration: number
   layer: number
-  padding: number
   sampleRate: number
   samples: number
   version: number
@@ -103,47 +100,17 @@ const FRAME_SAMPLES = {
   },
 }
 
-export class Mp3Loader {
+export class MP3Decoder {
   public onComplete: IOnCompleteCallback | undefined
   public onProgress: IOnProgressCallback | undefined
 
-  private url: string
   private fileMetaData: IFileMetadata
   private frames: number[] = []
   private chunks: Uint8Array[] = []
   private bytes: number[] = []
-  private totalBytes = 0
+  private totalBytesRead = 0
 
-  constructor(url: string) {
-    this.url = url
-  }
-
-  public get() {
-    Axios.head(this.url).then((redirect: AxiosResponse) => {
-      if (redirect.request) {
-        const url = redirect.request.responseURL
-        if (!(window.fetch || ReadableStream)) {
-          Axios.get(url, { responseType: 'arraybuffer' }).then(
-            (response: AxiosResponse<ArrayBuffer>) => {
-              this.parseFile(response.data)
-            }
-          )
-        } else {
-          fetch(url)
-            .then(response => response.body)
-            .then(body => {
-              if (body) {
-                this.parseStream(body)
-              } else {
-                throw Error('Got null response.body instead of a readable stream.')
-              }
-            })
-        }
-      }
-    })
-  }
-
-  public getByteForTime(time: number): number {
+  public getSafeByteOffsetForTime(time: number): number {
     const frame = Math.ceil(time / this.fileMetaData.frameDuration)
     if (frame < this.frames.length) {
       const startByte = this.frames[frame]
@@ -153,12 +120,8 @@ export class Mp3Loader {
     }
   }
 
-  public getLastByte() {
-    return this.frames[this.frames.length - 1]
-  }
-
-  public getChunkAt(startByte: number, endByte: number): ArrayBuffer {
-    if (startByte < this.totalBytes && endByte < this.totalBytes) {
+  public getBytes(startByte: number, endByte: number): ArrayBuffer {
+    if (startByte < this.totalBytesRead && endByte < this.totalBytesRead) {
       const foundChunks: Uint8Array[] = []
       let started = false
       let done = false
@@ -207,9 +170,9 @@ export class Mp3Loader {
     }
   }
 
-  private parseStream(stream: ReadableStream) {
+  public parseStream(stream: ReadableStream) {
     const reader = stream.getReader()
-    let frameBoundary: number | undefined = 0
+    let lastFrameOffset: number | undefined = 0
     let currentChunk: Uint8Array
     let leftOverChunk: Uint8Array | undefined
     let reads = 0
@@ -225,25 +188,31 @@ export class Mp3Loader {
             currentChunk = chunk.value
           }
 
-          const frames = this.parseFrames(currentChunk, frameBoundary, this.totalBytes)
+          const frames = this.parseFrames(currentChunk, lastFrameOffset, this.totalBytesRead)
           this.frames = [...this.frames, ...frames]
           const lastFrame = frames.pop()
 
           if (lastFrame !== undefined) {
-            frameBoundary = lastFrame - this.totalBytes
-            if (frameBoundary < currentChunk.byteLength) {
-              this.chunks.push(currentChunk.slice(0, frameBoundary))
-              leftOverChunk = currentChunk.slice(frameBoundary)
-              this.totalBytes += frameBoundary
-              frameBoundary = 0
+            lastFrameOffset = lastFrame - this.totalBytesRead
+            const nextFrameSize = this.getFrameSize(
+              currentChunk,
+              this.fileMetaData,
+              lastFrameOffset
+            )
+            const nextFrameOffset = lastFrameOffset + nextFrameSize
+            if (nextFrameOffset < currentChunk.byteLength) {
+              this.chunks.push(currentChunk.slice(0, nextFrameOffset))
+              leftOverChunk = currentChunk.slice(nextFrameOffset)
+              this.totalBytesRead += nextFrameOffset
+              lastFrameOffset = 0
             } else {
               this.chunks.push(currentChunk)
-              this.totalBytes += currentChunk.byteLength
-              frameBoundary -= currentChunk.byteLength
+              this.totalBytesRead += currentChunk.byteLength
+              lastFrameOffset = nextFrameOffset - currentChunk.byteLength
             }
-            this.bytes.push(this.totalBytes)
+            this.bytes.push(this.totalBytesRead)
           } else {
-            throw new Error('got no frames.')
+            leftOverChunk = currentChunk
           }
 
           if (this.onProgress && reads % 50 === 0) {
@@ -262,12 +231,12 @@ export class Mp3Loader {
     readStream()
   }
 
-  private parseFile(buffer: ArrayBuffer) {
+  public parseFile(buffer: ArrayBuffer) {
     const data = new Uint8Array(buffer)
     this.chunks.push(data)
     this.bytes.push(data.byteLength)
     this.frames = this.parseFrames(data)
-    this.totalBytes = data.byteLength
+    this.totalBytesRead = data.byteLength
     if (this.onComplete) {
       const duration = this.frames.length * this.fileMetaData.frameDuration
       this.onComplete(duration)
@@ -277,21 +246,35 @@ export class Mp3Loader {
   private parseFrames(data: Uint8Array, firstFrameBoundary = 0, frameOffset = 0): number[] {
     const frames: number[] = []
     let frameBoundary = firstFrameBoundary
-    while (frameBoundary + 2 < data.byteLength) {
+    while (frameBoundary + 2 <= data.byteLength) {
       if (this.isFrameHeader(data, frameBoundary)) {
         if (this.fileMetaData === undefined) {
           this.fileMetaData = this.getFileMetadata(data, frameBoundary)
         }
-        frameBoundary += this.getFrameSize(data, this.fileMetaData, frameBoundary)
-        frames.push(frameBoundary + frameOffset)
+
+        let foundNextFrame = false
+        let frameSize = this.getFrameSize(data, this.fileMetaData, frameBoundary)
+        while (!foundNextFrame && frameSize + frameBoundary < data.byteLength) {
+          if (this.isFrameHeader(data, frameBoundary + frameSize)) {
+            foundNextFrame = true
+          } else {
+            frameSize += 1
+          }
+        }
+
+        if (foundNextFrame) {
+          frameBoundary += frameSize
+          frames.push(frameBoundary + frameOffset)
+        } else {
+          break
+        }
       } else if (this.isID3v1Tag(data, frameBoundary)) {
         frameBoundary += ID3_V1_FRAME_SIZE
       } else if (this.isID3v2Tag(data, frameBoundary)) {
         frameBoundary += this.getID3v2TagSize(data, frameBoundary)
       } else {
         // Ignore and keep looking for the next frame header.
-        frameBoundary++
-        throw new Error('manged audio file.')
+        frameBoundary += 1
       }
     }
     return frames
@@ -395,13 +378,12 @@ export class Mp3Loader {
     const version = this.getVersion(header)
     const layer = this.getLayer(header)
     const sampleRate = this.getSampleRate(header, version)
-    const padding = this.getPadding(header)
+
     const samples = this.getSamples(version, layer)
     const frameDuration = samples / sampleRate
     return {
       frameDuration,
       layer,
-      padding,
       sampleRate,
       samples,
       version,
@@ -411,14 +393,14 @@ export class Mp3Loader {
   private getFrameSize(data: Uint8Array, metadata: IFileMetadata, offset: number): number {
     const header = this.getUint32(data, offset)
     const bitRate = this.getBitRate(header, metadata.version, metadata.layer)
+    const padding = this.getPadding(header)
 
     // tslint:disable:no-bitwise
     let frameSize: number
     if (metadata.layer === LAYER.ONE) {
-      frameSize =
-        ((metadata.samples * bitRate * 125) / metadata.sampleRate + metadata.padding * 4) | 0
+      frameSize = ((metadata.samples * bitRate * 125) / metadata.sampleRate + padding * 4) | 0
     } else {
-      frameSize = ((metadata.samples * bitRate * 125) / metadata.sampleRate + metadata.padding) | 0
+      frameSize = ((metadata.samples * bitRate * 125) / metadata.sampleRate + padding) | 0
     }
     // tslint:enable:no-bitwise
     return frameSize
