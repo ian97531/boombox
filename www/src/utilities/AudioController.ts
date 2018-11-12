@@ -25,11 +25,11 @@ const CROSSFADE_DURATION = 0.03
 type AudioControllerCallback = (eventName: AudioControllerEventName) => void
 
 class AudioController {
-  public status: AudioControllerStatus
   public currentTime = 0
   public duration: number
-  public src: string
   public progress: number = 0
+  public src: string
+  public status: AudioControllerStatus
 
   private listeners: AudioControllerCallback[] = []
 
@@ -37,22 +37,30 @@ class AudioController {
   private audioDecoder: MP3Decoder
   private queuedAudioSegments: IAudioSegment[] = []
   private scheduledAudioSegments = new Set<IAudioSegment>()
-  private currentSegmentEndTime = 0
-  private nextSegmentStartTime = 0
   private playLoop: NodeJS.Timeout
 
+  private playStartTime = 0
+  private contextStartTime = 0
+  private currentSegmentEndTime = 0
+  private nextSegmentStartTime = 0
+
   public setAudio(src: string, duration: number = 0) {
+    const AudioContextSafe = (window as any).AudioContext || (window as any).webkitAudioContext
+
     if (this.status === AudioControllerStatus.Playing) {
-      this.pause()
+      this.reset()
     }
 
     if (this.context) {
       this.context.close()
     }
 
-    const AudioContextSafe = (window as any).AudioContext || (window as any).webkitAudioContext
     this.context = new AudioContextSafe()
     this.currentTime = 0
+    this.playStartTime = 0
+    this.contextStartTime = 0
+    this.currentSegmentEndTime = 0
+    this.nextSegmentStartTime = 0
     this.duration = duration
     this.src = src
     this.status = AudioControllerStatus.Loading
@@ -91,9 +99,11 @@ class AudioController {
 
   public play() {
     if (this.status === AudioControllerStatus.Idle) {
+      console.log(`Starting with ${this.queuedAudioSegments.length} queued segments`)
+      console.log(`Starting with ${this.scheduledAudioSegments.values.length} scheduled segments`)
       this.status = AudioControllerStatus.Playing
-      const startContextTime = this.context.currentTime
-      const startTime = this.currentTime
+      this.contextStartTime = this.context.currentTime
+      this.playStartTime = this.currentTime
 
       this.fetchNextSegment()
       this.scheduleNextSegment()
@@ -107,9 +117,7 @@ class AudioController {
           this.scheduleNextSegment()
         }
 
-        const playTime = this.context.currentTime - startContextTime
-        this.currentTime = startTime + playTime
-        this.callListeners(AudioControllerEventName.CurrentTimeUpdated)
+        this.updateCurrentTime()
       }, 500)
 
       this.callListeners(AudioControllerEventName.StatusChange)
@@ -118,15 +126,23 @@ class AudioController {
 
   public pause() {
     if (this.status === AudioControllerStatus.Playing) {
+      this.updateCurrentTime()
       this.reset()
       this.callListeners(AudioControllerEventName.StatusChange)
     }
   }
 
   public seek(newTime: number) {
+    console.log('seek time: ' + newTime)
     this.currentTime = newTime
     this.reset()
     this.play()
+    this.callListeners(AudioControllerEventName.CurrentTimeUpdated)
+  }
+
+  private updateCurrentTime() {
+    const playDuration = this.context.currentTime - this.contextStartTime
+    this.currentTime = this.playStartTime + playDuration
     this.callListeners(AudioControllerEventName.CurrentTimeUpdated)
   }
 
@@ -139,6 +155,7 @@ class AudioController {
     for (const segement of this.scheduledAudioSegments.values()) {
       segement.source.stop()
       this.scheduledAudioSegments.delete(segement)
+      console.log('deleting segment')
     }
 
     this.queuedAudioSegments = []
