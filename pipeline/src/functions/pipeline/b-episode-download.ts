@@ -36,6 +36,7 @@ const episodeDownloadHandler = async (lambda: Lambda, job: Job, episode: Episode
   await job.log(`Episode duration is ${episodeDuration} seconds.`)
 
   episode.duration = episodeDuration
+  episode.bytes = parseInt(response.headers['content-length'], 10)
   episode.createSegments()
 
   if (episode.audio) {

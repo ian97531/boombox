@@ -49,6 +49,7 @@ export interface ISegment {
 export interface ISerializedEpisodeJob {
   audio?: IAudio
   bucket: string
+  bytes?: number
   duration?: number
   imageURL: string
   mp3URL: string
@@ -106,6 +107,7 @@ export class EpisodeJob {
   public audio?: IAudio
   public imageURL: string
   public mp3URL: string
+  public bytes: number
   public podcastSlug: string
   public publishedAt: Date
   public segments: ISegment[]
@@ -150,6 +152,7 @@ export class EpisodeJob {
 
   public getEpisode(): IEpisode {
     return {
+      bytes: this.bytes,
       duration: this.duration,
       imageURL: this.imageURL,
       mp3URL: this.mp3URL,
@@ -196,6 +199,7 @@ export class EpisodeJob {
     return {
       audio: this.audio,
       bucket: this.bucket,
+      bytes: this.bytes,
       duration: this.duration,
       imageURL: this.imageURL,
       mp3URL: this.mp3URL,
