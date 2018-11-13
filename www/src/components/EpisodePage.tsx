@@ -88,6 +88,7 @@ class EpisodePage extends React.Component<IEpisodePageProps, IEpisodeState> {
       // so that the currently episode information isn't tightly coupled with the router.
       const episodeAudioUrl = this.props.episode.mp3URL
       const episodeAudioDuration = this.props.episode.duration
+      const episodeBytes = this.props.episode.bytes
       const syncToAudio = this.state.syncToAudio
       player = ReactDOM.createPortal(
         <WindowContext>
@@ -96,6 +97,7 @@ class EpisodePage extends React.Component<IEpisodePageProps, IEpisodeState> {
               <Player
                 audioDuration={episodeAudioDuration}
                 audioUrl={episodeAudioUrl}
+                bytes={episodeBytes}
                 onSeek={this.onSeek}
                 skipBackDelegate={this.skipBackDelegate}
                 skipForwardDelegate={this.skipForwardDelegate}

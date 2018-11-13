@@ -1,5 +1,8 @@
+import { IAudioMetadata } from '@boombox/shared/src/types/models/audio'
+import { IItemResponse } from '@boombox/shared/src/types/responses'
 import Axios, { AxiosResponse } from 'axios'
 import AudioParser from 'utilities/AudioParser'
+import { api } from 'utilities/axios'
 
 export enum AudioControllerEventName {
   StatusChange,
@@ -23,6 +26,7 @@ interface IAudioSegment {
 const SEGMENT_DURATION = 5
 const SEGMENT_OVERLAP = 0.5
 const CROSSFADE_DURATION = 0.03
+const AUDIO_METADATA_URL = '/audio/metadata'
 
 type AudioControllerCallback = (eventName: AudioControllerEventName) => void
 
@@ -46,7 +50,7 @@ class AudioController {
   private currentSegmentEndTime = 0
   private nextSegmentStartTime = 0
 
-  public setAudio(src: string, duration: number = 0) {
+  public setAudio(src: string, duration: number = 0, bytes: number = 0) {
     const AudioContextSafe = (window as any).AudioContext || (window as any).webkitAudioContext
 
     if (this.status === AudioControllerStatus.Playing) {
@@ -71,28 +75,28 @@ class AudioController {
     this.audioParser.onComplete = this.onLoadComplete
     this.audioParser.onProgress = this.onLoadProgress
 
-    Axios.head(this.src).then((redirect: AxiosResponse) => {
-      if (redirect.request) {
-        const url = redirect.request.responseURL
-        if (!(window.fetch || ReadableStream)) {
-          Axios.get(url, { responseType: 'arraybuffer' }).then(
-            (response: AxiosResponse<ArrayBuffer>) => {
-              this.audioParser.parseFile(response.data)
-            }
-          )
-        } else {
-          fetch(url)
-            .then(response => response.body)
-            .then(body => {
-              if (body) {
-                this.audioParser.parseStream(body)
-              } else {
-                throw Error('Got null response.body instead of a readable stream.')
-              }
-            })
-        }
-      }
-    })
+    if (bytes) {
+      // Ensure that we have the final URL...
+      Axios.head(this.src).then(response => {
+        const url = response.request.responseURL
+        this.loadAudio(url, bytes)
+      })
+    } else {
+      // If the byte length of the file
+      api
+        .get(`${AUDIO_METADATA_URL}?url=${this.src}`)
+        .then((metadataResponse: AxiosResponse<IItemResponse<IAudioMetadata>>) => {
+          const metadata = metadataResponse.data.item
+          this.loadAudio(metadata.url, metadata.contentLength)
+        })
+        .catch(() => {
+          // The Audio Metadata API failed, so try falling back on just following redirects.
+          Axios.head(this.src).then(response => {
+            const url = response.request.responseURL
+            this.loadAudio(url)
+          })
+        })
+    }
   }
 
   public addListener(callback: AudioControllerCallback) {
@@ -135,6 +139,26 @@ class AudioController {
     this.reset()
     this.play()
     this.callListeners(AudioControllerEventName.CurrentTimeUpdated)
+  }
+
+  private loadAudio(url: string, totalBytes = 0) {
+    if (!(window.fetch || ReadableStream)) {
+      Axios.get(url, { responseType: 'arraybuffer' }).then(
+        (response: AxiosResponse<ArrayBuffer>) => {
+          this.audioParser.parseFile(response.data)
+        }
+      )
+    } else {
+      fetch(url)
+        .then(response => response.body)
+        .then(body => {
+          if (body) {
+            this.audioParser.parseStream(body, totalBytes)
+          } else {
+            throw Error('Got null response.body instead of a readable stream.')
+          }
+        })
+    }
   }
 
   private updateCurrentTime() {
@@ -221,10 +245,14 @@ class AudioController {
     }
   }
 
-  private onLoadComplete = () => {
+  private onLoadComplete = (duration: number) => {
     this.progress = 1
     if (this.status === AudioControllerStatus.Loading) {
       this.status = AudioControllerStatus.Idle
+    }
+
+    if (!this.duration) {
+      this.duration = duration
     }
     this.callListeners(AudioControllerEventName.StatusChange)
   }

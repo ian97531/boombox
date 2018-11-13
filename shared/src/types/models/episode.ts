@@ -1,5 +1,6 @@
 interface IEpisodeBase {
   duration: number
+  bytes: number
   imageURL: string
   mp3URL: string
   podcastSlug: string

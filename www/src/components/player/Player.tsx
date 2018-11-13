@@ -14,6 +14,7 @@ type ISkipDelegate = (currentTime: number) => number | void
 interface IPlayerProps extends IPlayerStore {
   audioDuration: number
   audioUrl: string
+  bytes?: number
   dispatch: Dispatch
   onSeek: (time: number) => void
   scrubProgressPercent: number | undefined
@@ -29,7 +30,7 @@ class Player extends React.Component<IPlayerProps, IPlayerState> {
   public readonly state: IPlayerState = {}
 
   public componentDidMount() {
-    AudioController.setAudio(this.props.audioUrl, this.props.audioDuration)
+    AudioController.setAudio(this.props.audioUrl, this.props.audioDuration, this.props.bytes)
   }
 
   public render() {
