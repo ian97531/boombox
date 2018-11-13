@@ -1,7 +1,7 @@
 import { parseFrames } from 'utilities/audio-parsers/mp3'
 import { appendIntArrays } from 'utilities/binaryUtils'
 
-export type IOnCompleteCallback = () => void
+export type IOnCompleteCallback = (duration: number) => void
 export type IOnProgressCallback = (progress: number) => void
 
 interface IReadableStreamChunkAvailable {
@@ -140,7 +140,8 @@ export default class AudioParser {
           readStream()
         } else {
           if (this.onComplete) {
-            this.onComplete()
+            const duration = this.frames.length * this.frameDuration
+            this.onComplete(duration)
           }
         }
       })
@@ -163,7 +164,8 @@ export default class AudioParser {
     }
 
     if (this.onComplete) {
-      this.onComplete()
+      const duration = this.frames.length * this.frameDuration
+      this.onComplete(duration)
     }
   }
 
