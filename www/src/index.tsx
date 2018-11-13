@@ -21,6 +21,7 @@ AudioController.addListener(() =>
     playerUpdate({
       currentTime: AudioController.currentTime,
       duration: AudioController.duration,
+      loadingProgress: AudioController.progress,
       status: AudioController.status,
     })
   )

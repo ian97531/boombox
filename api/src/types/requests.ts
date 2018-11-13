@@ -1,9 +1,9 @@
 import { Request } from 'express'
 
-export interface IListRequest extends Request {
+export interface IListRequest<T> extends Request {
   nextItem?: string | number
   totalItems: number
-  items: any[]
+  items: T[]
   query: IListRequestQueryParams
 }
 
@@ -12,6 +12,6 @@ export interface IListRequestQueryParams {
   pageSize: number
 }
 
-export interface IItemRequest extends Request {
-  item: any
+export interface IItemRequest<T> extends Request {
+  item: T
 }

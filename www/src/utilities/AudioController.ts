@@ -1,6 +1,13 @@
+import { IAudioMetadata } from '@boombox/shared/src/types/models/audio'
+import { IItemResponse } from '@boombox/shared/src/types/responses'
+import Axios, { AxiosResponse } from 'axios'
+import AudioParser from 'utilities/AudioParser'
+import { api } from 'utilities/axios'
+
 export enum AudioControllerEventName {
   StatusChange,
   CurrentTimeUpdated,
+  ProgressUpdated,
 }
 
 export enum AudioControllerStatus {
@@ -10,121 +17,260 @@ export enum AudioControllerStatus {
   Error = 'ERROR',
 }
 
+interface IAudioSegment {
+  source?: AudioBufferSourceNode
+  duration?: number
+  startTime: number
+}
+
+const SEGMENT_DURATION = 5
+const SEGMENT_OVERLAP = 0.5
+const CROSSFADE_DURATION = 0.03
+const AUDIO_METADATA_URL = '/audio/metadata'
+
 type AudioControllerCallback = (eventName: AudioControllerEventName) => void
 
-/**
- * An AudioController is a singleton class that is used to control the audio that the page
- * is playing. It is responsible for creating, listening to, and destroying an underlying HTML5
- * audio element.
- *
- * Below is a basic overview of how this class should be used:
- *
- *   +-----------------+
- *   |                 |
- *   | HTML5 Audio El  |
- *   |                 |
- *   +--^---------+----+
- *      |         |
- *   +--+---------v----+    +-------+    +------------+
- *   |                 +---->       +---->            |
- *   | AudioController |    | Redux |    | Components |
- *   |                 <----+       <----+            |
- *   +-----------------+    +-------+    +------------+
- *
- * The gist is that the AudioController listens to changes from its underlying HTML5 Audio element
- * and forwards that information along to any listeners. When a component wishes to update the
- * playing audio it should only ever dispatch actions which will under the hood update the
- * AudioController.
- */
 class AudioController {
-  public status: AudioControllerStatus
-  public currentTime: number
+  public currentTime = 0
   public duration: number
+  public progress: number = 0
+  public src: string
+  public status: AudioControllerStatus
 
-  private audioEl: HTMLAudioElement | null
-  private listeners: AudioControllerCallback[]
+  private listeners: AudioControllerCallback[] = []
 
-  constructor() {
-    this.status = AudioControllerStatus.Idle
+  private context: AudioContext
+  private audioParser: AudioParser
+  private queuedAudioSegments: IAudioSegment[] = []
+  private scheduledAudioSegments = new Set<IAudioSegment>()
+  private playLoop: NodeJS.Timeout
+
+  private playStartTime = 0
+  private contextStartTime = 0
+  private currentSegmentEndTime = 0
+  private nextSegmentStartTime = 0
+
+  public setAudio(src: string, duration: number = 0, bytes: number = 0) {
+    const AudioContextSafe = (window as any).AudioContext || (window as any).webkitAudioContext
+
+    if (this.status === AudioControllerStatus.Playing) {
+      this.reset()
+    }
+
+    if (this.context) {
+      this.context.close()
+    }
+
+    this.context = new AudioContextSafe()
     this.currentTime = 0
-    this.listeners = []
+    this.playStartTime = 0
+    this.contextStartTime = 0
+    this.currentSegmentEndTime = 0
+    this.nextSegmentStartTime = 0
+    this.duration = duration
+    this.src = src
+    this.status = AudioControllerStatus.Loading
+    this.callListeners(AudioControllerEventName.StatusChange)
+    this.audioParser = new AudioParser()
+    this.audioParser.onComplete = this.onLoadComplete
+    this.audioParser.onProgress = this.onLoadProgress
+
+    if (bytes) {
+      // Ensure that we have the final URL...
+      Axios.head(this.src).then(response => {
+        const url = response.request.responseURL
+        this.loadAudio(url, bytes)
+      })
+    } else {
+      // If the byte length of the file
+      api
+        .get(`${AUDIO_METADATA_URL}?url=${this.src}`)
+        .then((metadataResponse: AxiosResponse<IItemResponse<IAudioMetadata>>) => {
+          const metadata = metadataResponse.data.item
+          this.loadAudio(metadata.url, metadata.contentLength)
+        })
+        .catch(() => {
+          // The Audio Metadata API failed, so try falling back on just following redirects.
+          Axios.head(this.src).then(response => {
+            const url = response.request.responseURL
+            this.loadAudio(url)
+          })
+        })
+    }
   }
 
   public addListener(callback: AudioControllerCallback) {
     this.listeners.push(callback)
   }
 
-  public setSrc(src: string) {
-    this.createAndLoadAudioElement(src)
-  }
-
   public play() {
-    if (this.audioEl) {
-      this.audioEl.play()
-    }
-  }
+    if (this.status === AudioControllerStatus.Idle) {
+      this.status = AudioControllerStatus.Playing
+      this.contextStartTime = this.context.currentTime
+      this.playStartTime = this.currentTime
 
-  public pause() {
-    if (this.audioEl) {
-      this.audioEl.pause()
-    }
-  }
+      this.fetchNextSegment()
+      this.scheduleNextSegment()
 
-  public seek(newTime: number) {
-    if (this.audioEl) {
-      this.audioEl.currentTime = newTime
-      this.play()
-    }
-  }
+      this.playLoop = setInterval(() => {
+        if (this.status === AudioControllerStatus.Playing) {
+          if (this.scheduledAudioSegments.size < 2) {
+            this.scheduleNextSegment()
+          }
 
-  private createAndLoadAudioElement(src: string) {
-    if (this.audioEl) {
-      this.audioEl.pause()
-      this.audioEl.removeEventListener('timeupdate', this.onTimeUpdated)
-      this.audioEl.removeEventListener('loadedmetadata', this.onLoadedMetadata)
-      this.audioEl.removeEventListener('play', this.onPlay)
-      this.audioEl.removeEventListener('pause', this.onPause)
-      this.audioEl = null
-    }
+          this.updateCurrentTime()
+        }
+      }, 500)
 
-    this.status = AudioControllerStatus.Loading
-    this.callListeners(AudioControllerEventName.StatusChange)
-
-    this.audioEl = document.createElement('audio')
-    this.audioEl.addEventListener('timeupdate', this.onTimeUpdated)
-    this.audioEl.addEventListener('loadedmetadata', this.onLoadedMetadata)
-    this.audioEl.addEventListener('play', this.onPlay)
-    this.audioEl.addEventListener('pause', this.onPause)
-    this.audioEl.src = src
-  }
-
-  private callListeners(eventName: AudioControllerEventName) {
-    this.listeners.forEach(cb => cb(eventName))
-  }
-
-  private onTimeUpdated = (evt: Event) => {
-    if (this.audioEl) {
-      this.currentTime = this.audioEl.currentTime
-      this.callListeners(AudioControllerEventName.CurrentTimeUpdated)
-    }
-  }
-
-  private onLoadedMetadata = (evt: Event) => {
-    if (this.audioEl) {
-      this.status = AudioControllerStatus.Idle
-      this.duration = this.audioEl.duration
       this.callListeners(AudioControllerEventName.StatusChange)
     }
   }
 
-  private onPlay = () => {
-    this.status = AudioControllerStatus.Playing
+  public pause() {
+    if (this.status === AudioControllerStatus.Playing) {
+      this.updateCurrentTime()
+      this.reset()
+      this.callListeners(AudioControllerEventName.StatusChange)
+    }
+  }
+
+  public seek(newTime: number) {
+    this.currentTime = newTime
+    this.reset()
+    this.play()
+    this.callListeners(AudioControllerEventName.CurrentTimeUpdated)
+  }
+
+  private loadAudio(url: string, totalBytes = 0) {
+    if (!(window.fetch || ReadableStream)) {
+      Axios.get(url, { responseType: 'arraybuffer' }).then(
+        (response: AxiosResponse<ArrayBuffer>) => {
+          this.audioParser.parseFile(response.data)
+        }
+      )
+    } else {
+      fetch(url)
+        .then(response => response.body)
+        .then(body => {
+          if (body) {
+            this.audioParser.parseStream(body, totalBytes)
+          } else {
+            throw Error('Got null response.body instead of a readable stream.')
+          }
+        })
+    }
+  }
+
+  private updateCurrentTime() {
+    const playDuration = this.context.currentTime - this.contextStartTime
+    this.currentTime = this.playStartTime + playDuration
+    this.callListeners(AudioControllerEventName.CurrentTimeUpdated)
+  }
+
+  private reset() {
+    this.status = AudioControllerStatus.Idle
+    if (this.playLoop !== undefined) {
+      clearInterval(this.playLoop)
+    }
+
+    for (const segment of this.scheduledAudioSegments.values()) {
+      if (segment.source) {
+        segment.source.stop()
+      }
+      this.scheduledAudioSegments.delete(segment)
+    }
+
+    this.queuedAudioSegments = []
+    this.currentSegmentEndTime = 0
+    this.nextSegmentStartTime = this.currentTime
+  }
+
+  private fetchNextSegment() {
+    const startTime = this.nextSegmentStartTime
+    const endTime = this.nextSegmentStartTime + SEGMENT_DURATION + SEGMENT_OVERLAP
+    const arrayBuffer = this.audioParser.getArrayBufferForTime(startTime, endTime)
+    this.nextSegmentStartTime += SEGMENT_DURATION
+
+    const segment: IAudioSegment = {
+      startTime,
+    }
+    this.queuedAudioSegments.push(segment)
+
+    this.context.decodeAudioData(arrayBuffer, (audioData: AudioBuffer) => {
+      if (this.status === AudioControllerStatus.Playing) {
+        const source = this.context.createBufferSource()
+        source.buffer = audioData
+        segment.duration = audioData.duration
+        segment.source = source
+      }
+    })
+  }
+
+  private scheduleNextSegment = () => {
+    if (this.status === AudioControllerStatus.Playing && this.queuedAudioSegments.length) {
+      const segment = this.queuedAudioSegments[0]
+      if (segment.source && segment.duration) {
+        this.queuedAudioSegments.shift()
+        let nextSegmentStartTime: number | undefined
+        let nextSegmentVolumeStartTime: number | undefined
+        let nextSegmentVolumeEndTime: number | undefined
+
+        if (this.currentSegmentEndTime) {
+          nextSegmentStartTime = this.currentSegmentEndTime - SEGMENT_OVERLAP
+          nextSegmentVolumeStartTime =
+            nextSegmentStartTime + SEGMENT_OVERLAP / 2 - CROSSFADE_DURATION
+        } else {
+          nextSegmentStartTime = this.context.currentTime
+          nextSegmentVolumeStartTime = this.context.currentTime
+        }
+
+        this.currentSegmentEndTime = nextSegmentStartTime + segment.duration
+        nextSegmentVolumeEndTime = this.currentSegmentEndTime - SEGMENT_OVERLAP / 2
+
+        const gainNode = this.context.createGain()
+        gainNode.gain.setValueAtTime(0, nextSegmentStartTime)
+        gainNode.gain.setTargetAtTime(1, nextSegmentVolumeStartTime, CROSSFADE_DURATION)
+        gainNode.gain.setTargetAtTime(0, nextSegmentVolumeEndTime, CROSSFADE_DURATION)
+        gainNode.connect(this.context.destination)
+
+        segment.source.connect(gainNode)
+        segment.source.start(nextSegmentStartTime)
+
+        this.scheduledAudioSegments.add(segment)
+        segment.source.onended = () => {
+          this.scheduledAudioSegments.delete(segment)
+        }
+        this.fetchNextSegment()
+      }
+    }
+  }
+
+  private onLoadComplete = (duration: number) => {
+    this.progress = 1
+    if (this.status === AudioControllerStatus.Loading) {
+      this.status = AudioControllerStatus.Idle
+    }
+
+    if (!this.duration) {
+      this.duration = duration
+    }
     this.callListeners(AudioControllerEventName.StatusChange)
   }
 
-  private onPause = () => {
-    this.status = AudioControllerStatus.Idle
+  private onLoadProgress = (progress: number) => {
+    this.progress = progress
+
+    // TODO(ian): Implement a real algorithm for determining when it's safe to start playing the
+    // audio.
+    if (progress > 0.01 && this.status === AudioControllerStatus.Loading) {
+      this.status = AudioControllerStatus.Idle
+    }
+
     this.callListeners(AudioControllerEventName.StatusChange)
+  }
+
+  private callListeners(eventName: AudioControllerEventName) {
+    this.listeners.forEach(cb => cb(eventName))
   }
 }
 

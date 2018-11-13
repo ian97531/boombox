@@ -1,4 +1,8 @@
 import { getEpisodeForSlugs, getEpisodes, getPodcast, getStatements } from '@boombox/shared/src/db'
+import { IEpisode } from '@boombox/shared/src/types/models/episode'
+import { IPodcast } from '@boombox/shared/src/types/models/podcast'
+import { IStatement } from '@boombox/shared/src/types/models/transcript'
+
 import { NextFunction, Response, Router } from 'express'
 import * as validator from 'validator'
 import { handleAsync, validatePageSize, validateQueryParams, validateStart } from '../middleware'
@@ -33,14 +37,14 @@ export default function() {
   return router
 }
 
-const findPodcast = async (req: IItemRequest, res: Response, next: NextFunction) => {
+const findPodcast = async (req: IItemRequest<IPodcast>, res: Response, next: NextFunction) => {
   const podcastSlug = validator.escape(req.params.podcastSlug)
   req.item = await getPodcast(podcastSlug)
 
   next()
 }
 
-const findEpisode = async (req: IItemRequest, res: Response, next: NextFunction) => {
+const findEpisode = async (req: IItemRequest<IEpisode>, res: Response, next: NextFunction) => {
   const podcastSlug = validator.escape(req.params.podcastSlug)
   const episodeSlug = validator.escape(req.params.episodeSlug)
 
@@ -49,7 +53,7 @@ const findEpisode = async (req: IItemRequest, res: Response, next: NextFunction)
   next()
 }
 
-const findEpisodes = async (req: IListRequest, res: Response, next: NextFunction) => {
+const findEpisodes = async (req: IListRequest<IEpisode>, res: Response, next: NextFunction) => {
   const podcastSlug = validator.escape(req.params.podcastSlug)
   const podcast = await getPodcast(podcastSlug)
 
@@ -69,7 +73,7 @@ const findEpisodes = async (req: IListRequest, res: Response, next: NextFunction
   next()
 }
 
-const findStatements = async (req: IListRequest, res: Response, next: NextFunction) => {
+const findStatements = async (req: IListRequest<IStatement>, res: Response, next: NextFunction) => {
   const podcastSlug = validator.escape(req.params.podcastSlug)
   const episodeSlug = validator.escape(req.params.episodeSlug)
 
@@ -83,6 +87,8 @@ const findStatements = async (req: IListRequest, res: Response, next: NextFuncti
   if (statements.length === pageSize + 1) {
     req.nextItem = statements[pageSize].endTime
     req.items = statements.slice(0, pageSize)
+  } else {
+    req.items = statements
   }
 
   req.totalItems = episode.totalStatements || 0

@@ -49,6 +49,7 @@ export interface ISegment {
 export interface ISerializedEpisodeJob {
   audio?: IAudio
   bucket: string
+  bytes?: number
   duration?: number
   imageURL: string
   mp3URL: string
@@ -81,8 +82,8 @@ export class EpisodeJob {
 
     const episode = {
       bucket: buckets.episode,
-      imageURL: item.itunes.image,
-      mp3URL: item.enclosure.url,
+      imageURL: item.itunes.image.replace(/^http:/i, 'https:'),
+      mp3URL: item.enclosure.url.replace(/^http:/i, 'https:'),
       podcastSlug: podcast.slug,
       publishedAt: publishedAt.toISOString(),
       segments: [],
@@ -106,6 +107,7 @@ export class EpisodeJob {
   public audio?: IAudio
   public imageURL: string
   public mp3URL: string
+  public bytes: number
   public podcastSlug: string
   public publishedAt: Date
   public segments: ISegment[]
@@ -150,6 +152,7 @@ export class EpisodeJob {
 
   public getEpisode(): IEpisode {
     return {
+      bytes: this.bytes,
       duration: this.duration,
       imageURL: this.imageURL,
       mp3URL: this.mp3URL,
@@ -163,9 +166,9 @@ export class EpisodeJob {
     }
   }
 
-  public createSegments(episodeDuration: number) {
-    const numSegments = Math.ceil(episodeDuration / MAX_SEGMENT_LENGTH)
-    const segmentDuration = Math.ceil(episodeDuration / numSegments)
+  public createSegments() {
+    const numSegments = Math.ceil(this.duration / MAX_SEGMENT_LENGTH)
+    const segmentDuration = Math.ceil(this.duration / numSegments)
     let startTime = 0
     let index = 0
 
@@ -179,13 +182,13 @@ export class EpisodeJob {
     }
 
     // Create the last segment to the end of the episode.
-    const finalDuration = Math.ceil(episodeDuration - startTime)
+    const finalDuration = Math.ceil(this.duration - startTime)
     this.segments.push(this.createSegment(startTime, finalDuration))
 
     this.audio = {
-      duration: episodeDuration,
+      duration: this.duration,
       filename: this.buildFilename(DESIGNATIONS.ORIGINAL_AUDIO, 'mp3', {
-        duration: episodeDuration,
+        duration: this.duration,
         startTime: 0,
       }),
       startTime: 0,
@@ -196,6 +199,7 @@ export class EpisodeJob {
     return {
       audio: this.audio,
       bucket: this.bucket,
+      bytes: this.bytes,
       duration: this.duration,
       imageURL: this.imageURL,
       mp3URL: this.mp3URL,

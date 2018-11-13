@@ -87,13 +87,17 @@ class EpisodePage extends React.Component<IEpisodePageProps, IEpisodeState> {
       // to the current podcast while browsing around. To do this we will have to rework the store
       // so that the currently episode information isn't tightly coupled with the router.
       const episodeAudioUrl = this.props.episode.mp3URL
+      const episodeAudioDuration = this.props.episode.duration
+      const episodeBytes = this.props.episode.bytes
       const syncToAudio = this.state.syncToAudio
       player = ReactDOM.createPortal(
         <WindowContext>
           {({ height, scrollHeight, scrollPosition }) => {
             return (
               <Player
+                audioDuration={episodeAudioDuration}
                 audioUrl={episodeAudioUrl}
+                bytes={episodeBytes}
                 onSeek={this.onSeek}
                 skipBackDelegate={this.skipBackDelegate}
                 skipForwardDelegate={this.skipForwardDelegate}

@@ -21,7 +21,7 @@
   height: 100%;
   content: '';
   background: var(--color-smoke);
-  opacity: 0.1;
+  opacity: 0.05;
 }
 
 .PlayerBar__progress {
@@ -41,6 +41,11 @@
 .PlayerBar__progress--scrub {
   opacity: 0;
   transition: opacity 150ms ease-in-out;
+}
+
+.PlayerBar__progress--loading {
+  opacity: 0;
+  transition: width 150ms ease-in-out;
 }
 
 .PlayerBar:hover .PlayerBar__progress--scrub {

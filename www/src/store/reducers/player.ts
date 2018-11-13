@@ -6,6 +6,7 @@ export interface IPlayerStore {
   currentSrc: string | null
   currentTime: number
   duration: number
+  loadingProgress: number
   status: AudioControllerStatus
 }
 
@@ -13,6 +14,7 @@ const DEFAULT_STATE: IPlayerStore = {
   currentSrc: null,
   currentTime: 0,
   duration: 0,
+  loadingProgress: 0,
   status: AudioControllerStatus.Idle,
 }
 

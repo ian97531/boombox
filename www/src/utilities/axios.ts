@@ -34,5 +34,5 @@ const apiHost = queryStringApiHost || originApiHost || defaultApiHost
 
 export const api = Axios.create({
   baseURL: 'https://' + apiHost + DOMAIN + '/',
-  timeout: 3000,
+  timeout: 10000,
 })

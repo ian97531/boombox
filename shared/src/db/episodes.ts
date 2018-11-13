@@ -3,6 +3,7 @@ import { buildProjectionExpression, documentClient, getItem, putItem } from './d
 import { getPodcast } from './podcasts'
 
 const EPISODE_PROJECTION = [
+  'bytes',
   'duration',
   'imageURL',
   'mp3URL',
