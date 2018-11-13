@@ -2,8 +2,8 @@ import { IItemResponse, IListResponse } from '@boombox/shared/src/types/response
 import { Response } from 'express'
 import { IItemRequest, IListRequest } from '../types/requests'
 
-export function returnList(req: IListRequest, res: Response) {
-  const response: IListResponse<any> = {
+export function returnList<T>(req: IListRequest<T>, res: Response) {
+  const response: IListResponse<T> = {
     info: {
       numItems: req.items ? req.items.length : 0,
       pageSize: req.query.pageSize as number,
@@ -19,8 +19,8 @@ export function returnList(req: IListRequest, res: Response) {
   res.json(response)
 }
 
-export function returnItem(req: IItemRequest, res: Response) {
-  const response: IItemResponse<any> = {
+export function returnItem<T>(req: IItemRequest<T>, res: Response) {
+  const response: IItemResponse<T> = {
     info: {
       statusCode: 200,
     },
