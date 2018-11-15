@@ -1,8 +1,5 @@
-import { IAudioMetadata } from '@boombox/shared/src/types/models/audio'
-import { IItemResponse } from '@boombox/shared/src/types/responses'
 import Axios, { AxiosResponse } from 'axios'
 import AudioParser from 'utilities/AudioParser'
-import { api } from 'utilities/axios'
 
 export enum AudioControllerEventName {
   StatusChange,
@@ -26,7 +23,6 @@ interface IAudioSegment {
 const SEGMENT_DURATION = 5
 const SEGMENT_OVERLAP = 0.5
 const CROSSFADE_DURATION = 0.03
-const AUDIO_METADATA_URL = '/audio/metadata'
 
 type AudioControllerCallback = (eventName: AudioControllerEventName) => void
 
@@ -75,28 +71,11 @@ class AudioController {
     this.audioParser.onComplete = this.onLoadComplete
     this.audioParser.onProgress = this.onLoadProgress
 
-    if (bytes) {
-      // Ensure that we have the final URL...
-      Axios.head(this.src).then(response => {
-        const url = response.request.responseURL
-        this.loadAudio(url, bytes)
-      })
-    } else {
-      // If the byte length of the file
-      api
-        .get(`${AUDIO_METADATA_URL}?url=${this.src}`)
-        .then((metadataResponse: AxiosResponse<IItemResponse<IAudioMetadata>>) => {
-          const metadata = metadataResponse.data.item
-          this.loadAudio(metadata.url, metadata.contentLength)
-        })
-        .catch(() => {
-          // The Audio Metadata API failed, so try falling back on just following redirects.
-          Axios.head(this.src).then(response => {
-            const url = response.request.responseURL
-            this.loadAudio(url)
-          })
-        })
-    }
+    // Ensure that we have the final URL...
+    Axios.head(this.src).then(response => {
+      const url = response.request.responseURL
+      this.loadAudio(url, bytes)
+    })
   }
 
   public addListener(callback: AudioControllerCallback) {
