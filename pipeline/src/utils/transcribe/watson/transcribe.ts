@@ -1,10 +1,4 @@
-import { ITranscript } from '@boombox/shared/src/types/models/transcript'
-import { checkFileExists, getJsonFile, putJsonFile } from '@boombox/shared/src/utils/aws/s3'
-import {
-  createTranscriptionJob,
-  getTranscriptionJob,
-  WATSON_TRANSCRIBE_STATUS,
-} from '@boombox/shared/src/utils/watson/transcribe'
+import { aws, ITranscript, watson, WATSON_TRANSCRIBE_STATUS } from '@boombox/shared'
 import { EpisodeJob, ISegment } from '../../episode'
 import { WatsonTranscription } from './WatsonTranscription'
 
@@ -13,13 +7,13 @@ export const transcriptionsReadyToBeNormalized = async (episode: EpisodeJob): Pr
   let erroredJobs = 0
   const bucket = episode.transcriptionsBucket
   for (const segment of episode.segments) {
-    if (await checkFileExists(bucket, segment.transcription.watson.normalizedFilename)) {
+    if (await aws.s3.checkFileExists(bucket, segment.transcription.watson.normalizedFilename)) {
       transcriptionsReady += 1
     } else {
       if (segment.transcription.watson.jobName) {
         const jobName = segment.transcription.watson.jobName
         try {
-          const response = await getTranscriptionJob(jobName)
+          const response = await watson.transcribe.getTranscriptionJob(jobName)
           if (
             response.results &&
             response.results[0] &&
@@ -46,7 +40,10 @@ export const transcriptionsReadyToBeNormalized = async (episode: EpisodeJob): Pr
 }
 
 export const transcribeSegment = async (episode: EpisodeJob, segment: ISegment): Promise<void> => {
-  const jobName = await createTranscriptionJob(episode.segmentsBucket, segment.audio.filename)
+  const jobName = await watson.transcribe.createTranscriptionJob(
+    episode.segmentsBucket,
+    segment.audio.filename
+  )
   segment.transcription.watson.jobName = jobName
 }
 
@@ -59,10 +56,10 @@ export const getEpisodeTranscriptions = async (episode: EpisodeJob): Promise<ITr
     const rawFilename = segment.transcription.watson.rawFilename
     let transcription: ITranscript | undefined
 
-    if (!(await checkFileExists(bucket, filename))) {
+    if (!(await aws.s3.checkFileExists(bucket, filename))) {
       if (segment.transcription.watson.jobName) {
         const jobName = segment.transcription.watson.jobName
-        const job = await getTranscriptionJob(jobName)
+        const job = await watson.transcribe.getTranscriptionJob(jobName)
         if (
           job.results &&
           job.results[0] &&
@@ -70,18 +67,18 @@ export const getEpisodeTranscriptions = async (episode: EpisodeJob): Promise<ITr
           job.status === WATSON_TRANSCRIBE_STATUS.SUCCESS
         ) {
           const rawTranscription = job.results[0]
-          await putJsonFile(bucket, rawFilename, rawTranscription)
+          await aws.s3.putJsonFile(bucket, rawFilename, rawTranscription)
 
           const watsonTranscription = new WatsonTranscription(
             rawTranscription,
             segment.audio.startTime
           )
           transcription = watsonTranscription.getNormalizedTranscription()
-          await putJsonFile(bucket, filename, transcription)
+          await aws.s3.putJsonFile(bucket, filename, transcription)
         }
       }
     } else {
-      transcription = (await getJsonFile(bucket, filename)) as ITranscript
+      transcription = (await aws.s3.getJsonFile(bucket, filename)) as ITranscript
     }
 
     if (!transcription) {
@@ -98,14 +95,16 @@ export const getUntranscribedSegments = async (episode: EpisodeJob): Promise<ISe
   const untranscribedSegments: ISegment[] = []
 
   for (const segment of episode.segments) {
-    const fileExists = await checkFileExists(
+    const fileExists = await aws.s3.checkFileExists(
       episode.transcriptionsBucket,
       segment.transcription.watson.normalizedFilename
     )
     let transcriptionExists = false
     if (segment.transcription.watson.jobName) {
       try {
-        const job = await getTranscriptionJob(segment.transcription.watson.jobName)
+        const job = await watson.transcribe.getTranscriptionJob(
+          segment.transcription.watson.jobName
+        )
         if (job.status === WATSON_TRANSCRIBE_STATUS.ERROR) {
           transcriptionExists = false
         } else if (job.results && !job.results[0].results) {

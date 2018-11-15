@@ -1,4 +1,4 @@
-import { ITranscript, ITranscriptWord } from '@boombox/shared/src/types/models/transcript'
+import { ITranscript, ITranscriptWord } from '@boombox/shared'
 
 export const matchWords = (
   left: ITranscript,

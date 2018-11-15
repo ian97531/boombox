@@ -1,6 +1,4 @@
-import { getPodcast, putPodcast } from '@boombox/shared/src/db/podcasts'
-import { IEpisode } from '@boombox/shared/src/types/models/episode'
-import { IPodcast } from '@boombox/shared/src/types/models/podcast'
+import { db, IEpisode, IPodcast } from '@boombox/shared'
 import slugify from 'slugify'
 import { SLUGIFY_OPTIONS } from '../../constants'
 
@@ -97,7 +95,7 @@ export class EpisodeJob {
 
     if (!podcast.episodes[episode.slug]) {
       podcast.episodes[episode.slug] = episode.publishedAt
-      await putPodcast(podcast)
+      await db.podcasts.putPodcast(podcast)
       return new EpisodeJob(episode)
     }
   }
@@ -143,10 +141,10 @@ export class EpisodeJob {
   }
 
   public async completeWithError(): Promise<void> {
-    const podcast = await getPodcast(this.podcastSlug)
+    const podcast = await db.podcasts.getPodcast(this.podcastSlug)
     if (podcast.episodes[this.slug]) {
       delete podcast.episodes[this.slug]
-      await putPodcast(podcast)
+      await db.podcasts.putPodcast(podcast)
     }
   }
 

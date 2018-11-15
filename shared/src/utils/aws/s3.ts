@@ -1,4 +1,5 @@
 import * as AWS from 'aws-sdk'
+import { Readable } from 'stream'
 
 const s3 = new AWS.S3()
 
@@ -28,7 +29,7 @@ export const deleteFile = async (bucket: string, filename: string) => {
   return s3.deleteObject(params).promise()
 }
 
-export const getFileStream = async (bucket: string, filename: string) => {
+export const getFileStream = async (bucket: string, filename: string): Promise<Readable> => {
   const params: AWS.S3.GetObjectRequest = {
     Bucket: bucket,
     Key: filename,

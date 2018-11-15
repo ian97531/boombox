@@ -1,4 +1,4 @@
-import { sendSQSMessage } from '@boombox/shared/src/utils/aws/sqs'
+import { aws } from '@boombox/shared'
 import { Callback, Context, SQSEvent } from 'aws-lambda'
 import { Lambda, LambdaCallback } from './Lambda'
 
@@ -63,6 +63,6 @@ export const lambdaHandler = <Input>(
 export const lambdaCaller = <Output>(queueName: string) => {
   return async (lambda: Lambda, message: Output, delay: number = 0) => {
     const queue = Lambda.getEnvVariable(queueName) as string
-    await sendSQSMessage(message, queue, delay)
+    await aws.sqs.sendSQSMessage(message, queue, delay)
   }
 }

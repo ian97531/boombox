@@ -1,15 +1,18 @@
-import { checkFileExists } from '@boombox/shared/src/utils/aws/s3'
+import { aws } from '@boombox/shared'
 import { ENV, episodeCaller, episodeHandler, EpisodeJob } from '../../utils/episode'
 import { Job } from '../../utils/job'
 import { Lambda } from '../../utils/lambda'
-import { aws, watson } from '../../utils/transcribe'
+import { aws as awsTranscribe, watson as watsonTranscribe } from '../../utils/transcribe'
 import { episodeNormalize } from './e-episode-normalize'
 
 const episodeTranscribeHandler = async (lambda: Lambda, job: Job, episode: EpisodeJob) => {
   let completeSegments = 0
 
   for (const segment of episode.segments) {
-    const segmentComplete = await checkFileExists(episode.segmentsBucket, segment.audio.filename)
+    const segmentComplete = await aws.s3.checkFileExists(
+      episode.segmentsBucket,
+      segment.audio.filename
+    )
     if (segmentComplete) {
       completeSegments += 1
     }
@@ -17,19 +20,19 @@ const episodeTranscribeHandler = async (lambda: Lambda, job: Job, episode: Episo
 
   if (episode.segments.length === completeSegments) {
     await job.log('All segments have completed transcoding.')
-    const awsSegments = await aws.getUntranscribedSegments(episode)
+    const awsSegments = await awsTranscribe.getUntranscribedSegments(episode)
     for (const segment of awsSegments) {
       await job.log(`Starting an AWS transcription job for ${segment.audio.filename}`)
-      await aws.transcribeSegment(episode, segment)
+      await awsTranscribe.transcribeSegment(episode, segment)
     }
     await job.log(
       `Started transcribing ${awsSegments.length} of ${episode.segments.length} segments with AWS.`
     )
 
-    const watsonSegments = await watson.getUntranscribedSegments(episode)
+    const watsonSegments = await watsonTranscribe.getUntranscribedSegments(episode)
     for (const segment of watsonSegments) {
       await job.log(`Starting a Watson transcription job for ${segment.audio.filename}`)
-      await watson.transcribeSegment(episode, segment)
+      await watsonTranscribe.transcribeSegment(episode, segment)
     }
     await job.log(
       `Started transcribing ${watsonSegments.length} of ${

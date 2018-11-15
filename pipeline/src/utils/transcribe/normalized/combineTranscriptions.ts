@@ -1,5 +1,4 @@
-import { ITranscript, ITranscriptWord } from '@boombox/shared/src/types/models/transcript'
-import { round } from '@boombox/shared/src/utils/numbers'
+import { ITranscript, ITranscriptWord, utils } from '@boombox/shared'
 import { computeOverlapBetweenWords, createWordMap } from './transcription'
 
 interface ICandidateTranscriptWord extends ITranscriptWord {
@@ -44,7 +43,7 @@ export const combineTranscriptions = (
       if (overlap) {
         candidateWords.push({
           ...candidateWord,
-          overlap: round(overlap, 3),
+          overlap: utils.numbers.round(overlap, 3),
         })
       }
     }

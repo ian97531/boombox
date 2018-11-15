@@ -1,4 +1,4 @@
-import { ITranscript } from '@boombox/shared/src/types/models/transcript'
+import { ITranscript } from '@boombox/shared'
 import * as fs from 'fs'
 import { normalized } from '../utils/transcribe/normalized'
 

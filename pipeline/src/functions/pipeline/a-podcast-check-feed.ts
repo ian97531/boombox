@@ -1,5 +1,4 @@
-import { getPodcast, putPodcast } from '@boombox/shared/src/db/podcasts'
-import { IPodcast } from '@boombox/shared/src/types/models/podcast'
+import { db, IPodcast } from '@boombox/shared'
 import * as Parser from 'rss-parser'
 import slugify from 'slugify'
 import { SLUGIFY_OPTIONS } from '../../constants'
@@ -60,10 +59,10 @@ const podcastCheckFeedHandler = async (lambda: Lambda): Promise<void> => {
 
   let podcast: IPodcast
   try {
-    podcast = await getPodcast(podcastSlug)
+    podcast = await db.podcasts.getPodcast(podcastSlug)
   } catch (error) {
     podcast = createPodcastFromFeed(podcastSlug, feed)
-    await putPodcast(podcast)
+    await db.podcasts.putPodcast(podcast)
   }
 
   let episodeIndex = 0

@@ -1,4 +1,4 @@
-import { IStatement } from '@boombox/shared/src/types/models/transcript'
+import { IStatement } from '@boombox/shared'
 import classNames from 'classnames'
 import * as React from 'react'
 import { formatTimeMarker } from 'utilities/Time'

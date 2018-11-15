@@ -1,4 +1,4 @@
-import { IStatementWord } from '@boombox/shared/src/types/models/transcript'
+import { IStatementWord } from '@boombox/shared'
 import classNames from 'classnames'
 import * as React from 'react'
 import { connect } from 'react-redux'

@@ -1,10 +1,12 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
+    "allowJs": false,
     "baseUrl": ".",
     "paths": {
       "*": ["src/*"]
     },
+    "outDir": "lib",
     "module": "commonjs",
     "target": "es2017",
     "lib": ["es2017", "dom"]

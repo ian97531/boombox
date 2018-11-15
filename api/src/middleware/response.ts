@@ -1,4 +1,4 @@
-import { IItemResponse, IListResponse } from '@boombox/shared/src/types/responses'
+import { IItemResponse, IListResponse } from '@boombox/shared'
 import { Response } from 'express'
 import { IItemRequest, IListRequest } from '../types/requests'
 

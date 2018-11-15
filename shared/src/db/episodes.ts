@@ -1,4 +1,3 @@
-import { IEpisode, IEpisodeDBRecord } from '../types/models/episode'
 import { buildProjectionExpression, documentClient, getItem, putItem } from './dynamo'
 import { getPodcast } from './podcasts'
 
@@ -16,7 +15,29 @@ const EPISODE_PROJECTION = [
   'totalStatements',
 ]
 
-function convertToIEpisode(result: IEpisodeDBRecord): IEpisode {
+interface IEpisodeBase {
+  duration: number
+  bytes: number
+  imageURL: string
+  mp3URL: string
+  podcastSlug: string
+  publishedAt: Date | string
+  slug: string
+  speakers: string[]
+  summary: string
+  title: string
+  totalStatements?: number
+}
+
+export interface IEpisode extends IEpisodeBase {
+  publishedAt: Date
+}
+
+export interface IEpisodeDBRecord extends IEpisodeBase {
+  publishedAt: string
+}
+
+export function convertToIEpisode(result: IEpisodeDBRecord): IEpisode {
   const episode: IEpisode = {
     ...result,
     publishedAt: new Date(result.publishedAt),
@@ -24,7 +45,7 @@ function convertToIEpisode(result: IEpisodeDBRecord): IEpisode {
   return episode
 }
 
-function convertToIEpisodeDBRecord(episode: IEpisode): IEpisodeDBRecord {
+export function convertToIEpisodeDBRecord(episode: IEpisode): IEpisodeDBRecord {
   const result: IEpisodeDBRecord = {
     ...episode,
     publishedAt: episode.publishedAt.toISOString(),

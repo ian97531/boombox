@@ -1,5 +1,4 @@
-import { ITranscript } from '@boombox/shared/src/types/models/transcript'
-import { IWatsonWord } from '@boombox/shared/src/types/watson'
+import { ITranscript, IWatsonWord } from '@boombox/shared'
 import {
   SpeakerLabelsResult,
   SpeechRecognitionResult,

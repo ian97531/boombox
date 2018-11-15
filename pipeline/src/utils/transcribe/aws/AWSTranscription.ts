@@ -2,8 +2,8 @@ import {
   IAWSTranscriptionItem,
   IAWSTranscriptionResult,
   IAWSTranscriptionSpeakerLabelSegment,
-} from '@boombox/shared/src/types/aws'
-import { ITranscript } from '@boombox/shared/src/types/models/transcript'
+  ITranscript,
+} from '@boombox/shared'
 import { round } from '@boombox/shared/src/utils/numbers'
 
 enum AWS_TRANSCRIPTION {

@@ -1,9 +1,5 @@
-import { putEpisode, putIStatmentDBRecord } from '@boombox/shared/src/db'
-import {
-  IStatementDBRecord,
-  ITranscript,
-  ITranscriptWord,
-} from '@boombox/shared/src/types/models/transcript'
+import { db } from '@boombox/shared'
+import { IStatementDBRecord, ITranscript, ITranscriptWord } from '@boombox/shared/lib/db/statements'
 import {
   checkFileExists,
   deleteFile,
@@ -49,7 +45,7 @@ const episodeInsertHandler = async (lambda: Lambda, job: Job, episode: EpisodeJo
         startTime,
         words,
       }
-      await putIStatmentDBRecord(episode.getEpisode(), record)
+      await db.statements.putIStatmentDBRecord(episode.getEpisode(), record)
       episode.totalStatements += 1
       if (episode.totalStatements % 25 === 0) {
         await job.log(`${episode.totalStatements} statements inserted.`)
@@ -59,7 +55,7 @@ const episodeInsertHandler = async (lambda: Lambda, job: Job, episode: EpisodeJo
 
     if (insertQueue.length === 0) {
       await job.log(`Inserted ${episode.totalStatements} statements.`)
-      await putEpisode(episode.getEpisode())
+      await db.episodes.putEpisode(episode.getEpisode())
       await deleteFile(episode.bucket, episode.transcriptions.insertQueue)
       await job.log('Added the episode record to dynamodb.')
       await job.completeWithSuccess()
