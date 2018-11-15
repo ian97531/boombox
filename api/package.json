@@ -20,7 +20,7 @@
     "lint": "tslint 'src/**/*.ts'",
     "start": "ts-node src/local.ts",
     "build-shared": "cd node_modules/@boombox/shared && yarn build",
-    "build": "yarn clean && tsc",
+    "build": "yarn build-shared && yarn clean && tsc",
     "domain": "serverless create_domain",
     "package": "yarn build-shared && yarn build && serverless package",
     "deploy": "yarn build-shared && yarn build && serverless deploy"

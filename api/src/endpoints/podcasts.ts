@@ -1,9 +1,16 @@
-import { db, IEpisode, IPodcast, IStatement } from '@boombox/shared'
 import { NextFunction, Response, Router } from 'express'
 import * as validator from 'validator'
-import { handleAsync, validatePageSize, validateQueryParams, validateStart } from '../middleware'
-import { returnItem, returnList } from '../middleware/response'
-import { IItemRequest, IListRequest } from '../types/requests'
+
+import { db, IEpisode, IPodcast, IStatement } from '@boombox/shared'
+import {
+  handleAsync,
+  returnItem,
+  returnList,
+  validatePageSize,
+  validateQueryParams,
+  validateStart,
+} from 'middleware'
+import { IItemRequest, IListRequest } from 'types/requests'
 
 export default function() {
   const router = Router()

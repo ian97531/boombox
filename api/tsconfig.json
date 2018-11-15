@@ -2,6 +2,9 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "baseUrl": ".",
+    "paths": {
+      "*": ["src/*"]
+    },
     "outDir": "build/dist",
     "module": "commonjs",
     "target": "es2017",
