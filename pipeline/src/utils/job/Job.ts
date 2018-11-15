@@ -1,5 +1,5 @@
 import { aws, ILogger } from '@boombox/shared'
-import { Lambda } from '../lambda/Lambda'
+import { Lambda } from 'utils/lambda'
 import { ENV } from './constants'
 import { putJob } from './db'
 

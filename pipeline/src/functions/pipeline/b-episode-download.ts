@@ -1,11 +1,12 @@
 import * as AWS from 'aws-sdk'
 import Axios from 'axios'
 import * as mp3Duration from 'mp3-duration'
-import { ENV, episodeCaller, episodeHandler, EpisodeJob } from '../../utils/episode'
-import { Job } from '../../utils/job'
-import { Lambda } from '../../utils/lambda'
-import { episodeSegment } from './c-episode-segment'
-import { episodeTranscribe } from './d-episode-transcribe'
+
+import { episodeSegment } from 'functions/pipeline/c-episode-segment'
+import { episodeTranscribe } from 'functions/pipeline/d-episode-transcribe'
+import { ENV, episodeCaller, episodeHandler, EpisodeJob } from 'utils/episode'
+import { Job } from 'utils/job'
+import { Lambda } from 'utils/lambda'
 
 const axios = Axios.create()
 const s3 = new AWS.S3()

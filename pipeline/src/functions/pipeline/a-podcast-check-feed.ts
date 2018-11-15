@@ -1,11 +1,12 @@
-import { db, IPodcast } from '@boombox/shared'
 import * as Parser from 'rss-parser'
 import slugify from 'slugify'
-import { SLUGIFY_OPTIONS } from '../../constants'
-import { ENV, EpisodeJob } from '../../utils/episode'
-import { Job } from '../../utils/job'
-import { Lambda, lambdaCaller, lambdaHandler } from '../../utils/lambda'
-import { episodeDownload } from './b-episode-download'
+
+import { db, IPodcast } from '@boombox/shared'
+import { episodeDownload } from 'functions/pipeline/b-episode-download'
+import { SLUGIFY_OPTIONS } from 'pipeline-constants'
+import { ENV, EpisodeJob } from 'utils/episode'
+import { Job } from 'utils/job'
+import { Lambda, lambdaCaller, lambdaHandler } from 'utils/lambda'
 
 const FEED_URL = 'https://www.hellointernet.fm/podcast?format=rss'
 const EPISODE_JOB_LIMIT = 1

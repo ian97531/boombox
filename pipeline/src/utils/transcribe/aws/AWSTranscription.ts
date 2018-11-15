@@ -3,8 +3,8 @@ import {
   IAWSTranscriptionResult,
   IAWSTranscriptionSpeakerLabelSegment,
   ITranscript,
+  utils,
 } from '@boombox/shared'
-import { round } from '@boombox/shared/src/utils/numbers'
 
 enum AWS_TRANSCRIPTION {
   PRONUNCIATION = 'pronunciation',
@@ -33,11 +33,11 @@ export class AWSTranscription {
       if (item.type === AWS_TRANSCRIPTION.PRONUNCIATION) {
         const speaker = this.getNextSpeaker()
         normalizedTranscription.push({
-          confidence: round(parseFloat(item.alternatives[0].confidence), 3),
+          confidence: utils.numbers.round(parseFloat(item.alternatives[0].confidence), 3),
           content: item.alternatives[0].content,
-          endTime: round(parseFloat(item.end_time) + this.startTime, 3),
+          endTime: utils.numbers.round(parseFloat(item.end_time) + this.startTime, 3),
           speaker,
-          startTime: round(parseFloat(item.start_time) + this.startTime, 3),
+          startTime: utils.numbers.round(parseFloat(item.start_time) + this.startTime, 3),
         })
       }
     }

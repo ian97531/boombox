@@ -1,10 +1,10 @@
 import { aws } from '@boombox/shared'
-import { ENV, episodeCaller, episodeHandler, EpisodeJob } from '../../utils/episode'
-import { Job } from '../../utils/job'
-import { Lambda } from '../../utils/lambda'
-import { aws as awsTranscribe, normalized, watson as watsonTranscibe } from '../../utils/transcribe'
-import { episodeTranscribe } from './d-episode-transcribe'
-import { episodeInsert } from './f-episode-insert'
+import { episodeTranscribe } from 'functions/pipeline/d-episode-transcribe'
+import { episodeInsert } from 'functions/pipeline/f-episode-insert'
+import { ENV, episodeCaller, episodeHandler, EpisodeJob } from 'utils/episode'
+import { Job } from 'utils/job'
+import { Lambda } from 'utils/lambda'
+import { aws as awsTranscribe, normalized, watson as watsonTranscibe } from 'utils/transcribe'
 
 const episodeNormalizeHandler = async (lambda: Lambda, job: Job, episode: EpisodeJob) => {
   let awsComplete = 0

@@ -1,4 +1,5 @@
 import { Context } from 'aws-lambda'
+
 export type LambdaCallback = () => Promise<void>
 
 export class Lambda {
