@@ -3,9 +3,9 @@ import { json, urlencoded } from 'body-parser'
 import cors = require('cors')
 import express = require('express')
 
-import podcasts from 'endpoints/podcasts'
-import { Forbidden } from 'errors'
-import { handleErrors, handleNotFound } from 'middleware'
+import podcasts from './endpoints/podcasts'
+import { Forbidden } from './errors'
+import { handleErrors, handleNotFound } from './middleware'
 
 const app: express.Application = express()
 

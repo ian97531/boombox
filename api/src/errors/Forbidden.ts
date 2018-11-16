@@ -1,4 +1,4 @@
-import { IError } from 'types/error'
+import { IError } from '../types/error'
 
 export default class Forbidden extends Error implements IError {
   public status = 403
