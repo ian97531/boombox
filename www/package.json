@@ -33,13 +33,13 @@
   },
   "scripts": {
     "precommit": "lint-staged",
-    "start": "yarn build-shared && react-scripts-ts start",
+    "start": "react-scripts-ts start",
     "build-shared": "cd node_modules/@boombox/shared && yarn build",
-    "build": "yarn build-shared && react-scripts-ts build",
+    "build": "react-scripts-ts build",
     "test": "react-scripts-ts test --env=jsdom",
     "copyToS3": "serverless client deploy --no-config-change --no-cors-change --no-policy-change --no-confirm",
     "domain": "serverless deploy",
-    "deploy": "yarn build && yarn domain && yarn copyToS3",
+    "deploy": "yarn build-shared && yarn build && yarn domain && yarn copyToS3",
     "eject": "react-scripts-ts eject"
   },
   "devDependencies": {
