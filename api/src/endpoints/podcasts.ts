@@ -9,8 +9,8 @@ import {
   validatePageSize,
   validateQueryParams,
   validateStart,
-} from 'middleware'
-import { IItemRequest, IListRequest } from 'types/requests'
+} from '../middleware'
+import { IItemRequest, IListRequest } from '../types/requests'
 
 export default function() {
   const router = Router()

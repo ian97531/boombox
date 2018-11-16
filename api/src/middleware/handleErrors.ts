@@ -1,5 +1,6 @@
-import { IErrorResponse } from '@boombox/shared'
 import { NextFunction, Request, Response } from 'express'
+
+import { IErrorResponse } from '@boombox/shared'
 import { IError } from '../types/error'
 
 // const EXCLUDE_ENV = [

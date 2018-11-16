@@ -1,5 +1,5 @@
-import { Job, jobCaller, jobHandler } from 'utils/job'
-import { Lambda } from 'utils/lambda'
+import { Job, jobCaller, jobHandler } from '../job'
+import { Lambda } from '../lambda'
 import { EpisodeJob, ISerializedEpisodeJob } from './EpisodeJob'
 
 const episodeHandlerFunction = (

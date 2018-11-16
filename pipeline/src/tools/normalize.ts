@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 
 import { ITranscript } from '@boombox/shared'
-import { normalized } from 'utils/transcribe'
+import { normalized } from '../utils/transcribe'
 
 const timings = [
   {

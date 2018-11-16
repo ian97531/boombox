@@ -1,7 +1,7 @@
 import slugify from 'slugify'
 
 import { db, IEpisode, IPodcast } from '@boombox/shared'
-import { SLUGIFY_OPTIONS } from 'pipeline-constants'
+import { SLUGIFY_OPTIONS } from '../../pipeline-constants'
 
 const MAX_SEGMENT_LENGTH = 55 * 60 // 55 minutes
 const SEGMENT_OVERLAP_LENGTH = 4 * 60 // 4 minutes

@@ -1,9 +1,9 @@
 import { aws } from '@boombox/shared'
-import { episodeNormalize } from 'functions/pipeline/e-episode-normalize'
-import { ENV, episodeCaller, episodeHandler, EpisodeJob } from 'utils/episode'
-import { Job } from 'utils/job'
-import { Lambda } from 'utils/lambda'
-import { aws as awsTranscribe, watson as watsonTranscribe } from 'utils/transcribe'
+import { ENV, episodeCaller, episodeHandler, EpisodeJob } from '../../utils/episode'
+import { Job } from '../../utils/job'
+import { Lambda } from '../../utils/lambda'
+import { aws as awsTranscribe, watson as watsonTranscribe } from '../../utils/transcribe'
+import { episodeNormalize } from './e-episode-normalize'
 
 const episodeTranscribeHandler = async (lambda: Lambda, job: Job, episode: EpisodeJob) => {
   let completeSegments = 0

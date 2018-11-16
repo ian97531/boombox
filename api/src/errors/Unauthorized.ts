@@ -1,4 +1,4 @@
-import { IError } from 'types/error'
+import { IError } from '../types/error'
 
 export default class Unauthorized extends Error implements IError {
   public status = 401

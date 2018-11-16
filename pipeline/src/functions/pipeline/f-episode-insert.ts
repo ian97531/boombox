@@ -1,7 +1,7 @@
 import { aws, db, IStatementDBRecord, ITranscript, ITranscriptWord, utils } from '@boombox/shared'
-import { ENV, episodeCaller, episodeHandler, EpisodeJob } from 'utils/episode'
-import { Job } from 'utils/job'
-import { Lambda } from 'utils/lambda'
+import { ENV, episodeCaller, episodeHandler, EpisodeJob } from '../../utils/episode'
+import { Job } from '../../utils/job'
+import { Lambda } from '../../utils/lambda'
 
 const episodeInsertHandler = async (lambda: Lambda, job: Job, episode: EpisodeJob) => {
   const insertQueueFilename = episode.transcriptions.insertQueue
