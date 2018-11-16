@@ -1,10 +1,36 @@
-import { IEpisode } from '../types/models/episode'
-import { ISpeaker, IStatement, IStatementDBRecord } from '../types/models/transcript'
 import { buildProjectionExpression, documentClient, putItem } from './dynamo'
-import { getEpisode } from './episodes'
-import { getSpeakers } from './speakers'
+import { getEpisode, IEpisode } from './episodes'
+import { getSpeakers, ISpeaker } from './speakers'
 
 const STATEMENT_PROJECTION = ['startTime', 'endTime', 'speaker', 'words']
+
+export interface IStatementWord {
+  startTime: number
+  endTime: number
+  content: string
+}
+
+export interface ITranscriptWord extends IStatementWord {
+  confidence: number
+  speaker: number
+}
+
+interface IStatementBase {
+  startTime: number
+  endTime: number
+  speaker: ISpeaker | number
+  words: IStatementWord[]
+}
+
+export interface IStatement extends IStatementBase {
+  speaker: ISpeaker
+}
+
+export interface IStatementDBRecord extends IStatementBase {
+  speaker: number
+}
+
+export type ITranscript = ITranscriptWord[]
 
 const convertToIStatement = (result: IStatementDBRecord, speakers: ISpeaker[]): IStatement => {
   const statement: IStatement = {

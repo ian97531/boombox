@@ -1,10 +1,10 @@
-import { putJsonFile } from '@boombox/shared/src/utils/aws/s3'
-import { ENV, episodeCaller, episodeHandler, EpisodeJob } from '../../utils/episode'
-import { Job } from '../../utils/job'
-import { Lambda } from '../../utils/lambda'
-import { aws, normalized, watson } from '../../utils/transcribe'
-import { episodeTranscribe } from './d-episode-transcribe'
-import { episodeInsert } from './f-episode-insert'
+import { aws } from '@boombox/shared'
+import { episodeTranscribe } from 'functions/pipeline/d-episode-transcribe'
+import { episodeInsert } from 'functions/pipeline/f-episode-insert'
+import { ENV, episodeCaller, episodeHandler, EpisodeJob } from 'utils/episode'
+import { Job } from 'utils/job'
+import { Lambda } from 'utils/lambda'
+import { aws as awsTranscribe, normalized, watson as watsonTranscibe } from 'utils/transcribe'
 
 const episodeNormalizeHandler = async (lambda: Lambda, job: Job, episode: EpisodeJob) => {
   let awsComplete = 0
@@ -13,8 +13,8 @@ const episodeNormalizeHandler = async (lambda: Lambda, job: Job, episode: Episod
   const totalSegments = episode.segments.length
 
   try {
-    awsComplete = await aws.transcriptionsReadyToBeNormalized(episode)
-    watsonComplete = await watson.transcriptionsReadyToBeNormalized(episode)
+    awsComplete = await awsTranscribe.transcriptionsReadyToBeNormalized(episode)
+    watsonComplete = await watsonTranscibe.transcriptionsReadyToBeNormalized(episode)
     await job.log(`${awsComplete} of ${totalSegments} AWS transcriptions are complete.`)
     await job.log(`${watsonComplete} of ${totalSegments} Watson transcriptions are complete.`)
   } catch (error) {
@@ -24,22 +24,22 @@ const episodeNormalizeHandler = async (lambda: Lambda, job: Job, episode: Episod
 
   if (awsComplete === totalSegments && watsonComplete === totalSegments) {
     await job.log(`Fetching the transcriptions for ${episode.podcastSlug} ${episode.slug}.`)
-    const awsTranscriptions = await aws.getEpisodeTranscriptions(episode)
-    const watsonTranscriptions = await watson.getEpisodeTranscriptions(episode)
+    const awsTranscriptions = await awsTranscribe.getEpisodeTranscriptions(episode)
+    const watsonTranscriptions = await watsonTranscibe.getEpisodeTranscriptions(episode)
 
     await job.log(`Zipping ${awsTranscriptions.length} segments into a single transcription.`)
     const awsTranscription = normalized.appendAllTranscriptions(awsTranscriptions)
     const watsonTranscription = normalized.appendAllTranscriptions(watsonTranscriptions)
-    await putJsonFile(episode.bucket, episode.transcriptions.aws, awsTranscription)
-    await putJsonFile(episode.bucket, episode.transcriptions.watson, watsonTranscription)
+    await aws.s3.putJsonFile(episode.bucket, episode.transcriptions.aws, awsTranscription)
+    await aws.s3.putJsonFile(episode.bucket, episode.transcriptions.watson, watsonTranscription)
 
     await job.log('Combining the AWS and Watson transcriptions.')
     const finalTranscription = normalized.combineTranscriptions(
       awsTranscription,
       watsonTranscription
     )
-    await putJsonFile(episode.bucket, episode.transcriptions.final, finalTranscription)
-    await putJsonFile(episode.bucket, episode.transcriptions.insertQueue, finalTranscription)
+    await aws.s3.putJsonFile(episode.bucket, episode.transcriptions.final, finalTranscription)
+    await aws.s3.putJsonFile(episode.bucket, episode.transcriptions.insertQueue, finalTranscription)
 
     episodeInsert(lambda, job, episode)
   } else if (transcriptionErrors) {

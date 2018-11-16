@@ -7,6 +7,14 @@
   "author": "Ian White and Andrew Hoyer",
   "private": true,
   "license": "UNLICENSED",
+  "directories": {
+    "lib": "lib"
+  },
+  "files": [
+    "lib"
+  ],
+  "main": "lib/index.js",
+  "typings": "lib/index.d.ts",
   "dependencies": {
     "@types/aws-sdk": "^2.7.0",
     "@types/node": "^10.9.4",
@@ -29,10 +37,10 @@
   },
   "scripts": {
     "format": "prettier --write --config .prettierrc.yaml '**/*.ts'",
-    "clean": "rm -f src/**/*.js && rm -f src/**/*.js.map",
+    "clean": "rm -rf lib/*",
     "lint": "tslint 'src/**/*.ts'",
     "start": "ts-node src/local.ts",
-    "build": "yarn clean && tsc",
+    "build": "yarn clean && tsc --declaration",
     "deploy": "serverless deploy"
   }
 }

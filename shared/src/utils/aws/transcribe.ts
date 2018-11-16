@@ -1,7 +1,7 @@
 import * as AWS from 'aws-sdk'
 import { retryThrottledRequests } from './throttle'
 
-const transcribe = new AWS.TranscribeService()
+const transcribe = AWS.TranscribeService ? new AWS.TranscribeService() : undefined
 
 export enum AWS_TRANSCRIBE_STATUS {
   ERROR = 'FAILED',
@@ -32,9 +32,13 @@ export const createTranscriptionJob = async (
     TranscriptionJobName: jobName,
   }
 
-  await retryThrottledRequests(async () => {
-    return await transcribe.startTranscriptionJob(params).promise()
-  }, timeoutMilliseconds)
+  if (transcribe) {
+    await retryThrottledRequests(async () => {
+      return await transcribe.startTranscriptionJob(params).promise()
+    }, timeoutMilliseconds)
+  } else {
+    throw new Error('The transcribe service cannot be used in browsers.')
+  }
 }
 
 export const getTranscriptionJob = async (
@@ -43,13 +47,17 @@ export const getTranscriptionJob = async (
   const params = {
     TranscriptionJobName: jobName,
   }
-  const response = await retryThrottledRequests(async () => {
-    return await transcribe.getTranscriptionJob(params).promise()
-  })
-  if (response.TranscriptionJob) {
-    return response.TranscriptionJob
+  if (transcribe) {
+    const response = await retryThrottledRequests(async () => {
+      return await transcribe.getTranscriptionJob(params).promise()
+    })
+    if (response.TranscriptionJob) {
+      return response.TranscriptionJob
+    } else {
+      throw Error(`Transcription Job not found for jobName: ${jobName}`)
+    }
   } else {
-    throw Error(`Transcription Job not found for jobName: ${jobName}`)
+    throw new Error('The transcribe service cannot be used in browsers.')
   }
 }
 
@@ -57,7 +65,11 @@ export const deleteTranscriptionJob = async (jobName: string): Promise<void> => 
   const params = {
     TranscriptionJobName: jobName,
   }
-  await retryThrottledRequests(async () => {
-    return await transcribe.deleteTranscriptionJob(params).promise()
-  })
+  if (transcribe) {
+    await retryThrottledRequests(async () => {
+      return await transcribe.deleteTranscriptionJob(params).promise()
+    })
+  } else {
+    throw new Error('The transcribe service cannot be used in browsers.')
+  }
 }

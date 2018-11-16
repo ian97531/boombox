@@ -1,4 +1,4 @@
-interface IResponseBase<Info, Response> {
+interface IResponseBase<Info> {
   info: Info
 }
 
@@ -19,12 +19,12 @@ interface IListInfo extends IInfo {
   start: number
 }
 
-export interface IItemResponse<ResponseObject> extends IResponseBase<IInfo, ResponseObject> {
+export interface IItemResponse<ResponseObject> extends IResponseBase<IInfo> {
   item: ResponseObject
 }
 
-export interface IListResponse<ResponseObject> extends IResponseBase<IListInfo, ResponseObject[]> {
+export interface IListResponse<ResponseObject> extends IResponseBase<IListInfo> {
   items: ResponseObject[]
 }
 
-export interface IErrorResponse extends IResponseBase<IErrorInfo, null> {}
+export interface IErrorResponse extends IResponseBase<IErrorInfo> {}

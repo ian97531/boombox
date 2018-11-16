@@ -1,4 +1,4 @@
-import { IStatement } from '@boombox/shared/src/types/models/transcript'
+import { IStatement } from '@boombox/shared'
 import {
   IGetStatementErrorAction,
   IGetStatementPendingAction,

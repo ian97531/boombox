@@ -1,4 +1,4 @@
-import { ENV as JOB_ENV } from '../job/constants'
+import { ENV as JOB_ENV } from 'utils/job'
 
 export class ENV extends JOB_ENV {
   public static readonly AWS_TRANSCRIBE_QUEUE = 'AWS_TRANSCRIBE_QUEUE'

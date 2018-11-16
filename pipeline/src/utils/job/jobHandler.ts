@@ -1,5 +1,5 @@
-import { Lambda } from '../lambda/Lambda'
-import { lambdaCaller, lambdaHandler } from '../lambda/lambdaHandler'
+import { Lambda } from 'utils/lambda'
+import { lambdaCaller, lambdaHandler } from 'utils/lambda'
 import { getJob, putJob } from './db'
 import { Job } from './Job'
 

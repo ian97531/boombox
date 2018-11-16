@@ -1,4 +1,4 @@
-import { IErrorResponse } from '@boombox/shared/src/types/responses'
+import { IErrorResponse } from '@boombox/shared'
 import { NextFunction, Request, Response } from 'express'
 import { IError } from '../types/error'
 

@@ -1,4 +1,4 @@
-import { IStatement } from '@boombox/shared/src/types/models/transcript'
+import { IStatement } from '@boombox/shared'
 import Statement from 'components/statement/Statement'
 import { WindowContext } from 'components/WindowContext'
 import * as React from 'react'

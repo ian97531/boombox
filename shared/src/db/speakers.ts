@@ -1,5 +1,11 @@
-import { ISpeaker } from '../types/models/transcript'
 import { documentClient } from './dynamo'
+
+export interface ISpeaker {
+  guid: string
+  avatarURL: string
+  isHost?: boolean
+  name: string
+}
 
 export async function getSpeakers(slugs: string[]): Promise<ISpeaker[]> {
   const speakers: ISpeaker[] = []

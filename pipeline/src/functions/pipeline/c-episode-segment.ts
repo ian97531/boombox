@@ -1,9 +1,8 @@
-import { checkFileExists } from '@boombox/shared/src/utils/aws/s3'
-import { createJob } from '@boombox/shared/src/utils/aws/transcode'
-import { ENV, episodeCaller, episodeHandler, EpisodeJob, ISegment } from '../../utils/episode'
-import { Job } from '../../utils/job'
-import { Lambda } from '../../utils/lambda'
-import { episodeTranscribe } from './d-episode-transcribe'
+import { aws } from '@boombox/shared'
+import { episodeTranscribe } from 'functions/pipeline/d-episode-transcribe'
+import { ENV, episodeCaller, episodeHandler, EpisodeJob, ISegment } from 'utils/episode'
+import { Job } from 'utils/job'
+import { Lambda } from 'utils/lambda'
 
 const startSegmentJob = async (
   pipelineId: string,
@@ -16,8 +15,8 @@ const startSegmentJob = async (
     throw Error('The provided episode does not have audio information set.')
   }
 
-  if (!(await checkFileExists(episode.segmentsBucket, segment.audio.filename))) {
-    await createJob(
+  if (!(await aws.s3.checkFileExists(episode.segmentsBucket, segment.audio.filename))) {
+    await aws.transcode.createJob(
       pipelineId,
       episode.audio.filename,
       segment.audio.filename,

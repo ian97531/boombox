@@ -1,5 +1,4 @@
-import { IEpisode } from '@boombox/shared/src/types/models/episode'
-import { IStatement } from '@boombox/shared/src/types/models/transcript'
+import { IEpisode, IStatement } from '@boombox/shared'
 import classNames from 'classnames'
 import ConversationPanel from 'components/ConversationPanel'
 import Player from 'components/player/Player'

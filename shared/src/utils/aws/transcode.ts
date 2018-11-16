@@ -2,7 +2,7 @@ import * as AWS from 'aws-sdk'
 
 const elasticTranscoder = new AWS.ElasticTranscoder()
 
-export const enum FORMATS {
+export const enum AWS_TRANSCODE_PRESETS {
   M4A_PRESET = '1351620000001-100120', // M4A AAC 160 44k
   MP3_PRESET = '1351620000001-300030', // MP3 160 44k
   OGG_PRESET = '1531717800275-2wz911', // OGG Vorbis 160 44k
@@ -15,7 +15,7 @@ export const createJob = async (
   outputBucket: string,
   startTime: number,
   duration: number,
-  format: FORMATS = FORMATS.MP3_PRESET
+  format: AWS_TRANSCODE_PRESETS = AWS_TRANSCODE_PRESETS.MP3_PRESET
 ): Promise<void> => {
   const jobInput = {
     Key: inputFilename,

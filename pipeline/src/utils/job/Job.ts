@@ -1,5 +1,5 @@
-import { createLogger, getLogger, ILogger } from '@boombox/shared/src/utils/aws/cloudwatch'
-import { Lambda } from '../lambda/Lambda'
+import { aws, ILogger } from '@boombox/shared'
+import { Lambda } from 'utils/lambda'
 import { ENV } from './constants'
 import { putJob } from './db'
 
@@ -28,7 +28,7 @@ export class Job {
     const jobName = startTime.replace(/:/gi, '-')
     const logGroupName = Lambda.getEnvVariable(ENV.JOBS_LOG_GROUP) as string
     const logStreamName = `${jobName} ${logName}`
-    const logger = await createLogger(logStreamName, logGroupName)
+    const logger = await aws.cloudwatch.createLogger(logStreamName, logGroupName)
 
     const job: IJob = {
       logGroupName,
@@ -49,7 +49,7 @@ export class Job {
   constructor(lambda: Lambda, job: IJob) {
     this.job = job
     this.lambdaName = Lambda.getEnvVariable(ENV.AWS_LAMBDA_FUNCTION_NAME) as string
-    this.logger = getLogger(job.logStreamName, job.logGroupName, job.sequenceToken)
+    this.logger = aws.cloudwatch.getLogger(job.logStreamName, job.logGroupName, job.sequenceToken)
     this.lambda = lambda
   }
 

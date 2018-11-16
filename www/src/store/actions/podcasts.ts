@@ -1,5 +1,4 @@
-import { IPodcast } from '@boombox/shared/src/types/models/podcast'
-import { IItemResponse } from '@boombox/shared/src/types/responses'
+import { IItemResponse, IPodcast } from '@boombox/shared'
 import { AxiosResponse } from 'axios'
 import { Action, ActionCreator, AnyAction, Dispatch } from 'redux'
 import { api } from 'utilities/axios'

@@ -1,14 +1,7 @@
-import { IAWSTranscription } from '@boombox/shared/src/types/aws'
-import { ITranscript } from '@boombox/shared/src/types/models/transcript'
-import { checkFileExists, getJsonFile, putJsonFile } from '@boombox/shared/src/utils/aws/s3'
-import {
-  AWS_TRANSCRIBE_STATUS,
-  createTranscriptionJob,
-  deleteTranscriptionJob,
-  getTranscriptionJob,
-} from '@boombox/shared/src/utils/aws/transcribe'
 import Axios from 'axios'
-import { EpisodeJob, ISegment } from '../../episode'
+
+import { aws, AWS_TRANSCRIBE_STATUS, IAWSTranscription, ITranscript } from '@boombox/shared'
+import { EpisodeJob, ISegment } from 'utils/episode'
 import { AWSTranscription } from './AWSTranscription'
 
 const axios = Axios.create()
@@ -22,19 +15,19 @@ export const transcriptionsReadyToBeNormalized = async (episode: EpisodeJob): Pr
   let erroredJobs = 0
   const bucket = episode.transcriptionsBucket
   for (const segment of episode.segments) {
-    if (await checkFileExists(bucket, segment.transcription.aws.normalizedFilename)) {
+    if (await aws.s3.checkFileExists(bucket, segment.transcription.aws.normalizedFilename)) {
       transcriptionsReady += 1
     } else {
       const jobName = createJobName(segment.audio.filename)
       try {
-        const response = await getTranscriptionJob(jobName)
+        const response = await aws.transcribe.getTranscriptionJob(jobName)
         if (
           response.Transcript &&
           response.TranscriptionJobStatus === AWS_TRANSCRIBE_STATUS.SUCCESS
         ) {
           transcriptionsReady += 1
         } else if (response && response.TranscriptionJobStatus === AWS_TRANSCRIBE_STATUS.ERROR) {
-          await deleteTranscriptionJob(jobName)
+          await aws.transcribe.deleteTranscriptionJob(jobName)
           erroredJobs += 1
         }
       } catch (error) {
@@ -51,7 +44,11 @@ export const transcriptionsReadyToBeNormalized = async (episode: EpisodeJob): Pr
 
 export const transcribeSegment = async (episode: EpisodeJob, segment: ISegment): Promise<void> => {
   const jobName = createJobName(segment.audio.filename)
-  await createTranscriptionJob(episode.segmentsBucket, segment.audio.filename, jobName)
+  await aws.transcribe.createTranscriptionJob(
+    episode.segmentsBucket,
+    segment.audio.filename,
+    jobName
+  )
 }
 
 export const getEpisodeTranscriptions = async (episode: EpisodeJob): Promise<ITranscript[]> => {
@@ -63,9 +60,9 @@ export const getEpisodeTranscriptions = async (episode: EpisodeJob): Promise<ITr
     const rawFilename = segment.transcription.aws.rawFilename
     let transcription: ITranscript | undefined
 
-    if (!(await checkFileExists(bucket, filename))) {
+    if (!(await aws.s3.checkFileExists(bucket, filename))) {
       const jobName = createJobName(segment.audio.filename)
-      const response = await getTranscriptionJob(jobName)
+      const response = await aws.transcribe.getTranscriptionJob(jobName)
       if (
         response.Transcript &&
         response.TranscriptionJobStatus === AWS_TRANSCRIBE_STATUS.SUCCESS
@@ -77,16 +74,16 @@ export const getEpisodeTranscriptions = async (episode: EpisodeJob): Promise<ITr
           url,
         })
         const rawTranscription = (transcriptResponse.data as IAWSTranscription).results
-        await putJsonFile(bucket, rawFilename, rawTranscription)
+        await aws.s3.putJsonFile(bucket, rawFilename, rawTranscription)
 
         const awsTranscription = new AWSTranscription(rawTranscription, segment.audio.startTime)
         transcription = awsTranscription.getNormalizedTranscription()
-        await putJsonFile(bucket, filename, transcription)
+        await aws.s3.putJsonFile(bucket, filename, transcription)
       } else {
         throw Error(`Cannot get transcription for job: ${jobName}`)
       }
     } else {
-      transcription = (await getJsonFile(bucket, filename)) as ITranscript
+      transcription = (await aws.s3.getJsonFile(bucket, filename)) as ITranscript
     }
 
     transcriptions.push(transcription)
@@ -99,7 +96,7 @@ export const getUntranscribedSegments = async (episode: EpisodeJob): Promise<ISe
   const untranscribedSegments: ISegment[] = []
 
   for (const segment of episode.segments) {
-    const fileExists = await checkFileExists(
+    const fileExists = await aws.s3.checkFileExists(
       episode.transcriptionsBucket,
       segment.transcription.aws.normalizedFilename
     )
@@ -107,9 +104,9 @@ export const getUntranscribedSegments = async (episode: EpisodeJob): Promise<ISe
     let transcriptionExists = false
     try {
       const jobName = createJobName(segment.audio.filename)
-      const job = await getTranscriptionJob(jobName)
+      const job = await aws.transcribe.getTranscriptionJob(jobName)
       if (job.TranscriptionJobStatus === AWS_TRANSCRIBE_STATUS.ERROR) {
-        await deleteTranscriptionJob(jobName)
+        await aws.transcribe.deleteTranscriptionJob(jobName)
         transcriptionExists = false
       } else {
         transcriptionExists = true

@@ -2,10 +2,10 @@ import { eventContext } from 'aws-serverless-express/middleware'
 import { json, urlencoded } from 'body-parser'
 import cors = require('cors')
 import express = require('express')
-import audio from './endpoints/audio'
-import podcasts from './endpoints/podcasts'
-import { Forbidden } from './errors'
-import { handleErrors, handleNotFound } from './middleware'
+
+import podcasts from 'endpoints/podcasts'
+import { Forbidden } from 'errors'
+import { handleErrors, handleNotFound } from 'middleware'
 
 const app: express.Application = express()
 
@@ -33,7 +33,6 @@ app.use(urlencoded({ extended: true }))
 app.use(eventContext())
 
 app.use('/podcasts', podcasts())
-app.use('/audio', audio())
 app.use(handleNotFound)
 app.use(handleErrors)
 

@@ -1,5 +1,4 @@
-import { IEpisode } from '@boombox/shared/src/types/models/episode'
-import { IItemResponse, IListResponse } from '@boombox/shared/src/types/responses'
+import { db, IEpisode, IEpisodeDBRecord, IItemResponse, IListResponse } from '@boombox/shared'
 import { AxiosResponse } from 'axios'
 import { Action, ActionCreator, AnyAction, Dispatch } from 'redux'
 import { api } from 'utilities/axios'
@@ -121,7 +120,7 @@ export const getEpisodes: ActionCreator<any> = (options: IGetEpisodesOptions) =>
 
     try {
       while (moreResults) {
-        const response: AxiosResponse<IListResponse<IEpisode>> = await api.get(
+        const response: AxiosResponse<IListResponse<IEpisodeDBRecord>> = await api.get(
           '/podcasts/' + options.podcastSlug + '/episodes',
           { params }
         )
@@ -132,7 +131,9 @@ export const getEpisodes: ActionCreator<any> = (options: IGetEpisodesOptions) =>
           moreResults = false
         }
 
-        dispatch(getEpisodesSuccess(options, response.data.info.totalItems, response.data.items))
+        const episodes = response.data.items.map(record => db.episodes.convertToIEpisode(record))
+
+        dispatch(getEpisodesSuccess(options, response.data.info.totalItems, episodes))
       }
     } catch (err) {
       dispatch(getEpisodesError(options, err.message))
@@ -145,11 +146,11 @@ export const getEpisode: ActionCreator<any> = (options: IGetSingleEpisodeOptions
     dispatch(getSingleEpisodePending(options))
 
     try {
-      const response: AxiosResponse<IItemResponse<IEpisode>> = await api.get(
+      const response: AxiosResponse<IItemResponse<IEpisodeDBRecord>> = await api.get(
         '/podcasts/' + options.podcastSlug + '/episodes/' + options.episodeSlug
       )
 
-      dispatch(getSingleEpisodeSuccess(options, response.data.item))
+      dispatch(getSingleEpisodeSuccess(options, db.episodes.convertToIEpisode(response.data.item)))
     } catch (err) {
       dispatch(getSingleEpisodeError(options, err.message))
     }
