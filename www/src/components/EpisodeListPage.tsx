@@ -1,14 +1,13 @@
 import { IEpisode, IPodcast } from '@boombox/shared'
+import { EpisodeEntry } from 'components/EpisodeEntry'
 import * as React from 'react'
 import { connect } from 'react-redux'
 import { RouteComponentProps, withRouter } from 'react-router'
-import { Link } from 'react-router-dom'
 import { Dispatch } from 'redux'
 import { getEpisodes } from 'store/actions/episodes'
 import { getPodcast } from 'store/actions/podcasts'
 import { IEpisodesStore } from 'store/reducers/episodes'
 import { IPodcastsStore } from 'store/reducers/podcasts'
-import { formatDate, formatDuration, formatTime } from 'utilities/Time'
 
 import './EpisodeListPage.css'
 
@@ -25,27 +24,6 @@ interface IEpisodeListPageProps extends IEpisodeListPageRouterProps {
   pending: boolean
   podcastSlug: string
 }
-
-const EpisodeEntry: React.SFC<{ episode: IEpisode }> = ({ episode }: { episode: IEpisode }) => (
-  <li className="EpisodeListPage__entry">
-    <h4 className="EpisodeListPage__entry-heading">
-      <Link
-        className="EpisodeListPage__entry-heading-link"
-        to={`/podcasts/${episode.podcastSlug}/${episode.slug}`}
-      >
-        {episode.title}
-      </Link>
-    </h4>
-    <p className="EpisodeListPage__entry-meta">
-      {formatDate(episode.publishedAt)} at {formatTime(episode.publishedAt)} |{' '}
-      {formatDuration(episode.duration)}
-    </p>
-    <div
-      dangerouslySetInnerHTML={{ __html: episode.summary }}
-      className="EpisodeListPage__entry-summary"
-    />
-  </li>
-)
 
 class EpisodeListPage extends React.Component<IEpisodeListPageProps> {
   public componentDidMount() {
