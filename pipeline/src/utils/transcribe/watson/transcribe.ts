@@ -1,5 +1,5 @@
 import { aws, ITranscript, watson, WATSON_TRANSCRIBE_STATUS } from '@boombox/shared'
-import { EpisodeJob, ISegment } from 'utils/episode'
+import { EpisodeJob, ISegment } from '../../episode'
 import { WatsonTranscription } from './WatsonTranscription'
 
 export const transcriptionsReadyToBeNormalized = async (episode: EpisodeJob): Promise<number> => {

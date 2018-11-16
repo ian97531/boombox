@@ -1,7 +1,7 @@
 import Axios from 'axios'
 
 import { aws, AWS_TRANSCRIBE_STATUS, IAWSTranscription, ITranscript } from '@boombox/shared'
-import { EpisodeJob, ISegment } from 'utils/episode'
+import { EpisodeJob, ISegment } from '../../episode'
 import { AWSTranscription } from './AWSTranscription'
 
 const axios = Axios.create()

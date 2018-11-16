@@ -1,8 +1,8 @@
 import { aws } from '@boombox/shared'
-import { episodeTranscribe } from 'functions/pipeline/d-episode-transcribe'
-import { ENV, episodeCaller, episodeHandler, EpisodeJob, ISegment } from 'utils/episode'
-import { Job } from 'utils/job'
-import { Lambda } from 'utils/lambda'
+import { ENV, episodeCaller, episodeHandler, EpisodeJob, ISegment } from '../../utils/episode'
+import { Job } from '../../utils/job'
+import { Lambda } from '../../utils/lambda'
+import { episodeTranscribe } from './d-episode-transcribe'
 
 const startSegmentJob = async (
   pipelineId: string,
