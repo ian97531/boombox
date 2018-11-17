@@ -26,14 +26,6 @@ export const matchWords = (
   return match
 }
 
-export const computeDistanceBetweenWords = (
-  left: ITranscriptWord,
-  right: ITranscriptWord,
-  rightStart: number = 0
-): number => {
-  return Math.abs(left.startTime - (right.startTime + rightStart))
-}
-
 export const createTranscriptWord = (
   input: ITranscriptWord,
   timeOffset: number = 0,
