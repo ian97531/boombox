@@ -1,5 +1,5 @@
 import { ITranscript, utils } from '@boombox/shared'
-import { computeDistanceBetweenWords, createTranscriptWord, matchWords } from './transcription'
+import { createTranscriptWord, matchWords } from './transcription'
 
 export const appendTranscriptions = (
   left: ITranscript,
@@ -19,24 +19,25 @@ export const appendTranscriptions = (
   }
 
   let matchFound = false
-  let rightIndex = 1
+  let rightIndex = 0
 
-  while (!matchFound && leftIndex < left.length) {
-    while (
-      !matchFound &&
-      rightIndex < right.length &&
-      computeDistanceBetweenWords(left[leftIndex], right[rightIndex]) < 5
-    ) {
-      matchFound = matchWords(left, right, leftIndex, rightIndex, withOverlap)
-
-      if (!matchFound) {
+  const leftSlice = left.slice(leftIndex).map(word => word.content.toLowerCase())
+  while (!matchFound && rightIndex + withOverlap < right.length) {
+    const rightWord = right[rightIndex].content.toLowerCase()
+    let offset = 0
+    while (!matchFound) {
+      offset = leftSlice.indexOf(rightWord, offset)
+      if (offset !== -1) {
+        if (matchWords(left, right, leftIndex + offset, rightIndex, withOverlap)) {
+          matchFound = true
+          leftIndex += offset
+        } else {
+          offset += 1
+        }
+      } else {
         rightIndex += 1
+        break
       }
-    }
-
-    if (!matchFound) {
-      rightIndex = 0
-      leftIndex += 1
     }
   }
 
