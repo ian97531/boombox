@@ -1,4 +1,6 @@
-import { ITranscript, ITranscriptWord } from '@boombox/shared'
+import { IStatementDBRecord, ITranscript, ITranscriptWord } from '@boombox/shared'
+
+const TERMINATING_PUNCTUATION = ['.', '?', '!']
 
 export const matchWords = (
   left: ITranscript,
@@ -94,4 +96,62 @@ export const computeOverlapBetweenWords = (
   const sameWord = left.content.toLowerCase() === right.content.toLowerCase()
 
   return percentOverlap > 0 && sameWord ? 1 : percentOverlap
+}
+
+const getDominantSpeaker = (words: ITranscriptWord[]): number => {
+  const speakerDurations: number[] = []
+
+  for (const word of words) {
+    const duration = word.endTime - word.startTime
+    speakerDurations[word.speaker] = speakerDurations[word.speaker]
+      ? speakerDurations[word.speaker] + duration
+      : duration
+  }
+
+  let dominantSpeaker = 0
+  speakerDurations.reduce((largestDuration, currentDuration, currentSpeaker) => {
+    dominantSpeaker = currentDuration > largestDuration ? currentSpeaker : dominantSpeaker
+    return currentDuration > largestDuration ? currentDuration : largestDuration
+  }, 0)
+
+  return dominantSpeaker
+}
+
+export const getSentences = (transcript: ITranscript): IStatementDBRecord[] => {
+  let currentSentenceStartIndex = 0
+  const sentences: IStatementDBRecord[] = []
+
+  transcript.forEach((word, index) => {
+    const lastChar = word.content[word.content.length - 1]
+    const nextWord = transcript[index + 1]
+    if (
+      TERMINATING_PUNCTUATION.indexOf(lastChar) !== -1 ||
+      (nextWord && word.endTime !== nextWord.startTime)
+    ) {
+      const words = transcript.slice(currentSentenceStartIndex, index + 1)
+      const sentence: IStatementDBRecord = {
+        endTime: words[words.length - 1].endTime,
+        speaker: getDominantSpeaker(words),
+        startTime: words[0].startTime,
+        words,
+      }
+
+      // If the previous sentence was by the same speaker combine the two setences.
+      if (sentences.length) {
+        const previousSentence = sentences[sentences.length - 1]
+
+        if (previousSentence.speaker === sentence.speaker) {
+          previousSentence.words = [...previousSentence.words, ...sentence.words]
+          previousSentence.endTime = sentence.endTime
+        } else {
+          sentences.push(sentence)
+        }
+      } else {
+        sentences.push(sentence)
+      }
+      currentSentenceStartIndex = index + 1
+    }
+  })
+
+  return sentences
 }

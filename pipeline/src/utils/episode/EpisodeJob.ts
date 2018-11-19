@@ -3,7 +3,7 @@ import slugify from 'slugify'
 import { db, IEpisode, IPodcast } from '@boombox/shared'
 import { SLUGIFY_OPTIONS } from '../../pipeline-constants'
 
-const MAX_SEGMENT_LENGTH = 55 * 60 // 55 minutes
+const MAX_SEGMENT_LENGTH = 190 * 60 // 190 minutes
 const SEGMENT_OVERLAP_LENGTH = 4 * 60 // 4 minutes
 
 enum DESIGNATIONS {
@@ -12,6 +12,9 @@ enum DESIGNATIONS {
   AWS_RAW_TRANSCRIPTION_SEGMENT = 'aws-raw-transcription-segment',
   AWS_TRANSCRIPTION_SEGMENT = 'aws-transcription-segment',
   AWS_TRANSCRIPTION = 'aws-transcription-full',
+  GOOGLE_RAW_TRANSCRIPTION_SEGMENT = 'google-raw-transcription-segment',
+  GOOGLE_TRANSCRIPTION_SEGMENT = 'google-transcription-segment',
+  GOOGLE_TRANSCRIPTION = 'google-transcription',
   WATSON_RAW_TRANSCRIPTION_SEGMENT = 'watson-raw-transcription-segment',
   WATSON_TRANSCRIPTION_SEGMENT = 'watson-transcription-segment',
   WATSON_TRANSCRIPTION = 'watson-transcription',
@@ -118,6 +121,7 @@ export class EpisodeJob {
   public transcriptions: {
     aws: string
     final: string
+    google: string
     insertQueue: string
     watson: string
   }
@@ -135,6 +139,7 @@ export class EpisodeJob {
       this.transcriptions = {
         aws: this.buildFilename(DESIGNATIONS.AWS_TRANSCRIPTION, 'json'),
         final: this.buildFilename(DESIGNATIONS.FINAL_TRANSCRIPTION, 'json'),
+        google: this.buildFilename(DESIGNATIONS.GOOGLE_TRANSCRIPTION, 'json'),
         insertQueue: this.buildFilename(DESIGNATIONS.FINAL_TRANSCRIPTION_INSERT_QUEUE, 'json'),
         watson: this.buildFilename(DESIGNATIONS.WATSON_TRANSCRIPTION, 'json'),
       }
@@ -173,10 +178,9 @@ export class EpisodeJob {
 
     while (index < numSegments - 1) {
       // Create a segment and a small segment that overlaps the previous and next segments
-      const overlapStartTime = startTime + segmentDuration - SEGMENT_OVERLAP_LENGTH / 2
-      this.segments.push(this.createSegment(startTime, segmentDuration))
-      this.segments.push(this.createSegment(overlapStartTime, SEGMENT_OVERLAP_LENGTH))
-      startTime += segmentDuration
+      const duration = index === 0 ? segmentDuration : segmentDuration + SEGMENT_OVERLAP_LENGTH
+      this.segments.push(this.createSegment(startTime, duration))
+      startTime = startTime + segmentDuration - SEGMENT_OVERLAP_LENGTH
       index += 1
     }
 
@@ -186,7 +190,7 @@ export class EpisodeJob {
 
     this.audio = {
       duration: this.duration,
-      filename: this.buildFilename(DESIGNATIONS.ORIGINAL_AUDIO, 'mp3', {
+      filename: this.buildFilename(DESIGNATIONS.ORIGINAL_AUDIO, 'flac', {
         duration: this.duration,
         startTime: 0,
       }),

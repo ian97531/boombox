@@ -96,6 +96,11 @@ custom:
         credentials:
           name: watson_transcribe_credentials
           arn: arn:aws:secretsmanager:${self:provider.region}:${self:custom.global.awsAccountId}:secret:watson_transcribe_credentials-rRBeuP
+    google:
+      transcribe:
+        credentials:
+          name: google_cloud_platform_credentials
+          arn: arn:aws:secretsmanager:${self:provider.region}:${self:custom.global.awsAccountId}:secret:google_cloud_platform_credentials-AER9R7
 
   logGroups:
     jobs:
@@ -119,6 +124,7 @@ provider:
     SEGMENTS_BUCKET: ${self:custom.buckets.segments}
     TRANSCRIPTIONS_BUCKET: ${self:custom.buckets.transcriptions}
     TRANSCODE_PIPELINE_ID: ${self:custom.transcoder.pipeline.id}
+    GOOGLE_TRANSCRIBE_CREDENTIALS: ${self:custom.secrets.google.transcribe.credentials.name}
     WATSON_TRANSCRIBE_CREDENTIALS: ${self:custom.secrets.watson.transcribe.credentials.name}
     PODCAST_CHECK_FEED_QUEUE: ${self:custom.steps.podcastCheckFeed.sqs.url}
     EPISODE_DOWNLOAD_QUEUE: ${self:custom.steps.episodeDownload.sqs.url}
