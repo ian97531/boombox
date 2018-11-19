@@ -82,6 +82,10 @@ export class EpisodeJob {
     const publishedAt = new Date()
     publishedAt.setTime(Date.parse(item.pubDate))
 
+    // In case the title can't be slugified (because maybe it's all emojis).
+    const slugified = slugify(item.title, SLUGIFY_OPTIONS)
+    const title = slugified === '-' ? `Episode #${item.itunes.episode}` : item.title
+    const slug = slugified === '-' ? slugify(title, SLUGIFY_OPTIONS) : slugified
     const episode = {
       bucket: buckets.episode,
       imageURL: item.itunes.image.replace(/^http:/i, 'https:'),
@@ -90,10 +94,10 @@ export class EpisodeJob {
       publishedAt: publishedAt.toISOString(),
       segments: [],
       segmentsBucket: buckets.segments || buckets.episode,
-      slug: slugify(item.title, SLUGIFY_OPTIONS),
+      slug,
       speakers: podcast.speakers,
       summary: item.content,
-      title: item.title,
+      title,
       transcriptionsBucket: buckets.transcriptions || buckets.episode,
     }
 
