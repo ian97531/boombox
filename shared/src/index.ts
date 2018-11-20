@@ -9,9 +9,10 @@ import * as s3 from './utils/aws/s3'
 import * as sqs from './utils/aws/sqs'
 import * as throttle from './utils/aws/throttle'
 import * as transcode from './utils/aws/transcode'
-import * as transcribe from './utils/aws/transcribe'
+import * as awsTranscribe from './utils/aws/transcribe'
 
-import * as watsonTranscribe from './utils/watson/transcribe'
+import * as googleStorage from './utils/google/storage'
+import * as googleTranscribe from './utils/google/transcribe'
 
 import * as numbers from './utils/numbers'
 import * as timing from './utils/timing'
@@ -30,16 +31,17 @@ export const aws = {
   sqs,
   throttle,
   transcode,
-  transcribe,
+  transcribe: awsTranscribe,
+}
+
+export const google = {
+  storage: googleStorage,
+  transcribe: googleTranscribe,
 }
 
 export const utils = {
   numbers,
   timing,
-}
-
-export const watson = {
-  transcribe: watsonTranscribe,
 }
 
 export { IEpisode, IEpisodeDBRecord } from './db/episodes'
@@ -53,9 +55,8 @@ export {
   ITranscriptWord,
 } from './db/statements'
 export * from './types/aws'
+export * from './types/google'
 export * from './types/responses'
-export * from './types/watson'
 export { ILogger } from './utils/aws/cloudwatch'
 export { AWS_TRANSCODE_PRESETS } from './utils/aws/transcode'
 export { AWS_TRANSCRIBE_STATUS } from './utils/aws/transcribe'
-export { WATSON_TRANSCRIBE_STATUS } from './utils/watson/transcribe'

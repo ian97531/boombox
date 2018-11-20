@@ -1,13 +1,10 @@
-import { v1p1beta1 as speech } from '@google-cloud/speech'
-import * as fs from 'fs'
-import { GoogleTranscription } from '../utils/transcribe/google/GoogleTranscription'
+import Axios from 'axios'
 
 // Imports the Google Cloud client library
 
 // Creates a client
-const client = new speech.SpeechClient()
 
-const gcsUri = 'gs://boombox-pipeline-test-audio/106.flac'
+const gcsUri = 'gs://boombox-pipeline-test-audio/audio.flac'
 const encoding = 'FLAC'
 const sampleRateHertz = 44100
 const languageCode = 'en-US'
@@ -42,23 +39,15 @@ const request = {
   config,
 }
 
+const url =
+  'https://speech.googleapis.com/v1p1beta1/speech:longrunningrecognize?key=AIzaSyBRrz1MBifITp0Tkk2SivJMPxAih6KpWXo'
 // Detects speech in the audio file. This creates a recognition job that you
 // can wait for now, or get its result later.
-client
-  .longRunningRecognize(request)
-  .then((data: any) => {
-    const operation = data[0]
-    // Get a Promise representation of the final result of the job
-    return operation.promise()
+Axios.post(url, request)
+  .then(response => {
+    console.log(response)
   })
-  .then((data: any) => {
-    console.log('received data')
-
-    const transcription = new GoogleTranscription(data[0])
-    const normalized = transcription.getNormalizedTranscription()
-    fs.writeFileSync('/Users/iwhite/Desktop/gcp.json', JSON.stringify(normalized, null, 2), 'utf-8')
-    console.log('done')
-  })
-  .catch((err: Error) => {
-    console.error('ERROR:', err)
+  .catch((error: Error) => {
+    console.log('ERROR')
+    console.log(error)
   })

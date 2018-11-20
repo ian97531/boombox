@@ -1,32 +1,9 @@
-import { ITranscript } from '@boombox/shared'
-
-type ISpeakerTag = number
-
-interface IGoogleTranscriptionTimecode {
-  seconds?: string
-  nanos?: number
-}
-
-interface IGoogleTranscriptionWord {
-  startTime: IGoogleTranscriptionTimecode
-  endTime: IGoogleTranscriptionTimecode
-  word: string
-  speakerTag: ISpeakerTag
-}
-
-interface IGoogleTranscriptionAlternative {
-  transcript: string
-  confidence: number
-  words: IGoogleTranscriptionWord[]
-}
-
-interface IGoogleTranscriptionResult {
-  alternatives: IGoogleTranscriptionAlternative[]
-}
-
-interface IGoogleTranscription {
-  results: IGoogleTranscriptionResult[]
-}
+import {
+  IGoogleTranscription,
+  IGoogleTranscriptionSpeakerTag,
+  IGoogleTranscriptionWord,
+  ITranscript,
+} from '@boombox/shared'
 
 export class GoogleTranscription {
   private words: IGoogleTranscriptionWord[]
@@ -51,16 +28,14 @@ export class GoogleTranscription {
     return normalizedTranscription
   }
 
-  private getSpeakerforTag(speakerTag: ISpeakerTag): number {
+  private getSpeakerforTag(speakerTag: IGoogleTranscriptionSpeakerTag): number {
     if (this.speakers.indexOf(speakerTag) === -1) {
       this.speakers.push(speakerTag)
     }
     return this.speakers.indexOf(speakerTag)
   }
 
-  private timecodeToSeconds(timecode: IGoogleTranscriptionTimecode): number {
-    const seconds = timecode.seconds ? parseInt(timecode.seconds, 10) : 0
-    const nanos = timecode.nanos ? timecode.nanos / 1000000000 : 0
-    return seconds + nanos + this.startTime
+  private timecodeToSeconds(timecode: string): number {
+    return parseFloat(timecode) + this.startTime
   }
 }

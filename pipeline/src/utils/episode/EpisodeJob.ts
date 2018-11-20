@@ -34,16 +34,19 @@ interface IBuckets {
   transcriptions?: string
 }
 
-interface ITranscriptionJob {
+export type ITranscriptionJobName = string | number
+
+export interface ITranscriptionJob {
   normalizedFilename: string
   rawFilename: string
-  jobName?: string
+  jobName?: ITranscriptionJobName
 }
 
 export interface ISegment {
   audio: IAudio
   transcription: {
     aws: ITranscriptionJob
+    google: ITranscriptionJob
     watson: ITranscriptionJob
   }
 }
@@ -66,6 +69,7 @@ export interface ISerializedEpisodeJob {
   transcriptions?: {
     aws: string
     final: string
+    google: string
     insertQueue: string
     watson: string
   }
@@ -194,7 +198,7 @@ export class EpisodeJob {
 
     this.audio = {
       duration: this.duration,
-      filename: this.buildFilename(DESIGNATIONS.ORIGINAL_AUDIO, 'flac', {
+      filename: this.buildFilename(DESIGNATIONS.ORIGINAL_AUDIO, 'mp3', {
         duration: this.duration,
         startTime: 0,
       }),
@@ -247,7 +251,7 @@ export class EpisodeJob {
   }
 
   private createSegment(startTime: number, duration: number): ISegment {
-    const audioFilename = this.buildFilename(DESIGNATIONS.AUDIO_SEGMENT, 'mp3', {
+    const audioFilename = this.buildFilename(DESIGNATIONS.AUDIO_SEGMENT, 'flac', {
       duration,
       startTime,
     })
@@ -261,6 +265,20 @@ export class EpisodeJob {
       duration,
       startTime,
     })
+
+    const googleFilename = this.buildFilename(DESIGNATIONS.GOOGLE_TRANSCRIPTION_SEGMENT, 'json', {
+      duration,
+      startTime,
+    })
+
+    const googleRawFilename = this.buildFilename(
+      DESIGNATIONS.GOOGLE_RAW_TRANSCRIPTION_SEGMENT,
+      'json',
+      {
+        duration,
+        startTime,
+      }
+    )
 
     const watsonFilename = this.buildFilename(DESIGNATIONS.WATSON_TRANSCRIPTION_SEGMENT, 'json', {
       duration,
@@ -286,6 +304,10 @@ export class EpisodeJob {
         aws: {
           normalizedFilename: awsFilename,
           rawFilename: awsRawFilename,
+        },
+        google: {
+          normalizedFilename: googleFilename,
+          rawFilename: googleRawFilename,
         },
         watson: {
           normalizedFilename: watsonFilename,

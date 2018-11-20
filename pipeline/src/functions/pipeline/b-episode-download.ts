@@ -6,7 +6,6 @@ import { ENV, episodeCaller, episodeHandler, EpisodeJob } from '../../utils/epis
 import { Job } from '../../utils/job'
 import { Lambda } from '../../utils/lambda'
 import { episodeSegment } from './c-episode-segment'
-import { episodeTranscribe } from './d-episode-transcribe'
 
 const axios = Axios.create()
 const s3 = new AWS.S3()
@@ -47,13 +46,7 @@ const episodeDownloadHandler = async (lambda: Lambda, job: Job, episode: Episode
       `Completed writing ${episode.mp3URL} to ${episode.bucket}/${episode.audio.filename}.`
     )
 
-    if (episode.segments.length === 1) {
-      job.log('Skipping transcoding because the entire audio fits into a single segment.')
-      episode.segments[0].audio.filename = episode.audio.filename
-      episodeTranscribe(lambda, job, episode)
-    } else {
-      episodeSegment(lambda, job, episode)
-    }
+    episodeSegment(lambda, job, episode)
   } else {
     throw Error(
       'episode.audio was not properly configured by episode.createSegments.' +

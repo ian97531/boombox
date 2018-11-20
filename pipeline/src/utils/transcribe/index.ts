@@ -1,3 +1,3 @@
 export { aws } from './aws'
-export { watson } from './watson'
+export { google } from './google'
 export { normalized } from './normalized'
