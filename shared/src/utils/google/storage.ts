@@ -23,30 +23,23 @@ export const streamFileFromS3ToGoogleCloudStorage = async (
   outputBucket: string,
   outputFilename?: string
 ): Promise<void> => {
+  if (storage === undefined) {
+    const credentials = await getGoogleCredentials()
+    storage = new Storage({ credentials })
+  }
+  const destinationFilename = outputFilename ? outputFilename : inputFilename
+  const bucket = storage.bucket(outputBucket)
+  const file = bucket.file(destinationFilename)
+  const stream = getFileStream(inputBucket, inputFilename).pipe(file.createWriteStream())
   return new Promise<void>((resolve, reject) => {
-    getGoogleCredentials().then(credentials => {
-      if (storage === undefined) {
-        storage = new Storage({ credentials })
-      }
-
-      getFileStream(inputBucket, inputFilename).then(readStream => {
-        const destinationFilename = outputFilename ? outputFilename : inputFilename
-        const myBucket = storage.bucket(outputBucket)
-        const file = myBucket.file(destinationFilename)
-        console.log('Starting to stream the file from aws to gc storage.')
-        readStream
-          .pipe(file.createWriteStream())
-          .on('error', (err: Error) => {
-            console.error(
-              `Unable to write s3://${inputBucket}/${inputFilename} to gcp://${outputBucket}/${destinationFilename}.`
-            )
-            reject(err)
-          })
-          .on('finish', () => {
-            console.log('Completed streaming the file to gc.')
-            resolve()
-          })
-      })
+    stream.on('error', (err: Error) => {
+      console.error(
+        `Unable to write s3://${inputBucket}/${inputFilename} to gcp://${outputBucket}/${destinationFilename}.`
+      )
+      reject(err)
+    })
+    stream.on('finish', () => {
+      resolve()
     })
   })
 }

@@ -23,7 +23,7 @@ const episodeTranscribeHandler = async (lambda: Lambda, job: Job, episode: Episo
     await job.log('All segments have completed transcoding.')
     const googleSegments = await googleTranscribe.getUntranscribedSegments(episode)
     for (const segment of googleSegments) {
-      const awsBucket = episode.bucket
+      const awsBucket = episode.segmentsBucket
       const awsFilename = segment.audio.filename
       const googleBucket = Lambda.getEnvVariable(ENV.GOOGLE_AUDIO_BUCKET) as string
 
@@ -41,7 +41,7 @@ const episodeTranscribeHandler = async (lambda: Lambda, job: Job, episode: Episo
           `Completed moving s3://${awsBucket}/${awsFilename} to gs://${googleBucket}/${awsFilename}.`
         )
       }
-
+      await google.storage.makeFilePublic(googleBucket, awsFilename)
       await job.log(`Starting a Google transcription job for ${segment.audio.filename}`)
       await googleTranscribe.transcribeSegment(episode, segment)
     }

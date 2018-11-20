@@ -50,8 +50,14 @@ const createJobAsync = async (
     config,
   }
 
-  const response = await Axios.post(url, request)
-  return response.data.name
+  try {
+    const response = await Axios.post(url, request)
+    return response.data.name
+  } catch (err) {
+    console.log(`Request to ${url} failed with error ${err}`)
+    console.log(JSON.stringify(request, null, 2))
+    throw Error(err)
+  }
 }
 
 export const createTranscriptionJob = async (

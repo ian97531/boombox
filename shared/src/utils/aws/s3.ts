@@ -29,7 +29,7 @@ export const deleteFile = async (bucket: string, filename: string) => {
   return s3.deleteObject(params).promise()
 }
 
-export const getFileStream = async (bucket: string, filename: string): Promise<Readable> => {
+export const getFileStream = (bucket: string, filename: string): Readable => {
   const params: AWS.S3.GetObjectRequest = {
     Bucket: bucket,
     Key: filename,
