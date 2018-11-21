@@ -49,10 +49,12 @@ const createJobAsync = async (
     },
     config,
   }
-
+  console.log(`Creating transcription job with request: ${JSON.stringify(request, null, 2)}`)
   try {
     const response = await Axios.post(url, request)
-    return response.data.name
+    const jobId = response.data.name
+    console.log(`Created transcription job: ${jobId}`)
+    return jobId
   } catch (err) {
     console.log(`Request to ${url} failed with error ${err}`)
     console.log(JSON.stringify(request, null, 2))

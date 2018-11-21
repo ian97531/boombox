@@ -1,6 +1,6 @@
 import slugify from 'slugify'
 
-import { db, IEpisode, IPodcast } from '@boombox/shared'
+import { db, GoogleSpeechJobId, IEpisode, IPodcast } from '@boombox/shared'
 import { SLUGIFY_OPTIONS } from '../../pipeline-constants'
 
 const MAX_SEGMENT_LENGTH = 190 * 60 // 190 minutes
@@ -9,15 +9,8 @@ const SEGMENT_OVERLAP_LENGTH = 4 * 60 // 4 minutes
 enum DESIGNATIONS {
   ORIGINAL_AUDIO = 'original-audio',
   AUDIO_SEGMENT = 'audio-segment',
-  AWS_RAW_TRANSCRIPTION_SEGMENT = 'aws-raw-transcription-segment',
-  AWS_TRANSCRIPTION_SEGMENT = 'aws-transcription-segment',
-  AWS_TRANSCRIPTION = 'aws-transcription-full',
-  GOOGLE_RAW_TRANSCRIPTION_SEGMENT = 'google-raw-transcription-segment',
-  GOOGLE_TRANSCRIPTION_SEGMENT = 'google-transcription-segment',
-  GOOGLE_TRANSCRIPTION = 'google-transcription',
-  WATSON_RAW_TRANSCRIPTION_SEGMENT = 'watson-raw-transcription-segment',
-  WATSON_TRANSCRIPTION_SEGMENT = 'watson-transcription-segment',
-  WATSON_TRANSCRIPTION = 'watson-transcription',
+  RAW_TRANSCRIPTION_SEGMENT = 'google-raw-transcription-segment',
+  NORMALIZED_TRANSCRIPTION_SEGMENT = 'google-normalized-transcription-segment',
   FINAL_TRANSCRIPTION = 'final-transcription',
   FINAL_TRANSCRIPTION_INSERT_QUEUE = 'final-transcription-insert-queue',
 }
@@ -37,18 +30,14 @@ interface IBuckets {
 export type ITranscriptionJobName = string | number
 
 export interface ITranscriptionJob {
-  normalizedFilename: string
-  rawFilename: string
-  jobName?: ITranscriptionJobName
+  normalizedTranscriptFilename: string
+  rawTranscriptFilename: string
+  jobName?: GoogleSpeechJobId
 }
 
 export interface ISegment {
   audio: IAudio
-  transcription: {
-    aws: ITranscriptionJob
-    google: ITranscriptionJob
-    watson: ITranscriptionJob
-  }
+  transcription: ITranscriptionJob
 }
 
 export interface ISerializedEpisodeJob {
@@ -67,11 +56,8 @@ export interface ISerializedEpisodeJob {
   summary: string
   title: string
   transcriptions?: {
-    aws: string
     final: string
-    google: string
     insertQueue: string
-    watson: string
   }
   transcriptionsBucket: string
   totalStatements?: number
@@ -127,11 +113,8 @@ export class EpisodeJob {
   public summary: string
   public title: string
   public transcriptions: {
-    aws: string
     final: string
-    google: string
     insertQueue: string
-    watson: string
   }
   public transcriptionsBucket: string
   public totalStatements?: number
@@ -145,11 +128,8 @@ export class EpisodeJob {
 
     if (!episode.transcriptions) {
       this.transcriptions = {
-        aws: this.buildFilename(DESIGNATIONS.AWS_TRANSCRIPTION, 'json'),
         final: this.buildFilename(DESIGNATIONS.FINAL_TRANSCRIPTION, 'json'),
-        google: this.buildFilename(DESIGNATIONS.GOOGLE_TRANSCRIPTION, 'json'),
         insertQueue: this.buildFilename(DESIGNATIONS.FINAL_TRANSCRIPTION_INSERT_QUEUE, 'json'),
-        watson: this.buildFilename(DESIGNATIONS.WATSON_TRANSCRIPTION, 'json'),
       }
     }
   }
@@ -256,23 +236,8 @@ export class EpisodeJob {
       startTime,
     })
 
-    const awsFilename = this.buildFilename(DESIGNATIONS.AWS_TRANSCRIPTION_SEGMENT, 'json', {
-      duration,
-      startTime,
-    })
-
-    const awsRawFilename = this.buildFilename(DESIGNATIONS.AWS_RAW_TRANSCRIPTION_SEGMENT, 'json', {
-      duration,
-      startTime,
-    })
-
-    const googleFilename = this.buildFilename(DESIGNATIONS.GOOGLE_TRANSCRIPTION_SEGMENT, 'json', {
-      duration,
-      startTime,
-    })
-
-    const googleRawFilename = this.buildFilename(
-      DESIGNATIONS.GOOGLE_RAW_TRANSCRIPTION_SEGMENT,
+    const normalizedTranscriptFilename = this.buildFilename(
+      DESIGNATIONS.NORMALIZED_TRANSCRIPTION_SEGMENT,
       'json',
       {
         duration,
@@ -280,13 +245,8 @@ export class EpisodeJob {
       }
     )
 
-    const watsonFilename = this.buildFilename(DESIGNATIONS.WATSON_TRANSCRIPTION_SEGMENT, 'json', {
-      duration,
-      startTime,
-    })
-
-    const watsonRawFilename = this.buildFilename(
-      DESIGNATIONS.WATSON_RAW_TRANSCRIPTION_SEGMENT,
+    const rawTranscriptFilename = this.buildFilename(
+      DESIGNATIONS.RAW_TRANSCRIPTION_SEGMENT,
       'json',
       {
         duration,
@@ -301,18 +261,8 @@ export class EpisodeJob {
         startTime,
       },
       transcription: {
-        aws: {
-          normalizedFilename: awsFilename,
-          rawFilename: awsRawFilename,
-        },
-        google: {
-          normalizedFilename: googleFilename,
-          rawFilename: googleRawFilename,
-        },
-        watson: {
-          normalizedFilename: watsonFilename,
-          rawFilename: watsonRawFilename,
-        },
+        normalizedTranscriptFilename,
+        rawTranscriptFilename,
       },
     }
   }

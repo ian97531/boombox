@@ -1,26 +1,16 @@
 import * as fs from 'fs'
 
 import { ITranscript } from '@boombox/shared'
-import { normalized } from '../utils/transcribe'
+import { getStatements } from '../utils/normalized'
 
-const location = '/Users/iwhite/Desktop'
-const awsDir = `${location}/aws`
-const watsonDir = `${location}/watson`
+const location = '/Users/iwhite/Desktop/final-transcription.json'
 
-const awsSegments = fs.readdirSync(awsDir).map(file => {
-  return JSON.parse(fs.readFileSync(`${awsDir}/${file}`, 'utf8')) as ITranscript
-})
-const watsonSegments = fs.readdirSync(watsonDir).map(file => {
-  return JSON.parse(fs.readFileSync(`${watsonDir}/${file}`, 'utf8')) as ITranscript
-})
+const transcript = JSON.parse(fs.readFileSync(location, 'utf8')) as ITranscript
 
-const awsTranscription = normalized.appendAllTranscriptions(awsSegments)
-const watsonTranscription = normalized.appendAllTranscriptions(watsonSegments)
-
-const finalTranscription = normalized.combineTranscriptions(awsTranscription, watsonTranscription)
+const statements = getStatements(transcript)
 
 fs.writeFileSync(
-  '/Users/iwhite/Desktop/final.json',
-  JSON.stringify(finalTranscription, null, 2),
+  '/Users/iwhite/Desktop/statements.json',
+  JSON.stringify(statements, null, 2),
   'utf-8'
 )

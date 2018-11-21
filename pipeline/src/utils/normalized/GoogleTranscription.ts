@@ -11,7 +11,15 @@ export class GoogleTranscription {
   private speakers: number[] = []
 
   constructor(transcription: IGoogleTranscription, startTime: number = 0) {
-    this.words = transcription.results[transcription.results.length - 1].alternatives[0].words
+    const lastResult = transcription.results[transcription.results.length - 1]
+    if (lastResult.alternatives[0].words[0].speakerTag !== undefined) {
+      this.words = transcription.results[transcription.results.length - 1].alternatives[0].words
+    } else {
+      this.words = transcription.results.reduce((accumulated, resultSet) => {
+        return [...accumulated, ...resultSet.alternatives[0].words]
+      }, [])
+    }
+
     this.startTime = startTime
   }
 

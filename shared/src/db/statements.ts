@@ -4,14 +4,10 @@ import { getSpeakers, ISpeaker } from './speakers'
 
 const STATEMENT_PROJECTION = ['startTime', 'endTime', 'speaker', 'words']
 
-export interface IStatementWord {
+export interface IWord {
   startTime: number
   endTime: number
   content: string
-}
-
-export interface ITranscriptWord extends IStatementWord {
-  confidence: number
   speaker: number
 }
 
@@ -19,7 +15,7 @@ interface IStatementBase {
   startTime: number
   endTime: number
   speaker: ISpeaker | number
-  words: IStatementWord[]
+  words: IWord[]
 }
 
 export interface IStatement extends IStatementBase {
@@ -30,7 +26,7 @@ export interface IStatementDBRecord extends IStatementBase {
   speaker: number
 }
 
-export type ITranscript = ITranscriptWord[]
+export type ITranscript = IWord[]
 
 const convertToIStatement = (result: IStatementDBRecord, speakers: ISpeaker[]): IStatement => {
   const statement: IStatement = {

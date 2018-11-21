@@ -2,8 +2,7 @@ import { aws, google } from '@boombox/shared'
 import { ENV, episodeCaller, episodeHandler, EpisodeJob } from '../../utils/episode'
 import { Job } from '../../utils/job'
 import { Lambda } from '../../utils/lambda'
-// import { aws as awsTranscribe, watson as watsonTranscribe } from '../../utils/transcribe'
-import { google as googleTranscribe } from '../../utils/transcribe'
+import { getUntranscribedSegments, transcribeSegment } from '../../utils/transcribe'
 import { episodeNormalize } from './e-episode-normalize'
 
 const episodeTranscribeHandler = async (lambda: Lambda, job: Job, episode: EpisodeJob) => {
@@ -21,7 +20,7 @@ const episodeTranscribeHandler = async (lambda: Lambda, job: Job, episode: Episo
 
   if (episode.segments.length === completeSegments) {
     await job.log('All segments have completed transcoding.')
-    const googleSegments = await googleTranscribe.getUntranscribedSegments(episode)
+    const googleSegments = await getUntranscribedSegments(episode)
     for (const segment of googleSegments) {
       const awsBucket = episode.segmentsBucket
       const awsFilename = segment.audio.filename
@@ -43,7 +42,7 @@ const episodeTranscribeHandler = async (lambda: Lambda, job: Job, episode: Episo
       }
       await google.storage.makeFilePublic(googleBucket, awsFilename)
       await job.log(`Starting a Google transcription job for ${segment.audio.filename}`)
-      await googleTranscribe.transcribeSegment(episode, segment)
+      segment.transcription.jobName = await transcribeSegment(episode, segment)
     }
     await job.log(
       `Started transcribing ${googleSegments.length} of ${
@@ -51,27 +50,6 @@ const episodeTranscribeHandler = async (lambda: Lambda, job: Job, episode: Episo
       } segments with Google.`
     )
 
-    // const awsSegments = await awsTranscribe.getUntranscribedSegments(episode)
-    // for (const segment of awsSegments) {
-    //   await job.log(`Starting an AWS transcription job for ${segment.audio.filename}`)
-    //   await awsTranscribe.transcribeSegment(episode, segment)
-    // }
-    // await job.log(
-    //   `Started transcribing ${awsSegments.length} of ${episode.segments.length} segments with AWS.`
-    // )
-
-    // const watsonSegments = await watsonTranscribe.getUntranscribedSegments(episode)
-    // for (const segment of watsonSegments) {
-    //   await job.log(`Starting a Watson transcription job for ${segment.audio.filename}`)
-    //   await watsonTranscribe.transcribeSegment(episode, segment)
-    // }
-    // await job.log(
-    //   `Started transcribing ${watsonSegments.length} of ${
-    //     episode.segments.length
-    //   } segments with AWS.`
-    // )
-
-    // const delay = awsSegments.length || watsonSegments.length ? 120 : 0
     const delay = googleSegments.length ? 120 : 0
     episodeNormalize(lambda, job, episode, delay)
   } else {

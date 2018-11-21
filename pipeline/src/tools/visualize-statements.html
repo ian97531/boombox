@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Visualize</title>
+	<style>
+		body {
+			background-color: linen;
+			padding: 20px;
+		}
+
+		textarea {
+			width: 100%;
+			height: 100px;
+			color: maroon;
+		}
+
+		.c100 {
+			background-color: rgb(255, 255, 255);
+		}
+
+		.c90 {
+			background-color: rgb(255, 230, 230);
+		}
+
+		.c80 {
+			background-color: rgb(255, 205, 205);
+		}
+
+		.c70 {
+			background-color: rgb(255, 180, 180);
+		}
+
+		.c60 {
+			background-color: rgb(255, 155, 155);
+		}
+
+		.c50 {
+			background-color: rgb(255, 130, 130);
+		}
+
+		.c40 {
+			background-color: rgb(255, 105, 105);
+		}
+
+		.c30 {
+			background-color: rgb(255, 80, 80);
+		}
+
+		.c20 {
+			background-color: rgb(255, 55, 55);
+		}
+
+		.c10 {
+			background-color: rgb(255, 30, 30);
+		}
+
+		.c0 {
+			background-color: rgb(255, 5, 5);
+		}
+	</style>
+	<script type="text/javascript">
+		function process() {
+
+
+			outputEl = document.getElementById('output');
+			textData = document.getElementById('input').value;
+			speakers = [
+				document.getElementById('speaker1').value,
+				document.getElementById('speaker2').value
+			];
+			jsonData = JSON.parse(textData);
+			lines = []
+
+			jsonData.forEach(function (statement) {
+        const words = statement.words.map((word) => {
+          if (word.speaker === statement.speaker) {
+            return `<span title='${JSON.stringify(word, null, 2)}'>${word.content}</span>`
+          } else {
+            return `<span title='${JSON.stringify(word, null, 2)}'><b>${word.content}</b></span>`
+          }
+        })
+				humanSpeaker = speakers[statement.speaker] ? speakers[statement.speaker] : `Speaker ${statement.speaker}`
+        lines.push(`<h3>${humanSpeaker}</h3><div class="line">${words.join(' ')}</div>`)
+			});
+
+			outputEl.innerHTML = lines.join('');
+		}
+
+	</script>
+</head>
+
+<body>
+	<div>
+		<h4>Paste the statements json into this text area:</h4>
+		<textarea id="input"></textarea>
+	</div>
+	<div>
+		<h4>Speaker 1:
+			<input type="text" value="Speaker 1" id="speaker1" />
+		</h4>
+
+	</div>
+	<div>
+		<h4>Speaker 2:
+			<input type="text" value="Speaker 2" id="speaker2" />
+		</h4>
+
+	</div>
+	<div>
+		<input onClick="process()" value="Visualize" type="button"></input>
+	</div>
+	<hr>
+	<div>
+		Hover over the word to see that word's transcription confidence score. The more red the highlighting of a word, the
+		lower
+		the confidence score.
+	</div>
+	<div id="output"></div>
+</body>
+
+</html>
