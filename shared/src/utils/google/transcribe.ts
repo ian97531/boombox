@@ -13,6 +13,7 @@ import {
   IGoogleSpeechResponse,
 } from '../../types/google'
 import { getSecret } from '../aws/secrets'
+import { sleep } from '../timing'
 
 const GOOGLE_SPEECH_URL = 'https://speech.googleapis.com/v1p1beta1'
 
@@ -69,7 +70,7 @@ export const createTranscriptionJob = async (
 ): Promise<GoogleSpeechJobId> => {
   const credentials = await getGoogleApiKey()
   const uri = `gs://${bucket}/${filename}`
-
+  const withSpeakers = speakers > 1
   const encoding = GoogleSpeechAudioEncoding.FLAC
   const sampleRateHertz = 44100
   const languageCode = 'en-US'
@@ -85,17 +86,27 @@ export const createTranscriptionJob = async (
   const config: IGoogleSpeechRecognitionConfig = {
     diarizationSpeakerCount: speakers,
     enableAutomaticPunctuation: true,
-    enableSpeakerDiarization: speakers > 1,
+    enableSpeakerDiarization: withSpeakers,
     enableWordTimeOffsets: true,
     encoding,
     languageCode,
     metadata: recognitionMetadata,
-    model: GoogleSpeechModel.PHONE_CALL,
+    model: withSpeakers ? GoogleSpeechModel.PHONE_CALL : GoogleSpeechModel.VIDEO,
     sampleRateHertz,
     useEnhanced: true,
   }
 
-  return await createJobAsync(uri, config, credentials)
+  let jobId: number | undefined
+  while (!jobId) {
+    try {
+      jobId = await createJobAsync(uri, config, credentials)
+      console.log(`Created job id: ${jobId}.`)
+    } catch (err) {
+      console.log('Google Cloud Platform Speech has throttled our request. Waiting 60 seconds.')
+      await sleep(60000)
+    }
+  }
+  return jobId
 }
 
 export const getTranscriptionJob = async (

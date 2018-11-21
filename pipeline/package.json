@@ -10,14 +10,17 @@
   "license": "UNLICENSED",
   "scripts": {
     "format": "prettier --write --config .prettierrc.yaml '**/*.ts'",
+    "clean-all": "yarn clean-shared && yarn clean",
+    "clean-shared": "cd node_modules/@boombox/shared && yarn clean",
     "clean": "rm -rf build/dist",
     "lint": "tslint 'src/**/*.ts'",
     "start": "ts-node src/local.ts",
+    "build-all": "yarn build-shared && yarn build",
     "build-shared": "cd node_modules/@boombox/shared && yarn build",
-    "build": "yarn clean && tsc",
+    "build": "echo 'build @boombox/shared' && tsc --version && && tsc",
     "domain": "serverless create_domain",
-    "package": "yarn build-shared && yarn build && serverless package",
-    "deploy": "yarn build-shared && yarn build && serverless deploy"
+    "package": "yarn clean-all && yarn build-all && serverless package",
+    "deploy": "yarn clean-all && yarn build-all && serverless deploy"
   },
   "dependencies": {
     "@boombox/shared": "1.0.0",

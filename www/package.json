@@ -32,14 +32,18 @@
     ]
   },
   "scripts": {
+    "clean-all": "yarn clean-shared && yarn clean",
+    "clean-shared": "cd node_modules/@boombox/shared && yarn clean",
+    "clean": "rm -rf build/*",
     "precommit": "lint-staged",
     "start": "react-scripts-ts start",
+    "build-all": "yarn build-shared && yarn build",
     "build-shared": "cd node_modules/@boombox/shared && yarn build",
     "build": "react-scripts-ts build",
     "test": "react-scripts-ts test --env=jsdom",
     "copyToS3": "serverless client deploy --no-config-change --no-cors-change --no-policy-change --no-confirm",
     "domain": "serverless deploy",
-    "deploy": "yarn build-shared && yarn build && yarn domain && yarn copyToS3",
+    "deploy": "yarn clean-all && yarn build-all && yarn domain && yarn copyToS3",
     "eject": "react-scripts-ts eject"
   },
   "devDependencies": {

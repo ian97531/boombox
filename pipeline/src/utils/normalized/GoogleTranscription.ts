@@ -36,11 +36,15 @@ export class GoogleTranscription {
     return normalizedTranscription
   }
 
-  private getSpeakerforTag(speakerTag: IGoogleTranscriptionSpeakerTag): number {
-    if (this.speakers.indexOf(speakerTag) === -1) {
-      this.speakers.push(speakerTag)
+  private getSpeakerforTag(speakerTag?: IGoogleTranscriptionSpeakerTag): number {
+    if (speakerTag) {
+      if (this.speakers.indexOf(speakerTag) === -1) {
+        this.speakers.push(speakerTag)
+      }
+      return this.speakers.indexOf(speakerTag)
+    } else {
+      return 0
     }
-    return this.speakers.indexOf(speakerTag)
   }
 
   private timecodeToSeconds(timecode: string): number {

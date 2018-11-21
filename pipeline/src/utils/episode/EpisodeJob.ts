@@ -9,8 +9,10 @@ const SEGMENT_OVERLAP_LENGTH = 4 * 60 // 4 minutes
 enum DESIGNATIONS {
   ORIGINAL_AUDIO = 'original-audio',
   AUDIO_SEGMENT = 'audio-segment',
-  RAW_TRANSCRIPTION_SEGMENT = 'google-raw-transcription-segment',
-  NORMALIZED_TRANSCRIPTION_SEGMENT = 'google-normalized-transcription-segment',
+  RAW_SPEAKER_TRANSCRIPTION_SEGMENT = 'google-raw-speaker-transcription-segment',
+  NORMALIZED_SPEAKER_TRANSCRIPTION_SEGMENT = 'google-normalized-speaker-transcription-segment',
+  RAW_WORD_TRANSCRIPTION_SEGMENT = 'google-raw-word-transcription-segment',
+  NORMALIZED_WORD_TRANSCRIPTION_SEGMENT = 'google-normalized-word-transcription-segment',
   FINAL_TRANSCRIPTION = 'final-transcription',
   FINAL_TRANSCRIPTION_INSERT_QUEUE = 'final-transcription-insert-queue',
 }
@@ -37,7 +39,8 @@ export interface ITranscriptionJob {
 
 export interface ISegment {
   audio: IAudio
-  transcription: ITranscriptionJob
+  speakerTranscription: ITranscriptionJob
+  wordTranscription: ITranscriptionJob
 }
 
 export interface ISerializedEpisodeJob {
@@ -236,8 +239,8 @@ export class EpisodeJob {
       startTime,
     })
 
-    const normalizedTranscriptFilename = this.buildFilename(
-      DESIGNATIONS.NORMALIZED_TRANSCRIPTION_SEGMENT,
+    const normalizedSpeakerTranscriptFilename = this.buildFilename(
+      DESIGNATIONS.NORMALIZED_SPEAKER_TRANSCRIPTION_SEGMENT,
       'json',
       {
         duration,
@@ -245,8 +248,26 @@ export class EpisodeJob {
       }
     )
 
-    const rawTranscriptFilename = this.buildFilename(
-      DESIGNATIONS.RAW_TRANSCRIPTION_SEGMENT,
+    const rawSpeakerTranscriptFilename = this.buildFilename(
+      DESIGNATIONS.RAW_SPEAKER_TRANSCRIPTION_SEGMENT,
+      'json',
+      {
+        duration,
+        startTime,
+      }
+    )
+
+    const normalizedWordTranscriptFilename = this.buildFilename(
+      DESIGNATIONS.NORMALIZED_WORD_TRANSCRIPTION_SEGMENT,
+      'json',
+      {
+        duration,
+        startTime,
+      }
+    )
+
+    const rawWordTranscriptFilename = this.buildFilename(
+      DESIGNATIONS.RAW_WORD_TRANSCRIPTION_SEGMENT,
       'json',
       {
         duration,
@@ -260,9 +281,13 @@ export class EpisodeJob {
         filename: audioFilename,
         startTime,
       },
-      transcription: {
-        normalizedTranscriptFilename,
-        rawTranscriptFilename,
+      speakerTranscription: {
+        normalizedTranscriptFilename: normalizedSpeakerTranscriptFilename,
+        rawTranscriptFilename: rawSpeakerTranscriptFilename,
+      },
+      wordTranscription: {
+        normalizedTranscriptFilename: normalizedWordTranscriptFilename,
+        rawTranscriptFilename: rawWordTranscriptFilename,
       },
     }
   }

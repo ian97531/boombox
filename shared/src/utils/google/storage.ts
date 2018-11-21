@@ -71,5 +71,7 @@ export const fileExists = async (bucket: string, filename: string): Promise<bool
   }
   const myBucket = storage.bucket(bucket)
   const file = myBucket.file(filename)
-  return await file.exists()[0]
+  const response = await file.exists()
+  console.log(response)
+  return response[0]
 }

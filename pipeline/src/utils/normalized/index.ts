@@ -1,2 +1,2 @@
 export { appendAllTranscriptions } from './append'
-export { getStatements, normalizeGoogleTranscription } from './transcription'
+export { getStatements, normalizeGoogleTranscription, combineTranscriptions } from './transcription'

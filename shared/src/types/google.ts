@@ -4,7 +4,7 @@ export interface IGoogleTranscriptionWord {
   startTime: string
   endTime: string
   word: string
-  speakerTag: IGoogleTranscriptionSpeakerTag
+  speakerTag?: IGoogleTranscriptionSpeakerTag
 }
 
 export interface IGoogleTranscriptionAlternative {

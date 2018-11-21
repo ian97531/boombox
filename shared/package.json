@@ -40,7 +40,7 @@
     "clean": "rm -rf lib/*",
     "lint": "tslint 'src/**/*.ts'",
     "start": "ts-node src/local.ts",
-    "build": "yarn clean && tsc --version && tsc --declaration",
+    "build": "echo 'build @boombox/shared' && tsc --version && tsc --declaration",
     "deploy": "serverless deploy"
   }
 }

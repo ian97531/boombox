@@ -1,5 +1,14 @@
-import { IGoogleTranscription, IStatementDBRecord, ITranscript, IWord } from '@boombox/shared'
-import { GoogleTranscription } from './GoogleTranscription'
+import {
+  IGoogleTranscription,
+  IGoogleTranscriptionWord,
+  IStatementDBRecord,
+  ITranscript,
+  IWord,
+  IWordTranscript,
+  utils,
+  IGoogleSpeakerTranscriptionWord,
+} from '@boombox/shared'
+import { GoogleSpeakerTranscription } from './GoogleSpeakerTranscription'
 
 const TERMINATING_PUNCTUATION = ['.', '?', '!']
 
@@ -114,20 +123,20 @@ const getDominantSpeaker = (words: IWord[]): number => {
   return dominantSpeaker
 }
 
-const capitalize = (word: string): string => {
-  const letters = word.split('')
-  letters[0] = letters[0].toUpperCase()
-  return letters.join('')
-}
+// const capitalize = (word: string): string => {
+//   const letters = word.split('')
+//   letters[0] = letters[0].toUpperCase()
+//   return letters.join('')
+// }
 
-const punctuate = (word: string): string => {
-  const lastChar = word[word.length - 1]
-  if (TERMINATING_PUNCTUATION.indexOf(lastChar) === -1) {
-    return `${word}.`
-  } else {
-    return word
-  }
-}
+// const punctuate = (word: string): string => {
+//   const lastChar = word[word.length - 1]
+//   if (TERMINATING_PUNCTUATION.indexOf(lastChar) === -1) {
+//     return `${word}.`
+//   } else {
+//     return word
+//   }
+// }
 
 export const getStatements = (transcript: ITranscript): IStatementDBRecord[] => {
   let currentSentenceStartIndex = 0
@@ -164,7 +173,7 @@ export const getStatements = (transcript: ITranscript): IStatementDBRecord[] => 
       // Runs less than 4 words long get coalesced into a single run.
       const survivingRuns: IWord[][] = []
       speakerRuns.forEach(run => {
-        if (run.length > 4) {
+        if (run.length > 8) {
           survivingRuns.push(run)
         } else {
           const lastRun = survivingRuns.pop()
@@ -206,20 +215,77 @@ export const getStatements = (transcript: ITranscript): IStatementDBRecord[] => 
     }
   })
 
-  statements.forEach(statement => {
-    const firstWord = statement.words[0]
-    const lastWord = statement.words[statement.words.length - 1]
-    firstWord.content = capitalize(firstWord.content)
-    lastWord.content = punctuate(lastWord.content)
-  })
+  // statements.forEach(statement => {
+  //   const firstWord = statement.words[0]
+  //   const lastWord = statement.words[statement.words.length - 1]
+  //   firstWord.content = capitalize(firstWord.content)
+  //   lastWord.content = punctuate(lastWord.content)
+  // })
 
   return statements
 }
 
-export const normalizeGoogleTranscription = (
-  transcript: IGoogleTranscription,
+export const normalizeGoogleSpeakerTranscription = (
+  transcript: IGoogleTranscription<IGoogleSpeakerTranscriptionWord>,
   startTime: number = 0
 ): ITranscript => {
-  const google = new GoogleTranscription(transcript, startTime)
+  const google = new GoogleSpeakerTranscription(transcript, startTime)
   return google.getNormalizedTranscription()
+}
+
+interface ICandidateTranscriptWord extends IWord {
+  overlap: number
+}
+
+export const combineTranscriptions = (
+  speakers: ITranscript,
+  words: IWordTranscript
+): ITranscript => {
+  const output: ITranscript = []
+  const wordMap = createWordMap(speakers)
+  let drift = words[0].startTime - speakers[0].startTime
+
+  for (const word of words) {
+    const startSecond = Math.floor(word.startTime)
+    const endSecond = Math.floor(word.endTime)
+    const possibleWords: IWord[] = []
+    let second = startSecond
+    while (second <= endSecond) {
+      if (wordMap[second] !== undefined) {
+        for (const possibleWord of wordMap[second]) {
+          if (possibleWords.indexOf(possibleWord) === -1) {
+            possibleWords.push(possibleWord)
+          }
+        }
+      }
+      second += 1
+    }
+
+    const candidateWords: ICandidateTranscriptWord[] = []
+    for (const candidateWord of possibleWords) {
+      const overlap = computeOverlapBetweenWords(word, candidateWord, drift)
+      if (overlap) {
+        candidateWords.push({
+          ...candidateWord,
+          overlap: utils.numbers.round(overlap, 3),
+        })
+      }
+    }
+
+    candidateWords.sort((a, b) => {
+      return b.overlap - a.overlap
+    })
+
+    if (candidateWords.length) {
+      output.push({
+        ...word,
+        speaker: candidateWords[0].speaker,
+      })
+      if (candidateWords[0].content.toLowerCase() === word.content.toLowerCase()) {
+        drift = word.endTime - candidateWords[0].endTime
+      }
+    }
+  }
+
+  return output
 }

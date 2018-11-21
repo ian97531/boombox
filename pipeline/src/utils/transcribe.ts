@@ -1,111 +1,97 @@
-import { aws, google, GoogleSpeechJobId, ITranscript } from '@boombox/shared'
-
-import { ENV, EpisodeJob, ISegment } from './episode'
+import {
+  aws,
+  google,
+  GoogleSpeechJobId,
+  IGoogleTranscription,
+  IGoogleTranscriptionWord,
+  ITranscript,
+} from '@boombox/shared'
+import { ENV, EpisodeJob, ISegment, ITranscriptionJob } from './episode'
 import { Lambda } from './lambda'
 import { normalizeGoogleTranscription } from './normalized'
 
-export const getEpisodeTranscriptions = async (episode: EpisodeJob): Promise<ITranscript[]> => {
-  const transcriptions: ITranscript[] = []
+export const getRawTranscription = async <T extends IGoogleTranscriptionWord>(
+  episode: EpisodeJob,
+  segment: ISegment,
+  job: ITranscriptionJob
+): Promise<IGoogleTranscription> => {
   const bucket = episode.transcriptionsBucket
-
-  for (const segment of episode.segments) {
-    const filename = segment.transcription.normalizedTranscriptFilename
-    const rawFilename = segment.transcription.rawTranscriptFilename
-    let transcription: ITranscript | undefined
-
-    if (!(await aws.s3.checkFileExists(bucket, filename))) {
-      if (segment.transcription.jobName) {
-        const jobName = segment.transcription.jobName as GoogleSpeechJobId
-        const job = await google.transcribe.getTranscriptionJob(jobName)
-        if (job.done && !job.error && job.response) {
-          const rawTranscription = job.response
-          await aws.s3.putJsonFile(bucket, rawFilename, rawTranscription)
-          transcription = normalizeGoogleTranscription(rawTranscription, segment.audio.startTime)
-          await aws.s3.putJsonFile(bucket, filename, transcription)
-        }
+  const rawFilename = job.rawTranscriptFilename
+  let transcription: IGoogleTranscription | undefined
+  if (!(await aws.s3.checkFileExists(bucket, rawFilename))) {
+    if (job.jobName) {
+      const jobResponse = await google.transcribe.getTranscriptionJob(job.jobName)
+      if (jobResponse.done && !jobResponse.error && jobResponse.response) {
+        transcription = jobResponse.response as IGoogleTranscription
+        await aws.s3.putJsonFile(bucket, rawFilename, transcription)
       }
-    } else {
-      transcription = (await aws.s3.getJsonFile(bucket, filename)) as ITranscript
     }
-
-    if (!transcription) {
-      throw Error(`Cannot get transcription for segment: ${segment.audio.filename}`)
-    }
-
-    transcriptions.push(transcription)
+  } else {
+    transcription = (await aws.s3.getJsonFile(bucket, rawFilename)) as IGoogleTranscription
   }
 
-  return transcriptions
+  if (!transcription) {
+    throw Error(`Cannot get raw transcription for segment: ${segment.audio.filename}`)
+  }
+
+  return transcription
 }
 
-export const getUntranscribedSegments = async (episode: EpisodeJob): Promise<ISegment[]> => {
-  const untranscribedSegments: ISegment[] = []
-
-  for (const segment of episode.segments) {
-    const fileExists = await aws.s3.checkFileExists(
-      episode.transcriptionsBucket,
-      segment.transcription.normalizedTranscriptFilename
-    )
-    let transcriptionExists = false
-    if (segment.transcription.jobName) {
-      try {
-        const jobName = segment.transcription.jobName as GoogleSpeechJobId
-        const job = await google.transcribe.getTranscriptionJob(jobName)
-        if (job.done && !job.error && job.response) {
-          transcriptionExists = true
-        } else {
-          transcriptionExists = false
-        }
-      } catch (error) {
-        transcriptionExists = false
-      }
-    } else {
-      transcriptionExists = false
+export const getNormalizedTranscription = async <T extends IGoogleTranscriptionWord>(
+  episode: EpisodeJob,
+  segment: ISegment,
+  job: ITranscriptionJob
+): Promise<ITranscript> => {
+  const bucket = episode.transcriptionsBucket
+  const filename = job.normalizedTranscriptFilename
+  let transcription: ITranscript | undefined
+  if (!(await aws.s3.checkFileExists(bucket, filename))) {
+    if (job.jobName) {
+      const rawTranscription = await getRawTranscription<T>(episode, segment, job)
+      transcription = normalizeGoogleTranscription(rawTranscription, segment.audio.startTime)
+      await aws.s3.putJsonFile(bucket, filename, transcription)
     }
-
-    if (!fileExists && !transcriptionExists) {
-      untranscribedSegments.push(segment)
-    }
+  } else {
+    transcription = (await aws.s3.getJsonFile(bucket, filename)) as ITranscript
   }
-  return untranscribedSegments
+
+  if (!transcription) {
+    throw Error(`Cannot get normalized transcription for segment: ${segment.audio.filename}`)
+  }
+  return transcription
 }
 
 export const transcribeSegment = async (
   episode: EpisodeJob,
-  segment: ISegment
+  segment: ISegment,
+  withSpeakers: boolean
 ): Promise<GoogleSpeechJobId> => {
   const filename = segment.audio.filename
   const bucket = Lambda.getEnvVariable(ENV.GOOGLE_AUDIO_BUCKET) as string
-  const numSpeakers = episode.speakers.length
+  const numSpeakers = withSpeakers ? episode.speakers.length : 0
   return await google.transcribe.createTranscriptionJob(bucket, filename, numSpeakers)
 }
 
-export const transcriptionsReadyToBeNormalized = async (episode: EpisodeJob): Promise<number> => {
-  let transcriptionsReady = 0
-  let erroredJobs = 0
+export const transcriptionProgress = async (
+  episode: EpisodeJob,
+  segment: ISegment,
+  job: ITranscriptionJob
+): Promise<number> => {
+  let progress = 0
   const bucket = episode.transcriptionsBucket
-  for (const segment of episode.segments) {
-    if (await aws.s3.checkFileExists(bucket, segment.transcription.normalizedTranscriptFilename)) {
-      transcriptionsReady += 1
+  const filename = job.normalizedTranscriptFilename
+  if (await aws.s3.checkFileExists(bucket, filename)) {
+    progress = 100
+  } else if (job.jobName) {
+    const response = await google.transcribe.getTranscriptionJob(job.jobName)
+    if (response && !response.error) {
+      const progressPercent = response.metadata.progressPercent
+      progress = response.done ? 100 : progressPercent ? progressPercent : 0
     } else {
-      if (segment.transcription.jobName) {
-        const jobName = segment.transcription.jobName as GoogleSpeechJobId
-        try {
-          const response = await google.transcribe.getTranscriptionJob(jobName)
-          if (response.done && !response.error) {
-            transcriptionsReady += 1
-          } else if (response.done && response.error) {
-            erroredJobs += 1
-          }
-        } catch (error) {
-          console.log(`No transcription job found for ${jobName}`)
-        }
-      }
+      throw Error(`Job ${job.jobName} failed.`)
     }
+  } else {
+    throw Error('No job found for: ' + filename)
   }
-  if (erroredJobs) {
-    throw Error(`${erroredJobs} segment transcription job(s) encountered an error.`)
-  }
-
-  return transcriptionsReady
+  return progress
 }
