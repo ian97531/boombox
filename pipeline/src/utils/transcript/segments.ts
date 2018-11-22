@@ -1,7 +1,7 @@
 import { ITranscript, utils } from '@boombox/shared'
-import { createTranscriptWord, matchWords } from './transcription'
+import { createTranscriptWord, matchWords } from './words'
 
-export const appendTranscriptions = (
+const appendTranscriptions = (
   left: ITranscript,
   right: ITranscript,
   withOverlap: number = 10
@@ -66,7 +66,7 @@ export const appendTranscriptions = (
   return output
 }
 
-export const appendAllTranscriptions = (transcriptions: ITranscript[]): ITranscript => {
+export const concatSegmentTranscriptions = (transcriptions: ITranscript[]): ITranscript => {
   let index = 1
   let output = transcriptions[0]
   while (index < transcriptions.length) {

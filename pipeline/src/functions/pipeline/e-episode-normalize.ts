@@ -2,12 +2,12 @@ import { aws, google, ITranscript } from '@boombox/shared'
 import { ENV, episodeCaller, episodeHandler, EpisodeJob } from '../../utils/episode'
 import { Job } from '../../utils/job'
 import { Lambda } from '../../utils/lambda'
+import { getNormalizedTranscription, transcriptionProgress } from '../../utils/transcribe-service'
 import {
-  appendAllTranscriptions,
-  combineTranscriptions,
+  concatSegmentTranscriptions,
+  copySpeakersFromTranscription,
   getStatements,
-} from '../../utils/normalized'
-import { getNormalizedTranscription, transcriptionProgress } from '../../utils/transcribe'
+} from '../../utils/transcript'
 import { episodeInsert } from './f-episode-insert'
 
 const episodeNormalizeHandler = async (lambda: Lambda, job: Job, episode: EpisodeJob) => {
@@ -51,9 +51,12 @@ const episodeNormalizeHandler = async (lambda: Lambda, job: Job, episode: Episod
     }
 
     await job.log(`Zipping ${speakerTranscriptions.length} segments into a single transcription.`)
-    const speakerTranscription = appendAllTranscriptions(speakerTranscriptions)
-    const wordTranscription = appendAllTranscriptions(wordTranscriptions)
-    const finalTranscription = combineTranscriptions(speakerTranscription, wordTranscription)
+    const speakerTranscription = concatSegmentTranscriptions(speakerTranscriptions)
+    const wordTranscription = concatSegmentTranscriptions(wordTranscriptions)
+    const finalTranscription = copySpeakersFromTranscription(
+      speakerTranscription,
+      wordTranscription
+    )
     await aws.s3.putJsonFile(episode.bucket, episode.transcriptions.final, finalTranscription)
 
     await job.log('Creating statements from the transcription.')

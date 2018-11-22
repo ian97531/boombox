@@ -58,21 +58,77 @@
 		.c0 {
 			background-color: rgb(255, 5, 5);
 		}
+		#drop_zone {
+			border: 1px solid blue;
+		}
 	</style>
 	<script type="text/javascript">
+		transcript = []
+
+		function updateFilenames() {
+			const list = document.getElementById('file_list')
+			list.innerHTML = transcripts.map((transcript, index) => {
+				return `<li>${index + 1}: ${transcript.name}</li>`
+			}).join('')
+		}
+
+		function dragOverHandler(ev) {
+		  console.log('File(s) in drop zone');
+		  // Prevent default behavior (Prevent file from being opened)
+		  ev.preventDefault();
+		}
+
+		function loadFile(file) {
+			var reader = new FileReader()
+			reader.onloadend = (event) => {
+				const json = JSON.parse(event.target.result)
+				transcript = json
+				process()
+			}
+			reader.readAsText(file)
+		}
+		function processDrop(ev) {
+			console.log('File(s) dropped');
+
+		  // Prevent default behavior (Prevent file from being opened)
+		  ev.preventDefault();
+
+		  if (ev.dataTransfer.items) {
+		    // Use DataTransferItemList interface to access the file(s)
+		    for (var i = 0; i < ev.dataTransfer.items.length; i++) {
+		      // If dropped items aren't files, reject them
+		      if (ev.dataTransfer.items[i].kind === 'file') {
+						var file = ev.dataTransfer.items[i].getAsFile();
+						loadFile(file)
+						console.log('... file[' + i + '].name = ' + file.name);
+		      }
+		    }
+		  } else {
+		    // Use DataTransfer interface to access the file(s)
+		    for (var i = 0; i < ev.dataTransfer.files.length; i++) {
+		      console.log('... file[' + i + '].name = ' + ev.dataTransfer.files[i].name);
+		    }
+		  }
+
+		  // Pass event to removeDragData for cleanup
+		  if (ev.dataTransfer.items) {
+		    // Use DataTransferItemList interface to remove the drag data
+		    ev.dataTransfer.items.clear();
+		  } else {
+		    // Use DataTransfer interface to remove the drag data
+		    ev.dataTransfer.clearData();
+		  }
+			return false
+		}
 		function process() {
-
-
 			outputEl = document.getElementById('output');
-			textData = document.getElementById('input').value;
 			speakers = [
 				document.getElementById('speaker1').value,
 				document.getElementById('speaker2').value
 			];
-			jsonData = JSON.parse(textData);
 			lines = []
 
-			jsonData.forEach(function (statement) {
+			transcript.forEach((statement) => {
         const words = statement.words.map((word) => {
           if (word.speaker === statement.speaker) {
             return `<span title='${JSON.stringify(word, null, 2)}'>${word.content}</span>`
@@ -91,9 +147,8 @@
 </head>
 
 <body>
-	<div>
-		<h4>Paste the statements json into this text area:</h4>
-		<textarea id="input"></textarea>
+	<div id="drop_zone" ondrop="processDrop(event);" ondragover="dragOverHandler(event)">
+		<p>Drag one file here.</p>
 	</div>
 	<div>
 		<h4>Speaker 1:

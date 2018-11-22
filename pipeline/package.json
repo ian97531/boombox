@@ -17,7 +17,7 @@
     "start": "ts-node src/local.ts",
     "build-all": "yarn build-shared && yarn build",
     "build-shared": "cd node_modules/@boombox/shared && yarn build",
-    "build": "echo 'build @boombox/shared' && tsc --version && && tsc",
+    "build": "echo 'Building @boombox/pipeline with tsc' && tsc --version && tsc",
     "domain": "serverless create_domain",
     "package": "yarn clean-all && yarn build-all && serverless package",
     "deploy": "yarn clean-all && yarn build-all && serverless deploy"

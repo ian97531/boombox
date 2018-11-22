@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Visualize</title>
+	<style>
+		body {
+			background-color: linen;
+			padding: 20px;
+		}
+
+		textarea {
+			width: 100%;
+			height: 100px;
+			color: maroon;
+		}
+		.speaker0 {
+			background-color: rgba(0,200,0,0.2);
+			border-top: 1px solid rgba(0,0,0,0.5);
+			border-bottom: 1px solid rgba(0,0,0,0.5);
+			border-left: 1px solid transparent;
+			border-right: 1px solid transparent;
+		}
+
+		.speaker1 {
+			background-color: rgba(0,0,200,0.2);
+			border-top: 1px solid rgba(0,0,0,0.5);
+			border-bottom: 1px solid rgba(0,0,0,0.5);
+			border-left: 1px solid transparent;
+			border-right: 1px solid transparent;
+		}
+
+		.c100 {
+			background-color: rgb(255, 255, 255);
+		}
+
+		.c90 {
+			background-color: rgb(255, 230, 230);
+		}
+
+		.c80 {
+			background-color: rgb(255, 205, 205);
+		}
+
+		.c70 {
+			background-color: rgb(255, 180, 180);
+		}
+
+		.c60 {
+			background-color: rgb(255, 155, 155);
+		}
+
+		.c50 {
+			background-color: rgb(255, 130, 130);
+		}
+
+		.c40 {
+			background-color: rgb(255, 105, 105);
+		}
+
+		.c30 {
+			background-color: rgb(255, 80, 80);
+		}
+
+		.c20 {
+			background-color: rgb(255, 55, 55);
+		}
+
+		.c10 {
+			background-color: rgb(255, 30, 30);
+		}
+
+		.c0 {
+			background-color: rgb(255, 5, 5);
+		}
+
+		#drop_zone {
+			border: 1px solid blue;
+		}
+
+		.line {
+			margin-bottom: 10px;
+			margin-top: 10px;
+			padding-top:10px;
+			padding-bottom: 10px;
+			border-bottom: 1px solid black
+		}
+		.segment {
+			margin-top: 5px;
+			margin-bottom: 5px;
+			position: relative;
+		}
+
+		.segment > div {
+			display: inline;
+		}
+
+		.segment.time > div {
+			display: block;
+			position:absolute;
+			top: 0px;
+			left: 0px;
+			margin-left: 2px;
+		}
+
+		.segment > div:hover {
+			border-top: 1px solid rgba(0,0,0);
+			border-bottom: 1px solid rgba(0,0,0);
+			border-left: 1px solid rgba(0,0,0);
+			border-right: 1px solid rgba(0,0,0);
+			background-color: rgba(0,0,0,0.8);
+			z-index: 100;
+		}
+
+		.segment > div:hover > span{
+			background-color: rgba(200,0,0,0.8);
+			color: white;
+		}
+	</style>
+	<script type="text/javascript">
+		transcripts = []
+		filenames = []
+		positionByTime = true
+
+		function updateFilenames() {
+			const list = document.getElementById('file_list')
+			list.innerHTML = transcripts.map((transcript, index) => {
+				return `<li>${index + 1}: ${transcript.name}</li>`
+			}).join('')
+		}
+
+		function dragOverHandler(ev) {
+		  console.log('File(s) in drop zone');
+		  // Prevent default behavior (Prevent file from being opened)
+		  ev.preventDefault();
+		}
+
+		function loadFile(file) {
+			var reader = new FileReader()
+			reader.onloadend = (event) => {
+				const json = JSON.parse(event.target.result)
+				transcripts.push({
+					words: json,
+					name: file.name
+				})
+				updateFilenames()
+			}
+			reader.readAsText(file)
+		}
+		function processDrop(ev) {
+			console.log('File(s) dropped');
+		  // Prevent default behavior (Prevent file from being opened)
+		  ev.preventDefault();
+
+		  if (ev.dataTransfer.items) {
+		    // Use DataTransferItemList interface to access the file(s)
+		    for (var i = 0; i < ev.dataTransfer.items.length; i++) {
+		      // If dropped items aren't files, reject them
+		      if (ev.dataTransfer.items[i].kind === 'file') {
+						var file = ev.dataTransfer.items[i].getAsFile();
+						loadFile(file)
+						console.log('... file[' + i + '].name = ' + file.name);
+		      }
+		    }
+		  } else {
+		    // Use DataTransfer interface to access the file(s)
+		    for (var i = 0; i < ev.dataTransfer.files.length; i++) {
+		      console.log('... file[' + i + '].name = ' + ev.dataTransfer.files[i].name);
+		    }
+		  }
+
+		  // Pass event to removeDragData for cleanup
+		  if (ev.dataTransfer.items) {
+		    // Use DataTransferItemList interface to remove the drag data
+		    ev.dataTransfer.items.clear();
+		  } else {
+		    // Use DataTransfer interface to remove the drag data
+		    ev.dataTransfer.clearData();
+		  }
+			return false
+		}
+
+		function process() {
+			let done = false
+			let index = 0
+			const segmentLength = 4
+			const lines = []
+			const width = window.innerWidth - 200
+			const factor = width / segmentLength
+
+			const sources = transcripts.map(transcript => transcript.words.slice(0))
+			while(!done) {
+				const segments = []
+				done = sources.reduce((prev, transcript, fileIndex)=> {
+					let gotSegment = false
+					const words = []
+					while(!gotSegment) {
+						const word = transcript.shift()
+						if (word) {
+							if (word.endTime >= index + segmentLength) {
+								gotSegment = true
+							}
+							words.push(word)
+						} else {
+							gotSegment = true
+						}
+					}
+					if (words.length) {
+						const spans = words.map((word)=> {
+							const left = positionByTime ? `left:${20 + ((word.startTime - index) * factor)}px;` : ''
+							const width = positionByTime ? `width:${(word.endTime - word.startTime) * factor}px;` : ''
+							return `<div class="speaker${word.speaker}" style="${left} ${width}" title='${JSON.stringify(word, null, 2)}'><span>${word.content}</span></div>`
+						})
+						const position = positionByTime ? 'time' : ''
+						segments.push(`<div class="segment ${position}">${fileIndex + 1}: ${spans.join(' ')}</div>`)
+					} else {
+						segments.push(`<div class="segment">${fileIndex + 1}: </div>`)
+					}
+
+					return !words.length && prev
+				}, true)
+
+				lines.push(`<div class="line">${segments.join('')}</div>`)
+				index += segmentLength
+			}
+			document.getElementById('output').innerHTML = lines.join('')
+		}
+
+		function reset() {
+			transcripts = []
+			updateFilenames()
+			process()
+		}
+		function updatePosition(event) {
+			positionByTime = event.target.checked
+		}
+	</script>
+</head>
+
+<body>
+	<div id="drop_zone" ondrop="processDrop(event);" ondragover="dragOverHandler(event)">
+		<p>Drag one or more files to this Drop Zone ...</p>
+	</div>
+	<div id="files">
+		<p>Loaded files:</p>
+		<ul id="file_list"></ul>
+	</div>
+	<div>
+		<input onClick="process()" value="Visualize" type="button"></input>
+		<input onclick="reset()" value="Reset" type="Button"></input>
+		<input onclick="updatePosition(event)" checked="checked" type="checkbox">Position By Time</input>
+	</div>
+	<hr>
+	<div>
+		Hover over the word to see that word's transcription confidence score. The more red the highlighting of a word, the
+		lower
+		the confidence score.
+	</div>
+	<div id="output"></div>
+</body>
+
+</html>
