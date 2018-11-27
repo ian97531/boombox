@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Visualize</title>
+	<style>
+		body {
+			background-color: linen;
+			padding: 20px;
+		}
+
+		textarea {
+			width: 100%;
+			height: 100px;
+			color: maroon;
+		}
+		.speaker0 {
+			background-color: rgba(0,200,0,0.2);
+			border-top: 1px solid rgba(0,0,0,0.5);
+			border-bottom: 1px solid rgba(0,0,0,0.5);
+			border-left: 1px solid transparent;
+			border-right: 1px solid transparent;
+		}
+
+		.speaker1 {
+			background-color: rgba(0,0,200,0.2);
+			border-top: 1px solid rgba(0,0,0,0.5);
+			border-bottom: 1px solid rgba(0,0,0,0.5);
+			border-left: 1px solid transparent;
+			border-right: 1px solid transparent;
+		}
+
+		.c100 {
+			background-color: rgb(255, 255, 255);
+		}
+
+		.c90 {
+			background-color: rgb(255, 230, 230);
+		}
+
+		.c80 {
+			background-color: rgb(255, 205, 205);
+		}
+
+		.c70 {
+			background-color: rgb(255, 180, 180);
+		}
+
+		.c60 {
+			background-color: rgb(255, 155, 155);
+		}
+
+		.c50 {
+			background-color: rgb(255, 130, 130);
+		}
+
+		.c40 {
+			background-color: rgb(255, 105, 105);
+		}
+
+		.c30 {
+			background-color: rgb(255, 80, 80);
+		}
+
+		.c20 {
+			background-color: rgb(255, 55, 55);
+		}
+
+		.c10 {
+			background-color: rgb(255, 30, 30);
+		}
+
+		.c0 {
+			background-color: rgb(255, 5, 5);
+		}
+
+		#drop_zone {
+			border: 1px solid blue;
+		}
+
+		.line {
+			margin-bottom: 10px;
+			margin-top: 10px;
+			padding-top:10px;
+			padding-bottom: 10px;
+			border-bottom: 1px solid black
+		}
+		.segment {
+			margin-top: 5px;
+			margin-bottom: 5px;
+			position: relative;
+		}
+
+		.segment > div {
+			display: inline;
+		}
+
+		.segment.time > div {
+			display: block;
+			position:absolute;
+			top: 0px;
+			left: 0px;
+			margin-left: 2px;
+		}
+
+		.segment > div:hover {
+			border-top: 1px solid rgba(0,0,0);
+			border-bottom: 1px solid rgba(0,0,0);
+			border-left: 1px solid rgba(0,0,0);
+			border-right: 1px solid rgba(0,0,0);
+			background-color: rgba(0,0,0,0.8);
+			z-index: 100;
+		}
+
+		.segment > div:hover > span{
+			background-color: rgba(200,0,0,0.8);
+			color: white;
+		}
+
+    #preview {
+      font-size: 40px;
+    }
+
+    #preview > span {
+      opacity: 0.4;
+      display: inline-block;
+    }
+
+    #preview > span.current {
+      opacity: 1
+    }
+
+    #preview > span.previous {
+      width: 300px;
+      text-align: right;
+      padding-right: 10px;
+    }
+
+    #output {
+      margin-top: 20px;
+      font-size: 16px;
+    }
+
+    #output > div {
+      padding-top: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #AAA;
+    }
+	</style>
+	<script type="text/javascript">
+    transcript = {}
+    output = []
+    sentences = []
+    const WORD_CONTEXT = 2
+    const MINUTE_IN_SECONDS = 60
+    const HOUR_IN_MINUTES = 60
+    const HOUR_IN_SECONDS = HOUR_IN_MINUTES * MINUTE_IN_SECONDS
+
+		function updateFilename() {
+      const list = document.getElementById('file_list')
+      if (transcript.name) {
+        list.innerHTML = `<li>${transcript.name}</li>`
+      } else {
+        list.innerHTML = ''
+      }
+		}
+
+		function dragOverHandler(ev) {
+		  console.log('File(s) in drop zone');
+		  // Prevent default behavior (Prevent file from being opened)
+		  ev.preventDefault();
+		}
+
+		function loadFile(file) {
+      transcript = {}
+      output = []
+      sentences = []
+			var reader = new FileReader()
+			reader.onloadend = (event) => {
+				const json = JSON.parse(event.target.result)
+				transcript = {
+					words: json,
+					name: file.name
+				}
+        updateFilename()
+        render()
+			}
+			reader.readAsText(file)
+		}
+		function processDrop(ev) {
+			console.log('File(s) dropped');
+		  // Prevent default behavior (Prevent file from being opened)
+		  ev.preventDefault();
+
+		  if (ev.dataTransfer.items) {
+		    // Use DataTransferItemList interface to access the file(s)
+		    for (var i = 0; i < ev.dataTransfer.items.length; i++) {
+		      // If dropped items aren't files, reject them
+		      if (ev.dataTransfer.items[i].kind === 'file') {
+            var file = ev.dataTransfer.items[i].getAsFile();
+
+            if (loadFromLocalStorage(file.name)) {
+              updateFilename()
+              render()
+            } else {
+              loadFile(file)
+            }
+
+						console.log('... file[' + i + '].name = ' + file.name);
+		      }
+		    }
+		  } else {
+		    // Use DataTransfer interface to access the file(s)
+		    for (var i = 0; i < ev.dataTransfer.files.length; i++) {
+		      console.log('... file[' + i + '].name = ' + ev.dataTransfer.files[i].name);
+		    }
+		  }
+
+		  // Pass event to removeDragData for cleanup
+		  if (ev.dataTransfer.items) {
+		    // Use DataTransferItemList interface to remove the drag data
+		    ev.dataTransfer.items.clear();
+		  } else {
+		    // Use DataTransfer interface to remove the drag data
+		    ev.dataTransfer.clearData();
+		  }
+			return false
+    }
+
+    function renderPreview() {
+      const currentWordIndex = output.length
+      const startIndex = currentWordIndex < WORD_CONTEXT ? 0 : currentWordIndex - (WORD_CONTEXT - 1)
+      const endIndex  = currentWordIndex > transcript.words.length - (WORD_CONTEXT + 1) ? transcript.words.length - 1 : currentWordIndex + WORD_CONTEXT + 1
+
+      const words = transcript.words.slice(startIndex, endIndex)
+      const display = words.map((word, index) => {
+        const currentWord = index === currentWordIndex - startIndex
+        const currentWordClass = currentWord ? 'current' : ''
+        const previousWordClass = !currentWord && index === 0 ? 'previous' : ''
+
+        if (currentWord && index === 0 && startIndex === 0) {
+          return `<span class="previous"></span><span class="${currentWordClass}">${word.content}</span>`
+        } else {
+          return `<span class="${currentWordClass} ${previousWordClass}">${word.content}</span>`
+        }
+
+      }).join(' ')
+      document.getElementById('preview').innerHTML = display
+    }
+
+    function secondsToTimeParts(time) {
+      const totalSeconds = Math.round(time)
+      const totalMinutes = Math.floor(totalSeconds / MINUTE_IN_SECONDS)
+
+      const hours = Math.floor(totalMinutes / HOUR_IN_MINUTES)
+      const minutes = totalMinutes - hours * HOUR_IN_MINUTES
+      const seconds = totalSeconds - minutes * MINUTE_IN_SECONDS - hours * HOUR_IN_SECONDS
+
+      return { hours, minutes, seconds }
+    }
+
+    function formatTimeMarker(time) {
+      const { hours, minutes, seconds } = secondsToTimeParts(time)
+      const parts = [minutes, seconds]
+
+      if (hours) {
+        parts.unshift(hours)
+      }
+
+      return parts
+        .map((part, index) => (index === 0 ? part.toString() : part.toString().padStart(2, '0')))
+        .join(':')
+    }
+
+    function renderSentences() {
+      if (sentences.length && sentences[0].length) {
+        speakers = [
+  				document.getElementById('speaker1').value,
+  				document.getElementById('speaker2').value
+        ];
+
+        const display = []
+        let index = sentences.length - 1
+        while (index >= 0) {
+          const sentence = sentences[index]
+          const words = sentence.map(word => word.content).join(' ')
+          const speaker = speakers[sentence[0].speaker]
+          const time = formatTimeMarker(sentence[0].startTime)
+          display.push(`<div><b>${speaker} (${time})</b>: ${words}</div>`)
+          index -= 1
+        }
+        document.getElementById('output').innerHTML = display.join('')
+      } else {
+        document.getElementById('output').innerHTML = ''
+      }
+
+    }
+
+		function render() {
+      renderPreview()
+      renderSentences()
+		}
+
+		function reset() {
+      localStorage.removeItem(transcript.name)
+
+			transcript = []
+      sentences = []
+      output = []
+
+			updateFilenames()
+			render()
+		}
+		function updatePosition(event) {
+			positionByTime = event.target.checked
+    }
+
+    function updateSpeaker(speaker) {
+      const index = output.length
+      const newSentence = !output.length || output[output.length - 1].speaker !== speaker
+      const word = {
+        ...transcript.words[index],
+        speaker
+      }
+      output.push(word)
+
+      if (newSentence) {
+        sentences.push([word])
+      } else {
+        sentences[sentences.length - 1].push(word)
+      }
+    }
+
+    function deleteLastSpeaker() {
+      output.pop()
+      if (sentences.length) {
+        if (sentences[sentences.length - 1].length) {
+          sentences[sentences.length - 1].pop()
+          if (sentences[sentences.length - 1].length === 0) {
+            sentences.pop()
+          }
+        } else {
+          sentences.pop()
+        }
+      }
+    }
+
+    function saveToLocalStorage() {
+      localStorage.setItem(transcript.name, JSON.stringify({
+        transcript,
+        sentences,
+        output
+      }))
+    }
+
+    function loadFromLocalStorage(filename) {
+      const item = JSON.parse(localStorage.getItem(filename))
+      if (item) {
+        transcript = item.transcript
+        sentences = item.sentences
+        output = item.output
+        return true
+      } else {
+        return false
+      }
+    }
+
+    document.onkeydown = (event) => {
+      if (event.code === 'ArrowLeft') {
+        updateSpeaker(0)
+        saveToLocalStorage()
+        render()
+      } else if (event.code === 'ArrowRight') {
+        updateSpeaker(1)
+        saveToLocalStorage()
+        render()
+      } else if (event.code === 'Backspace') {
+        deleteLastSpeaker()
+        saveToLocalStorage()
+        render()
+      }
+    }
+	</script>
+</head>
+
+<body>
+	<div id="drop_zone" ondrop="processDrop(event);" ondragover="dragOverHandler(event)">
+		<p>Drag one or more files to this Drop Zone ...</p>
+	</div>
+	<div id="files">
+		<p>Loaded files:</p>
+		<ul id="file_list"></ul>
+  </div>
+  <div>
+		<h4>Speaker 1:
+			<input type="text" value="Speaker 1" id="speaker1" />
+		</h4>
+
+	</div>
+	<div>
+		<h4>Speaker 2:
+			<input type="text" value="Speaker 2" id="speaker2" />
+		</h4>
+	</div>
+	<div>
+		<input onClick="render()" value="Visualize" type="button"></input>
+		<input onclick="reset()" value="Reset" type="Button"></input>
+  </div>
+	<hr>
+	<div id="preview"></div>
+	<div id="output"></div>
+</body>
+
+</html>
