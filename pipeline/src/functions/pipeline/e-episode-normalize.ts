@@ -1,8 +1,15 @@
-import { aws, google, ITranscript } from '@boombox/shared'
+import { aws, ITranscript } from '@boombox/shared'
 import { ENV, episodeCaller, episodeHandler, EpisodeJob } from '../../utils/episode'
 import { Job } from '../../utils/job'
 import { Lambda } from '../../utils/lambda'
-import { getNormalizedTranscription, transcriptionProgress } from '../../utils/transcribe-service'
+import {
+  getNormalizedTranscription as googleGetTranscription,
+  transcriptionProgress as googleTranscriptionProgress,
+} from '../../utils/transcribe-services/google'
+import {
+  getNormalizedTranscription as watsonGetTranscription,
+  transcriptionComplete as watsonTranscriptionComplete,
+} from '../../utils/transcribe-services/watson'
 import {
   concatSegmentTranscriptions,
   copySpeakersFromTranscription,
@@ -15,39 +22,27 @@ const episodeNormalizeHandler = async (lambda: Lambda, job: Job, episode: Episod
   const totalSegments = episode.segments.length
 
   for (const segment of episode.segments) {
-    const speakerProgress = await transcriptionProgress(
-      episode,
-      segment,
-      segment.speakerTranscription
-    )
-    await job.log(
-      `Speaker transcription of ${segment.audio.filename} is ${speakerProgress}% complete.`
-    )
-    const wordProgress = await transcriptionProgress(episode, segment, segment.wordTranscription)
-    await job.log(`Word transcription of ${segment.audio.filename} is ${wordProgress}% complete.`)
+    const googleProgress = await googleTranscriptionProgress(episode, segment)
+    await job.log(`Google transcription of ${segment.audio.flac} is ${googleProgress}% complete.`)
 
-    if (speakerProgress === 100 && wordProgress === 100) {
+    const watsonComplete = await watsonTranscriptionComplete(episode, segment)
+    await job.log(
+      `Watson transcription of ${segment.audio.mp3} is ${watsonComplete ? '' : 'not '}complete.`
+    )
+
+    if (googleProgress === 100 && watsonComplete) {
       segmentsTranscribed += 1
     }
   }
 
   if (segmentsTranscribed === totalSegments) {
-    await job.log('Deleting the segment flac files in GCP.')
     const speakerTranscriptions: ITranscript[] = []
     const wordTranscriptions: ITranscript[] = []
 
     for (const segment of episode.segments) {
-      const bucket = Lambda.getEnvVariable(ENV.GOOGLE_AUDIO_BUCKET) as string
-      const filename = segment.audio.filename
-      google.storage.deleteFile(bucket, filename)
-
       await job.log(`Fetching the transcriptions for ${episode.podcastSlug} ${episode.slug}.`)
-      speakerTranscriptions.push(
-        await getNormalizedTranscription(episode, segment, segment.speakerTranscription)
-      )
-      wordTranscriptions.push(
-        await getNormalizedTranscription(episode, segment, segment.wordTranscription)
-      )
+      speakerTranscriptions.push(await watsonGetTranscription(episode, segment))
+      wordTranscriptions.push(await googleGetTranscription(episode, segment))
     }
 
     await job.log(`Zipping ${speakerTranscriptions.length} segments into a single transcription.`)

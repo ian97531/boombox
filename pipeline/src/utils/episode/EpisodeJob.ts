@@ -1,16 +1,16 @@
 import slugify from 'slugify'
 
-import { db, GoogleSpeechJobId, IEpisode, IPodcast } from '@boombox/shared'
+import { db, GoogleSpeechJobId, IEpisode, IPodcast, WatsonJobId } from '@boombox/shared'
 import { SLUGIFY_OPTIONS } from '../../pipeline-constants'
 
-const MAX_SEGMENT_LENGTH = 190 * 60 // 190 minutes
+const MAX_SEGMENT_LENGTH = 60 * 60 // 60 minutes
 const SEGMENT_OVERLAP_LENGTH = 4 * 60 // 4 minutes
 
 enum DESIGNATIONS {
   ORIGINAL_AUDIO = 'original-audio',
   AUDIO_SEGMENT = 'audio-segment',
-  RAW_SPEAKER_TRANSCRIPTION_SEGMENT = 'google-raw-speaker-transcription-segment',
-  NORMALIZED_SPEAKER_TRANSCRIPTION_SEGMENT = 'google-normalized-speaker-transcription-segment',
+  RAW_SPEAKER_TRANSCRIPTION_SEGMENT = 'watson-raw-speaker-transcription-segment',
+  NORMALIZED_SPEAKER_TRANSCRIPTION_SEGMENT = 'watson-normalized-speaker-transcription-segment',
   RAW_WORD_TRANSCRIPTION_SEGMENT = 'google-raw-word-transcription-segment',
   NORMALIZED_WORD_TRANSCRIPTION_SEGMENT = 'google-normalized-word-transcription-segment',
   FINAL_TRANSCRIPTION = 'final-transcription',
@@ -19,8 +19,12 @@ enum DESIGNATIONS {
 
 interface IAudio {
   duration: number
-  filename: string
+  mp3: string
   startTime: number
+}
+
+interface ISegmentAudio extends IAudio {
+  flac: string
 }
 
 interface IBuckets {
@@ -29,18 +33,23 @@ interface IBuckets {
   transcriptions?: string
 }
 
-export type ITranscriptionJobName = string | number
-
-export interface ITranscriptionJob {
+interface ITranscriptionJob {
   normalizedTranscriptFilename: string
   rawTranscriptFilename: string
+}
+
+export interface IGoogleTranscriptionJob extends ITranscriptionJob {
   jobName?: GoogleSpeechJobId
 }
 
+export interface IWatsonTranscriptionJob extends ITranscriptionJob {
+  jobName?: WatsonJobId
+}
+
 export interface ISegment {
-  audio: IAudio
-  speakerTranscription: ITranscriptionJob
-  wordTranscription: ITranscriptionJob
+  audio: ISegmentAudio
+  speakerTranscription: IWatsonTranscriptionJob
+  wordTranscription: IGoogleTranscriptionJob
 }
 
 export interface ISerializedEpisodeJob {
@@ -181,7 +190,7 @@ export class EpisodeJob {
 
     this.audio = {
       duration: this.duration,
-      filename: this.buildFilename(DESIGNATIONS.ORIGINAL_AUDIO, 'mp3', {
+      mp3: this.buildFilename(DESIGNATIONS.ORIGINAL_AUDIO, 'mp3', {
         duration: this.duration,
         startTime: 0,
       }),
@@ -234,7 +243,12 @@ export class EpisodeJob {
   }
 
   private createSegment(startTime: number, duration: number): ISegment {
-    const audioFilename = this.buildFilename(DESIGNATIONS.AUDIO_SEGMENT, 'flac', {
+    const flac = this.buildFilename(DESIGNATIONS.AUDIO_SEGMENT, 'flac', {
+      duration,
+      startTime,
+    })
+
+    const mp3 = this.buildFilename(DESIGNATIONS.AUDIO_SEGMENT, 'mp3', {
       duration,
       startTime,
     })
@@ -278,7 +292,8 @@ export class EpisodeJob {
     return {
       audio: {
         duration,
-        filename: audioFilename,
+        flac,
+        mp3,
         startTime,
       },
       speakerTranscription: {

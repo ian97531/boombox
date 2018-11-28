@@ -10,7 +10,7 @@ const getGoogleCredentials = async (): Promise<IGoogleCredentials> => {
   if (GOOGLE_CREDENTIALS === undefined) {
     const CREDENTIAL_KEY = process.env.GOOGLE_CREDENTIALS as string
     if (CREDENTIAL_KEY === undefined) {
-      throw Error('The WATSON_TRANSCRIBE_CREDENTIALS environment variable is undefined.')
+      throw Error('The GOOGLE_CREDENTIALS environment variable is undefined.')
     }
     GOOGLE_CREDENTIALS = (await getSecret(CREDENTIAL_KEY)) as IGoogleCredentials
   }

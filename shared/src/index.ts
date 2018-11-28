@@ -13,6 +13,8 @@ import * as transcode from './utils/aws/transcode'
 import * as googleStorage from './utils/google/storage'
 import * as googleTranscribe from './utils/google/transcribe'
 
+import * as watsonTranscribe from './utils/watson/transcribe'
+
 import * as numbers from './utils/numbers'
 import * as timing from './utils/timing'
 
@@ -37,6 +39,10 @@ export const google = {
   transcribe: googleTranscribe,
 }
 
+export const watson = {
+  transcribe: watsonTranscribe,
+}
+
 export const utils = {
   numbers,
   timing,
@@ -49,5 +55,7 @@ export { IStatement, IStatementDBRecord, ITranscript, IWord } from './db/stateme
 export * from './types/aws'
 export * from './types/google'
 export * from './types/responses'
+export * from './types/watson'
 export { ILogger } from './utils/aws/cloudwatch'
 export { AWS_TRANSCODE_PRESETS } from './utils/aws/transcode'
+export { WATSON_TRANSCRIBE_STATUS } from './utils/watson/transcribe'

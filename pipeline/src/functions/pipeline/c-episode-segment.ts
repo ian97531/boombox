@@ -1,4 +1,4 @@
-import { aws } from '@boombox/shared'
+import { aws, AWS_TRANSCODE_PRESETS } from '@boombox/shared'
 import { ENV, episodeCaller, episodeHandler, EpisodeJob, ISegment } from '../../utils/episode'
 import { Job } from '../../utils/job'
 import { Lambda } from '../../utils/lambda'
@@ -15,23 +15,47 @@ const startSegmentJob = async (
     throw Error('The provided episode does not have audio information set.')
   }
 
-  if (!(await aws.s3.checkFileExists(episode.segmentsBucket, segment.audio.filename))) {
+  if (!(await aws.s3.checkFileExists(episode.segmentsBucket, segment.audio.flac))) {
     await aws.transcode.createJob(
       pipelineId,
-      episode.audio.filename,
-      segment.audio.filename,
+      episode.audio.mp3,
+      segment.audio.flac,
       episode.bucket,
       segment.audio.startTime,
-      segment.audio.duration
+      segment.audio.duration,
+      AWS_TRANSCODE_PRESETS.FLAC_MONO
     )
     await job.log(
-      `Started a transcode job to split ${episode.audio.filename} at a start time ` +
+      `Started a FLAC transcode job to split ${episode.audio.mp3} at a start time ` +
         `of ${segment.audio.startTime} seconds for a duration of ${segment.audio.duration} seconds.`
     )
     jobStarted = true
   } else {
     await job.log(
-      `Skipping transcode job to split ${episode.audio.filename} at a start time ` +
+      `Skipping FLAC transcode job to split ${episode.audio.mp3} at a start time ` +
+        `of ${segment.audio.startTime} seconds for a duration of ${segment.audio.duration}  ` +
+        'seconds because that segment audio file already exists.'
+    )
+  }
+
+  if (!(await aws.s3.checkFileExists(episode.segmentsBucket, segment.audio.mp3))) {
+    await aws.transcode.createJob(
+      pipelineId,
+      episode.audio.mp3,
+      segment.audio.mp3,
+      episode.bucket,
+      segment.audio.startTime,
+      segment.audio.duration,
+      AWS_TRANSCODE_PRESETS.MP3
+    )
+    await job.log(
+      `Started a MP3 transcode job to split ${episode.audio.mp3} at a start time ` +
+        `of ${segment.audio.startTime} seconds for a duration of ${segment.audio.duration} seconds.`
+    )
+    jobStarted = true
+  } else {
+    await job.log(
+      `Skipping MP3 transcode job to split ${episode.audio.mp3} at a start time ` +
         `of ${segment.audio.startTime} seconds for a duration of ${segment.audio.duration}  ` +
         'seconds because that segment audio file already exists.'
     )

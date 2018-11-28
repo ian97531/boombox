@@ -30,7 +30,7 @@ const getGoogleApiKey = async (): Promise<IGoogleApiKey> => {
   if (GOOGLE_API_KEY === undefined) {
     const CREDENTIAL_KEY = process.env.GOOGLE_API_KEY as string
     if (CREDENTIAL_KEY === undefined) {
-      throw Error('The WATSON_TRANSCRIBE_CREDENTIALS environment variable is undefined.')
+      throw Error('The GOOGLE_API_KEY environment variable is undefined.')
     }
     GOOGLE_API_KEY = (await getSecret(CREDENTIAL_KEY)) as IGoogleApiKey
   }
@@ -65,12 +65,10 @@ const createJobAsync = async (
 
 export const createTranscriptionJob = async (
   bucket: string,
-  filename: string,
-  speakers: number
+  filename: string
 ): Promise<GoogleSpeechJobId> => {
   const credentials = await getGoogleApiKey()
   const uri = `gs://${bucket}/${filename}`
-  const withSpeakers = speakers > 1
   const encoding = GoogleSpeechAudioEncoding.FLAC
   const sampleRateHertz = 44100
   const languageCode = 'en-US'
@@ -84,14 +82,12 @@ export const createTranscriptionJob = async (
   }
 
   const config: IGoogleSpeechRecognitionConfig = {
-    diarizationSpeakerCount: speakers,
     enableAutomaticPunctuation: true,
-    enableSpeakerDiarization: withSpeakers,
     enableWordTimeOffsets: true,
     encoding,
     languageCode,
     metadata: recognitionMetadata,
-    model: withSpeakers ? GoogleSpeechModel.PHONE_CALL : GoogleSpeechModel.VIDEO,
+    model: GoogleSpeechModel.VIDEO,
     sampleRateHertz,
     useEnhanced: true,
   }

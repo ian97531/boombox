@@ -9,3 +9,5 @@ export interface IWatsonWord {
   content: string
   confidence: number
 }
+
+export type WatsonJobId = string

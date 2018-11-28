@@ -4,7 +4,14 @@ import {
   SpeechRecognitionResults,
 } from 'watson-developer-cloud/speech-to-text/v1-generated'
 
-import { aws, ITranscript, IWatsonWord, watson, WATSON_TRANSCRIBE_STATUS } from '@boombox/shared'
+import {
+  aws,
+  ITranscript,
+  IWatsonWord,
+  watson,
+  WATSON_TRANSCRIBE_STATUS,
+  WatsonJobId,
+} from '@boombox/shared'
 import { EpisodeJob, ISegment } from '../episode'
 
 enum WATSON_TRANSCRIPTION {
@@ -40,7 +47,7 @@ class WatsonTranscription {
       const word = this.getNextWord()
       if (word) {
         normalizedTranscription.push({
-          ...word,
+          content: word.content,
           endTime: word.endTime + this.startTime,
           speaker,
           startTime: word.startTime + this.startTime,
@@ -108,93 +115,93 @@ class WatsonTranscription {
   }
 }
 
-export const transcriptionsReadyToBeNormalized = async (episode: EpisodeJob): Promise<number> => {
-  let transcriptionsReady = 0
-  let erroredJobs = 0
+export const transcriptionComplete = async (
+  episode: EpisodeJob,
+  segment: ISegment
+): Promise<boolean> => {
   const bucket = episode.transcriptionsBucket
-  for (const segment of episode.segments) {
-    if (await aws.s3.checkFileExists(bucket, segment.transcription.watson.normalizedFilename)) {
-      transcriptionsReady += 1
-    } else {
-      if (segment.transcription.watson.jobName) {
-        const jobName = segment.transcription.watson.jobName
-        try {
-          const response = await watson.transcribe.getTranscriptionJob(jobName)
-          if (
-            response.results &&
-            response.results[0] &&
-            response.results[0].results &&
-            response.status === WATSON_TRANSCRIBE_STATUS.SUCCESS
-          ) {
-            transcriptionsReady += 1
-          } else if (response.status === WATSON_TRANSCRIBE_STATUS.SUCCESS) {
-            erroredJobs += 1
-          } else if (response.status === WATSON_TRANSCRIBE_STATUS.ERROR) {
-            erroredJobs += 1
-          }
-        } catch (error) {
-          console.log(`No transcription job found for ${jobName}`)
+
+  let complete = false
+  if (await aws.s3.checkFileExists(bucket, segment.speakerTranscription.rawTranscriptFilename)) {
+    complete = true
+  } else {
+    if (segment.speakerTranscription.jobName) {
+      const jobName = segment.speakerTranscription.jobName
+      try {
+        const response = await watson.transcribe.getTranscriptionJob(jobName)
+        if (
+          response.results &&
+          response.results[0] &&
+          response.results[0].results &&
+          response.status === WATSON_TRANSCRIBE_STATUS.SUCCESS
+        ) {
+          complete = true
+        } else if (
+          response.status === WATSON_TRANSCRIBE_STATUS.SUCCESS ||
+          response.status === WATSON_TRANSCRIBE_STATUS.ERROR
+        ) {
+          throw Error(`Transcription job for ${segment.audio.mp3} encountered an error.`)
         }
+      } catch (error) {
+        console.log(`No transcription job found for ${jobName}`)
       }
     }
   }
-  if (erroredJobs) {
-    throw Error(`${erroredJobs} segment transcription job(s) encountered an error.`)
-  }
 
-  return transcriptionsReady
+  return complete
 }
 
-export const transcribeSegment = async (episode: EpisodeJob, segment: ISegment): Promise<void> => {
+export const transcribeSegment = async (
+  episode: EpisodeJob,
+  segment: ISegment
+): Promise<WatsonJobId> => {
   const jobName = await watson.transcribe.createTranscriptionJob(
     episode.segmentsBucket,
-    segment.audio.filename
+    segment.audio.mp3
   )
-  segment.transcription.watson.jobName = jobName
+  return jobName
 }
 
-export const getEpisodeTranscriptions = async (episode: EpisodeJob): Promise<ITranscript[]> => {
-  const transcriptions: ITranscript[] = []
+export const getNormalizedTranscription = async (
+  episode: EpisodeJob,
+  segment: ISegment
+): Promise<ITranscript> => {
   const bucket = episode.transcriptionsBucket
 
-  for (const segment of episode.segments) {
-    const filename = segment.transcription.watson.normalizedFilename
-    const rawFilename = segment.transcription.watson.rawFilename
-    let transcription: ITranscript | undefined
+  const filename = segment.speakerTranscription.normalizedTranscriptFilename
+  const rawFilename = segment.speakerTranscription.rawTranscriptFilename
+  let transcription: ITranscript | undefined
 
-    if (!(await aws.s3.checkFileExists(bucket, filename))) {
-      if (segment.transcription.watson.jobName) {
-        const jobName = segment.transcription.watson.jobName
-        const job = await watson.transcribe.getTranscriptionJob(jobName)
-        if (
-          job.results &&
-          job.results[0] &&
-          job.results[0].results &&
-          job.status === WATSON_TRANSCRIBE_STATUS.SUCCESS
-        ) {
-          const rawTranscription = job.results[0]
-          await aws.s3.putJsonFile(bucket, rawFilename, rawTranscription)
+  if (!(await aws.s3.checkFileExists(bucket, filename))) {
+    if (segment.speakerTranscription.jobName) {
+      const jobName = segment.speakerTranscription.jobName
+      const job = await watson.transcribe.getTranscriptionJob(jobName)
+      if (
+        job.results &&
+        job.results[0] &&
+        job.results[0].results &&
+        job.status === WATSON_TRANSCRIBE_STATUS.SUCCESS
+      ) {
+        const rawTranscription = job.results[0]
+        await aws.s3.putJsonFile(bucket, rawFilename, rawTranscription)
 
-          const watsonTranscription = new WatsonTranscription(
-            rawTranscription,
-            segment.audio.startTime
-          )
-          transcription = watsonTranscription.getNormalizedTranscription()
-          await aws.s3.putJsonFile(bucket, filename, transcription)
-        }
+        const watsonTranscription = new WatsonTranscription(
+          rawTranscription,
+          segment.audio.startTime
+        )
+        transcription = watsonTranscription.getNormalizedTranscription()
+        await aws.s3.putJsonFile(bucket, filename, transcription)
       }
-    } else {
-      transcription = (await aws.s3.getJsonFile(bucket, filename)) as ITranscript
     }
-
-    if (!transcription) {
-      throw Error(`Cannot get transcription for segment: ${segment.audio.filename}`)
-    }
-
-    transcriptions.push(transcription)
+  } else {
+    transcription = (await aws.s3.getJsonFile(bucket, filename)) as ITranscript
   }
 
-  return transcriptions
+  if (!transcription) {
+    throw Error(`Cannot get transcription for segment: ${segment.audio.mp3}`)
+  }
+
+  return transcription
 }
 
 export const getUntranscribedSegments = async (episode: EpisodeJob): Promise<ISegment[]> => {
@@ -203,13 +210,13 @@ export const getUntranscribedSegments = async (episode: EpisodeJob): Promise<ISe
   for (const segment of episode.segments) {
     const fileExists = await aws.s3.checkFileExists(
       episode.transcriptionsBucket,
-      segment.transcription.watson.normalizedFilename
+      segment.speakerTranscription.normalizedTranscriptFilename
     )
     let transcriptionExists = false
-    if (segment.transcription.watson.jobName) {
+    if (segment.speakerTranscription.jobName) {
       try {
         const job = await watson.transcribe.getTranscriptionJob(
-          segment.transcription.watson.jobName
+          segment.speakerTranscription.jobName
         )
         if (job.status === WATSON_TRANSCRIBE_STATUS.ERROR) {
           transcriptionExists = false

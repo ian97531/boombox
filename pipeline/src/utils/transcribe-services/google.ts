@@ -7,8 +7,8 @@ import {
   IGoogleTranscriptionWord,
   ITranscript,
 } from '@boombox/shared'
-import { ENV, EpisodeJob, ISegment, ITranscriptionJob } from './episode'
-import { Lambda } from './lambda'
+import { ENV, EpisodeJob, ISegment } from '../episode'
+import { Lambda } from '../lambda'
 
 class GoogleTranscription {
   private words: IGoogleTranscriptionWord[]
@@ -65,12 +65,12 @@ export const normalizeGoogleTranscription = (
   return transcription.getNormalizedTranscription()
 }
 
-export const getRawTranscription = async <T extends IGoogleTranscriptionWord>(
+export const getRawTranscription = async (
   episode: EpisodeJob,
-  segment: ISegment,
-  job: ITranscriptionJob
+  segment: ISegment
 ): Promise<IGoogleTranscription> => {
   const bucket = episode.transcriptionsBucket
+  const job = segment.wordTranscription
   const rawFilename = job.rawTranscriptFilename
   let transcription: IGoogleTranscription | undefined
   if (!(await aws.s3.checkFileExists(bucket, rawFilename))) {
@@ -79,6 +79,10 @@ export const getRawTranscription = async <T extends IGoogleTranscriptionWord>(
       if (jobResponse.done && !jobResponse.error && jobResponse.response) {
         transcription = jobResponse.response as IGoogleTranscription
         await aws.s3.putJsonFile(bucket, rawFilename, transcription)
+
+        const googleBucket = Lambda.getEnvVariable(ENV.GOOGLE_AUDIO_BUCKET) as string
+        const flacFile = segment.audio.flac
+        google.storage.deleteFile(googleBucket, flacFile)
       }
     }
   } else {
@@ -86,7 +90,7 @@ export const getRawTranscription = async <T extends IGoogleTranscriptionWord>(
   }
 
   if (!transcription) {
-    throw Error(`Cannot get raw transcription for segment: ${segment.audio.filename}`)
+    throw Error(`Cannot get raw transcription for segment: ${segment.audio.mp3}`)
   }
 
   return transcription
@@ -94,15 +98,15 @@ export const getRawTranscription = async <T extends IGoogleTranscriptionWord>(
 
 export const getNormalizedTranscription = async (
   episode: EpisodeJob,
-  segment: ISegment,
-  job: ITranscriptionJob
+  segment: ISegment
 ): Promise<ITranscript> => {
   const bucket = episode.transcriptionsBucket
+  const job = segment.wordTranscription
   const filename = job.normalizedTranscriptFilename
   let transcription: ITranscript | undefined
   if (!(await aws.s3.checkFileExists(bucket, filename))) {
     if (job.jobName) {
-      const rawTranscription = await getRawTranscription(episode, segment, job)
+      const rawTranscription = await getRawTranscription(episode, segment)
       transcription = normalizeGoogleTranscription(rawTranscription, segment.audio.startTime)
       await aws.s3.putJsonFile(bucket, filename, transcription)
     }
@@ -111,29 +115,27 @@ export const getNormalizedTranscription = async (
   }
 
   if (!transcription) {
-    throw Error(`Cannot get normalized transcription for segment: ${segment.audio.filename}`)
+    throw Error(`Cannot get normalized transcription for segment: ${segment.audio.mp3}`)
   }
   return transcription
 }
 
 export const transcribeSegment = async (
   episode: EpisodeJob,
-  segment: ISegment,
-  withSpeakers: boolean
+  segment: ISegment
 ): Promise<GoogleSpeechJobId> => {
-  const filename = segment.audio.filename
+  const filename = segment.audio.flac
   const bucket = Lambda.getEnvVariable(ENV.GOOGLE_AUDIO_BUCKET) as string
-  const numSpeakers = withSpeakers ? episode.speakers.length : 0
-  return await google.transcribe.createTranscriptionJob(bucket, filename, numSpeakers)
+  return await google.transcribe.createTranscriptionJob(bucket, filename)
 }
 
 export const transcriptionProgress = async (
   episode: EpisodeJob,
-  segment: ISegment,
-  job: ITranscriptionJob
+  segment: ISegment
 ): Promise<number> => {
   let progress = 0
   const bucket = episode.transcriptionsBucket
+  const job = segment.wordTranscription
   const filename = job.normalizedTranscriptFilename
   if (await aws.s3.checkFileExists(bucket, filename)) {
     progress = 100

@@ -40,11 +40,9 @@ const episodeDownloadHandler = async (lambda: Lambda, job: Job, episode: Episode
   episode.createSegments()
 
   if (episode.audio) {
-    const params = { Bucket: episode.bucket, Key: episode.audio.filename, Body: response.data }
+    const params = { Bucket: episode.bucket, Key: episode.audio.mp3, Body: response.data }
     await s3.upload(params).promise()
-    await job.log(
-      `Completed writing ${episode.mp3URL} to ${episode.bucket}/${episode.audio.filename}.`
-    )
+    await job.log(`Completed writing ${episode.mp3URL} to ${episode.bucket}/${episode.audio.mp3}.`)
 
     episodeSegment(lambda, job, episode)
   } else {

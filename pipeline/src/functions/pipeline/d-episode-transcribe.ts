@@ -2,7 +2,8 @@ import { aws, google } from '@boombox/shared'
 import { ENV, episodeCaller, episodeHandler, EpisodeJob } from '../../utils/episode'
 import { Job } from '../../utils/job'
 import { Lambda } from '../../utils/lambda'
-import { transcribeSegment } from '../../utils/transcribe-service'
+import { transcribeSegment as googleTranscribeSegment } from '../../utils/transcribe-services/google'
+import { transcribeSegment as watsonTranscribeSegment } from '../../utils/transcribe-services/watson'
 import { episodeNormalize } from './e-episode-normalize'
 
 const episodeTranscribeHandler = async (lambda: Lambda, job: Job, episode: EpisodeJob) => {
@@ -10,11 +11,9 @@ const episodeTranscribeHandler = async (lambda: Lambda, job: Job, episode: Episo
   let transcriptionsStarted = 0
 
   for (const segment of episode.segments) {
-    const segmentComplete = await aws.s3.checkFileExists(
-      episode.segmentsBucket,
-      segment.audio.filename
-    )
-    if (segmentComplete) {
+    const mp3Complete = await aws.s3.checkFileExists(episode.segmentsBucket, segment.audio.mp3)
+    const flacComplete = await aws.s3.checkFileExists(episode.segmentsBucket, segment.audio.flac)
+    if (mp3Complete && flacComplete) {
       transcodedSegements += 1
     }
   }
@@ -34,44 +33,48 @@ const episodeTranscribeHandler = async (lambda: Lambda, job: Job, episode: Episo
         wordTranscriptionFilename
       )
 
-      await job.log(
-        `Word Transcription exists: ${wordTranscriptionExists}. Speaker Transcription exists: ${speakerTranscriptionExists}`
-      )
       if (!speakerTranscriptionExists || !wordTranscriptionExists) {
         const awsBucket = episode.segmentsBucket
-        const awsFilename = segment.audio.filename
-        const googleBucket = Lambda.getEnvVariable(ENV.GOOGLE_AUDIO_BUCKET) as string
-
-        const exists = await google.storage.fileExists(googleBucket, awsFilename)
-        if (!exists) {
-          await job.log(
-            `Starting to move s3://${awsBucket}/${awsFilename} to gs://${googleBucket}/${awsFilename}.`
-          )
-          await google.storage.streamFileFromS3ToGoogleCloudStorage(
-            awsBucket,
-            awsFilename,
-            googleBucket
-          )
-          await job.log(
-            `Completed moving s3://${awsBucket}/${awsFilename} to gs://${googleBucket}/${awsFilename}.`
-          )
-        }
-        await google.storage.makeFilePublic(googleBucket, awsFilename)
 
         if (!speakerTranscriptionExists) {
-          await job.log(`Starting a speaker transcription job for ${segment.audio.filename}`)
-          segment.speakerTranscription.jobName = await transcribeSegment(episode, segment, true)
+          await job.log(`Starting a Watson transcription job with for ${segment.audio.mp3}`)
+          segment.speakerTranscription.jobName = await watsonTranscribeSegment(episode, segment)
           transcriptionsStarted += 1
+          await job.log(
+            `Started a Watson transcription job with id ${segment.speakerTranscription.jobName}`
+          )
         }
 
         if (!wordTranscriptionExists) {
-          await job.log(`Starting a word transcription job for ${segment.audio.filename}`)
-          segment.wordTranscription.jobName = await transcribeSegment(episode, segment, false)
+          const awsFilename = segment.audio.flac
+          const googleBucket = Lambda.getEnvVariable(ENV.GOOGLE_AUDIO_BUCKET) as string
+
+          const exists = await google.storage.fileExists(googleBucket, awsFilename)
+          if (!exists) {
+            await job.log(
+              `Starting to move s3://${awsBucket}/${awsFilename} to gs://${googleBucket}/${awsFilename}.`
+            )
+            await google.storage.streamFileFromS3ToGoogleCloudStorage(
+              awsBucket,
+              awsFilename,
+              googleBucket
+            )
+            await job.log(
+              `Completed moving s3://${awsBucket}/${awsFilename} to gs://${googleBucket}/${awsFilename}.`
+            )
+          }
+
+          await google.storage.makeFilePublic(googleBucket, awsFilename)
+          await job.log(`Starting a word transcription job with Google for ${segment.audio.flac}`)
+          segment.wordTranscription.jobName = await googleTranscribeSegment(episode, segment)
+          await job.log(
+            `Started a Google transcription job with id ${segment.wordTranscription.jobName}`
+          )
           transcriptionsStarted += 1
         }
       }
     }
-    await job.log(`Started ${transcriptionsStarted} transcriptions with Google.`)
+    await job.log(`Started ${transcriptionsStarted} transcriptions.`)
 
     const delay = transcriptionsStarted ? 120 : 0
     episodeNormalize(lambda, job, episode, delay)

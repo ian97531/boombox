@@ -21,7 +21,8 @@
     "@types/node": "^10.9.4",
     "aws-sdk": "^2.336.0",
     "axios": "^0.18.0",
-    "ts-node": "^7.0.1"
+    "ts-node": "^7.0.1",
+    "watson-developer-cloud": "^3.13.1"
   },
   "devDependencies": {
     "babel-core": "^6.26.3",
